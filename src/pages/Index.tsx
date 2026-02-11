@@ -1,26 +1,19 @@
 import { useState } from 'react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import type { CountdownEvent, Task, TabType } from '@/types/app';
+import type { CountdownEvent, Task, TabType, AppSettings } from '@/types/app';
+import { DEFAULT_SETTINGS } from '@/types/app';
 import CountdownCard from '@/components/CountdownCard';
 import AddCountdownDialog from '@/components/AddCountdownDialog';
 import TaskList from '@/components/TaskList';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy } from 'lucide-react';
+import SettingsPanel from '@/components/SettingsPanel';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-
-const tabs: { id: TabType; label: string; icon: typeof Home }[] = [
-  { id: 'inicio', label: 'Inicio', icon: Home },
-  { id: 'deberes', label: 'Deberes', icon: BookOpen },
-  { id: 'examenes', label: 'Exámenes', icon: GraduationCap },
-  { id: 'eventos', label: 'Eventos', icon: Calendar },
-];
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<TabType>('inicio');
   const [countdowns, setCountdowns] = useLocalStorage<CountdownEvent[]>('deberes-countdowns', []);
   const [tasks, setTasks] = useLocalStorage<Task[]>('deberes-tasks', []);
-  const [usePartidos, setUsePartidos] = useLocalStorage<boolean>('deberes-partidos', false);
+  const [settings, setSettings] = useLocalStorage<AppSettings>('deberes-settings', DEFAULT_SETTINGS);
 
   const addCountdown = (event: CountdownEvent) => setCountdowns([...countdowns, event]);
   const removeCountdown = (id: string) => setCountdowns(countdowns.filter((c) => c.id !== id));
@@ -29,12 +22,37 @@ const Index = () => {
   const toggleTask = (id: string) => setTasks(tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)));
   const deleteTask = (id: string) => setTasks(tasks.filter((t) => t.id !== id));
 
-  const currentTabs = tabs.map((tab) => {
-    if (tab.id === 'eventos' && usePartidos) {
-      return { id: 'eventos' as TabType, label: 'Partidos', icon: Trophy };
+  // Build dynamic tabs
+  const buildTabs = () => {
+    const result: { id: TabType; label: string; icon: typeof Home }[] = [
+      { id: 'inicio', label: 'Inicio', icon: Home },
+      { id: 'deberes', label: 'Deberes', icon: BookOpen },
+      { id: 'examenes', label: 'Exámenes', icon: GraduationCap },
+    ];
+
+    if (settings.tareasEnabled) {
+      result.push({ id: 'tareas', label: 'Tareas', icon: ClipboardList });
     }
-    return tab;
-  });
+
+    if (settings.partidosMode === 'replace') {
+      result.push({ id: 'partidos', label: 'Partidos', icon: Trophy });
+    } else {
+      result.push({ id: 'eventos', label: 'Eventos', icon: Calendar });
+      if (settings.partidosMode === 'new_tab') {
+        result.push({ id: 'partidos', label: 'Partidos', icon: Trophy });
+      }
+    }
+
+    return result;
+  };
+
+  const currentTabs = buildTabs();
+
+  // Reset active tab if it's no longer available
+  if (!currentTabs.find(t => t.id === activeTab)) {
+    // This will re-render, but it's fine
+    setTimeout(() => setActiveTab('inicio'), 0);
+  }
 
   const pendingHomework = tasks.filter(t => t.type === 'homework' && !t.completed).length;
   const pendingExams = tasks.filter(t => t.type === 'exam' && !t.completed).length;
@@ -42,16 +60,18 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col max-w-lg mx-auto">
       {/* Header */}
-      <header className="gradient-hero px-5 pt-8 pb-6 rounded-b-3xl">
-        <h1 className="text-2xl font-extrabold text-primary-foreground">📚 Deberes</h1>
-        <p className="text-primary-foreground/70 text-sm font-medium mt-0.5">Colegio Portaceli</p>
+      <header className="gradient-hero px-5 pt-8 pb-6 rounded-b-3xl flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold text-primary-foreground">📚 {settings.appName}</h1>
+          <p className="text-primary-foreground/70 text-sm font-medium mt-0.5">{settings.schoolName}</p>
+        </div>
+        <SettingsPanel settings={settings} onUpdate={setSettings} />
       </header>
 
       {/* Content */}
       <main className="flex-1 px-4 py-4 pb-24 overflow-y-auto">
         {activeTab === 'inicio' && (
           <div className="space-y-5 animate-slide-up">
-            {/* Quick stats */}
             <div className="grid grid-cols-2 gap-3">
               <div className="glass-card rounded-xl p-4 text-center">
                 <p className="text-3xl font-extrabold text-primary">{pendingHomework}</p>
@@ -63,7 +83,6 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Countdowns */}
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="font-bold text-foreground">⏳ Contadores</h2>
@@ -82,55 +101,35 @@ const Index = () => {
                 </div>
               )}
             </div>
-
-            {/* Partidos toggle */}
-            <div className="glass-card rounded-xl p-4 flex items-center justify-between">
-              <Label className="cursor-pointer text-sm font-semibold flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-accent" />
-                Usar pestaña de Partidos
-              </Label>
-              <Switch checked={usePartidos} onCheckedChange={setUsePartidos} />
-            </div>
           </div>
         )}
 
         {activeTab === 'deberes' && (
-          <TaskList
-            tasks={tasks}
-            type="homework"
-            onAdd={addTask}
-            onToggle={toggleTask}
-            onDelete={deleteTask}
-            triggerLabel="Añadir deber"
-            emptyMessage="¡No tienes deberes pendientes!"
-            emptyEmoji="🎉"
-          />
+          <TaskList tasks={tasks} type="homework" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask}
+            triggerLabel="Añadir deber" emptyMessage="¡No tienes deberes pendientes!" emptyEmoji="🎉"
+            subjects={settings.enabledSubjects} />
         )}
 
         {activeTab === 'examenes' && (
-          <TaskList
-            tasks={tasks}
-            type="exam"
-            onAdd={addTask}
-            onToggle={toggleTask}
-            onDelete={deleteTask}
-            triggerLabel="Añadir examen"
-            emptyMessage="No hay exámenes próximos"
-            emptyEmoji="📝"
-          />
+          <TaskList tasks={tasks} type="exam" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask}
+            triggerLabel="Añadir examen" emptyMessage="No hay exámenes próximos" emptyEmoji="📝"
+            subjects={settings.enabledSubjects} />
+        )}
+
+        {activeTab === 'tareas' && (
+          <TaskList tasks={tasks} type="task" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask}
+            triggerLabel="Añadir tarea" emptyMessage="No hay tareas pendientes" emptyEmoji="✅"
+            subjects={settings.enabledSubjects} />
         )}
 
         {activeTab === 'eventos' && (
-          <TaskList
-            tasks={tasks}
-            type={usePartidos ? 'match' : 'event'}
-            onAdd={addTask}
-            onToggle={toggleTask}
-            onDelete={deleteTask}
-            triggerLabel={usePartidos ? 'Añadir partido' : 'Añadir evento'}
-            emptyMessage={usePartidos ? 'No hay partidos programados' : 'No hay eventos próximos'}
-            emptyEmoji={usePartidos ? '⚽' : '🎪'}
-          />
+          <TaskList tasks={tasks} type="event" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask}
+            triggerLabel="Añadir evento" emptyMessage="No hay eventos próximos" emptyEmoji="🎪" />
+        )}
+
+        {activeTab === 'partidos' && (
+          <TaskList tasks={tasks} type="match" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask}
+            triggerLabel="Añadir partido" emptyMessage="No hay partidos programados" emptyEmoji="⚽" />
         )}
       </main>
 
