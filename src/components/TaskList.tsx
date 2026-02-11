@@ -11,9 +11,10 @@ interface TaskListProps {
   triggerLabel: string;
   emptyMessage: string;
   emptyEmoji: string;
+  subjects?: string[];
 }
 
-const TaskList = ({ tasks, type, onAdd, onToggle, onDelete, triggerLabel, emptyMessage, emptyEmoji }: TaskListProps) => {
+const TaskList = ({ tasks, type, onAdd, onToggle, onDelete, triggerLabel, emptyMessage, emptyEmoji, subjects }: TaskListProps) => {
   const filtered = tasks
     .filter((t) => t.type === type)
     .sort((a, b) => {
@@ -27,7 +28,7 @@ const TaskList = ({ tasks, type, onAdd, onToggle, onDelete, triggerLabel, emptyM
         <p className="text-sm text-muted-foreground font-semibold">
           {filtered.filter(t => !t.completed).length} pendiente{filtered.filter(t => !t.completed).length !== 1 ? 's' : ''}
         </p>
-        <AddTaskDialog type={type} onAdd={onAdd} triggerLabel={triggerLabel} />
+        <AddTaskDialog type={type} onAdd={onAdd} triggerLabel={triggerLabel} subjects={subjects} />
       </div>
 
       {filtered.length === 0 ? (

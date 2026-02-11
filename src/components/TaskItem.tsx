@@ -1,19 +1,13 @@
 import type { Task } from '@/types/app';
-import { Check, Trash2, Clock, CalendarDays } from 'lucide-react';
+import { Check, Trash2, Clock, CalendarDays, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 interface TaskItemProps {
   task: Task;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
 }
-
-const typeColorMap: Record<Task['type'], string> = {
-  homework: 'bg-primary/10 text-primary',
-  exam: 'bg-exam/10 text-exam',
-  event: 'bg-event/10 text-event',
-  match: 'bg-accent/10 text-accent',
-};
 
 const TaskItem = ({ task, onToggle, onDelete }: TaskItemProps) => {
   const isPast = new Date(task.dueDate) < new Date(new Date().toDateString());
@@ -35,7 +29,7 @@ const TaskItem = ({ task, onToggle, onDelete }: TaskItemProps) => {
 
       <div className="flex-1 min-w-0">
         <p className={cn('font-semibold text-sm', task.completed && 'line-through')}>{task.name}</p>
-        <div className="flex items-center gap-3 mt-1">
+        <div className="flex flex-wrap items-center gap-2 mt-1">
           <span className={cn('text-xs flex items-center gap-1', isPast && !task.completed ? 'text-destructive font-semibold' : 'text-muted-foreground')}>
             <CalendarDays className="w-3 h-3" />
             {new Date(task.dueDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
@@ -44,6 +38,18 @@ const TaskItem = ({ task, onToggle, onDelete }: TaskItemProps) => {
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Clock className="w-3 h-3" />
               {task.dueTime}
+            </span>
+          )}
+          {task.subject && (
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{task.subject}</Badge>
+          )}
+          {task.rival && (
+            <span className="text-xs text-muted-foreground">vs {task.rival}</span>
+          )}
+          {task.homeAway && (
+            <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+              <MapPin className="w-3 h-3" />
+              {task.homeAway === 'home' ? 'Casa' : 'Fuera'}
             </span>
           )}
         </div>
