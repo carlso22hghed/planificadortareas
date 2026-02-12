@@ -1,0 +1,1 @@
+ALTER TABLE public.tasks ALTER COLUMN sport_type SET DEFAULT 'Fútbol';

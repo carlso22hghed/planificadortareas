@@ -6,15 +6,17 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const Onboarding = () => {
-  const { updateProfile } = useAuth();
+  const { updateProfile, updateSettings } = useAuth();
   const [name, setName] = useState('');
   const [role, setRole] = useState('estudiante');
   const [customRole, setCustomRole] = useState('');
+  const [schoolName, setSchoolName] = useState('');
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async () => {
-    if (!name.trim()) return;
+    if (!name.trim() || !schoolName.trim()) return;
     setSaving(true);
+    await updateSettings({ school_name: schoolName.trim() });
     await updateProfile({
       display_name: name.trim(),
       role: role === 'otro' ? 'otro' : role,
@@ -70,9 +72,18 @@ const Onboarding = () => {
             )}
           </div>
 
+          <div className="space-y-2">
+            <Label className="font-bold">🏫 ¿Cuál es tu colegio?</Label>
+            <Input
+              value={schoolName}
+              onChange={e => setSchoolName(e.target.value)}
+              placeholder="Nombre de tu colegio"
+            />
+          </div>
+
           <Button
             onClick={handleSubmit}
-            disabled={!name.trim() || saving}
+            disabled={!name.trim() || !schoolName.trim() || saving}
             className="w-full h-12 text-base rounded-xl"
           >
             {saving ? 'Guardando...' : 'Empezar 🚀'}

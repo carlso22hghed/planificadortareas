@@ -8,7 +8,7 @@ import { Settings, Pencil, Check, LogOut, Plus } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ALL_SUBJECTS, ALL_SPORT_TYPES } from '@/types/app';
+import { ALL_SUBJECTS, ALL_SPORT_TYPES, SPORT_EMOJIS } from '@/types/app';
 import type { DbSettings } from '@/types/app';
 import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
@@ -168,7 +168,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                       checked={settings.sport_types.includes(sport)}
                       onCheckedChange={() => toggleSportType(sport)}
                     />
-                    <span>{sport === 'Fútbol' ? '⚽' : sport === 'Baloncesto' ? '🏀' : '🏐'} {sport}</span>
+                    <span>{SPORT_EMOJIS[sport] || '🏅'} {sport}</span>
                   </label>
                 ))}
               </div>

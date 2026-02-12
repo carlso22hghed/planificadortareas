@@ -2,6 +2,7 @@ import type { DbTask } from '@/types/app';
 import { Check, Trash2, Clock, CalendarDays, MapPin, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { getSubjectColor } from '@/lib/subject-colors';
 
 interface TaskItemProps {
   task: DbTask;
@@ -36,9 +37,12 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit }: TaskItemProps) => {
               <Clock className="w-3 h-3" />{task.due_time}
             </span>
           )}
-          {task.subject && (
-            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{task.subject}</Badge>
-          )}
+          {task.subject && (() => {
+            const color = getSubjectColor(task.subject);
+            return (
+              <Badge variant="secondary" className={cn("text-[10px] px-1.5 py-0 border-0", color.bg, color.text)}>{task.subject}</Badge>
+            );
+          })()}
           {task.rival && <span className="text-xs text-muted-foreground">vs {task.rival}</span>}
           {task.sport_type && task.type === 'match' && (
             <Badge variant="outline" className="text-[10px] px-1.5 py-0">{task.sport_type}</Badge>
