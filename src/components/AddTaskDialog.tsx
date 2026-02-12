@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Plus } from 'lucide-react';
 import type { DbTask } from '@/types/app';
+import { SPORT_EMOJIS } from '@/types/app';
 import { toast } from '@/hooks/use-toast';
 
 interface AddTaskDialogProps {
@@ -151,7 +152,7 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
                   <Select value={sportType} onValueChange={setSportType}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {sportTypes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                      {sportTypes.map(s => <SelectItem key={s} value={s}>{SPORT_EMOJIS[s] || '🏅'} {s}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>

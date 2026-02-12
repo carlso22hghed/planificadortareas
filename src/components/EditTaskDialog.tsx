@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { DbTask } from '@/types/app';
+import { SPORT_EMOJIS } from '@/types/app';
 
 interface EditTaskDialogProps {
   task: DbTask | null;
@@ -102,7 +103,7 @@ const EditTaskDialog = ({ task, open, onOpenChange, onSave, subjects = [], sport
                   <Select value={sportType} onValueChange={setSportType}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {sportTypes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                      {sportTypes.map(s => <SelectItem key={s} value={s}>{SPORT_EMOJIS[s] || '🏅'} {s}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
