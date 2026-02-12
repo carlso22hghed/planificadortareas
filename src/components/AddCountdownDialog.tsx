@@ -4,10 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus } from 'lucide-react';
-import type { CountdownEvent } from '@/types/app';
 
 interface AddCountdownDialogProps {
-  onAdd: (event: CountdownEvent) => void;
+  onAdd: (data: { name: string; target_date: string; target_time: string }) => void;
 }
 
 const AddCountdownDialog = ({ onAdd }: AddCountdownDialogProps) => {
@@ -18,12 +17,7 @@ const AddCountdownDialog = ({ onAdd }: AddCountdownDialogProps) => {
 
   const handleSubmit = () => {
     if (!name || !date) return;
-    onAdd({
-      id: crypto.randomUUID(),
-      name,
-      targetDate: date,
-      targetTime: time,
-    });
+    onAdd({ name, target_date: date, target_time: time || '00:00' });
     setName('Vacaciones de Verano');
     setDate('');
     setTime('14:00');
@@ -45,15 +39,15 @@ const AddCountdownDialog = ({ onAdd }: AddCountdownDialogProps) => {
         <div className="space-y-4 mt-2">
           <div>
             <Label htmlFor="countdown-name">Nombre del evento</Label>
-            <Input id="countdown-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Vacaciones de Verano" />
+            <Input id="countdown-name" value={name} onChange={e => setName(e.target.value)} placeholder="Vacaciones de Verano" />
           </div>
           <div>
             <Label htmlFor="countdown-date">Fecha</Label>
-            <Input id="countdown-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <Input id="countdown-date" type="date" value={date} onChange={e => setDate(e.target.value)} />
           </div>
           <div>
             <Label htmlFor="countdown-time">Hora</Label>
-            <Input id="countdown-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+            <Input id="countdown-time" type="time" value={time} onChange={e => setTime(e.target.value)} />
           </div>
           <Button onClick={handleSubmit} className="w-full" disabled={!name || !date}>
             Crear contador
