@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
@@ -8,7 +8,7 @@ import AddCountdownDialog from '@/components/AddCountdownDialog';
 import EditCountdownDialog from '@/components/EditCountdownDialog';
 import TaskList from '@/components/TaskList';
 import SettingsPanel from '@/components/SettingsPanel';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList } from 'lucide-react';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 
@@ -34,11 +34,25 @@ const Index = () => {
   const { data: countdowns = [] } = useQuery({
     queryKey: ['countdowns', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('countdowns').select('*').eq('user_id', user!.id);
+      const { data } = await supabase.from('countdowns').select('*').eq('user_id', user!.id).order('sort_order');
       return (data || []) as DbCountdown[];
     },
     enabled: !!user,
   });
+
+  const moveCountdown = useCallback(async (index: number, direction: 'up' | 'down') => {
+    const swapIdx = direction === 'up' ? index - 1 : index + 1;
+    if (swapIdx < 0 || swapIdx >= countdowns.length) return;
+    const a = countdowns[index];
+    const b = countdowns[swapIdx];
+    const orderA = (a as any).sort_order || 0;
+    const orderB = (b as any).sort_order || 0;
+    await Promise.all([
+      supabase.from('countdowns').update({ sort_order: orderB }).eq('id', a.id),
+      supabase.from('countdowns').update({ sort_order: orderA }).eq('id', b.id),
+    ]);
+    queryClient.invalidateQueries({ queryKey: ['countdowns'] });
+  }, [countdowns, queryClient]);
 
   // Notification check: day before
   useEffect(() => {
@@ -180,8 +194,20 @@ const Index = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {countdowns.map(c => (
-                    <CountdownCard key={c.id} event={c} onRemove={removeCountdown} onEdit={setEditCountdown} />
+                  {countdowns.map((c, i) => (
+                    <div key={c.id} className="flex items-center gap-1">
+                      <div className="flex-1 min-w-0">
+                        <CountdownCard event={c} onRemove={removeCountdown} onEdit={setEditCountdown} />
+                      </div>
+                      <div className="flex flex-col gap-0.5 shrink-0">
+                        <button onClick={() => moveCountdown(i, 'up')} className="p-1 rounded hover:bg-muted transition-colors disabled:opacity-20" disabled={i === 0}>
+                          <ArrowUp className="w-3.5 h-3.5 text-muted-foreground" />
+                        </button>
+                        <button onClick={() => moveCountdown(i, 'down')} className="p-1 rounded hover:bg-muted transition-colors disabled:opacity-20" disabled={i >= countdowns.length - 1}>
+                          <ArrowDown className="w-3.5 h-3.5 text-muted-foreground" />
+                        </button>
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
