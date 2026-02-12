@@ -46,7 +46,14 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
 
   const addCustomSubject = () => {
     if (!newSubject.trim()) return;
-    onUpdate({ custom_subjects: [...settings.custom_subjects, newSubject.trim()] });
+    const name = newSubject.trim();
+    // Auto-enable the custom subject
+    onUpdate({
+      custom_subjects: [...settings.custom_subjects, name],
+      enabled_subjects: settings.enabled_subjects.includes(name)
+        ? settings.enabled_subjects
+        : [...settings.enabled_subjects, name],
+    });
     setNewSubject('');
   };
 

@@ -19,6 +19,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          sort_order: number
           target_date: string
           target_time: string
           user_id: string
@@ -27,6 +28,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          sort_order?: number
           target_date: string
           target_time?: string
           user_id: string
@@ -35,6 +37,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          sort_order?: number
           target_date?: string
           target_time?: string
           user_id?: string
@@ -88,6 +91,7 @@ export type Database = {
           name: string
           reminder_time: string | null
           rival: string | null
+          sort_order: number
           sport_type: string | null
           subject: string | null
           type: string
@@ -103,6 +107,7 @@ export type Database = {
           name: string
           reminder_time?: string | null
           rival?: string | null
+          sort_order?: number
           sport_type?: string | null
           subject?: string | null
           type: string
@@ -118,6 +123,7 @@ export type Database = {
           name?: string
           reminder_time?: string | null
           rival?: string | null
+          sort_order?: number
           sport_type?: string | null
           subject?: string | null
           type?: string
