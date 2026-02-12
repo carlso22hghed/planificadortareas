@@ -7,25 +7,32 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Plus } from 'lucide-react';
-import type { Task } from '@/types/app';
+import type { DbTask } from '@/types/app';
 import { toast } from '@/hooks/use-toast';
 
 interface AddTaskDialogProps {
-  type: Task['type'];
-  onAdd: (task: Task) => void;
+  type: DbTask['type'];
+  onAdd: (task: Partial<DbTask>) => void;
   triggerLabel: string;
   subjects?: string[];
+  sportTypes?: string[];
 }
 
-const typeLabels: Record<Task['type'], string> = {
-  homework: 'Deber',
-  exam: 'Examen',
-  event: 'Evento',
-  match: 'Partido',
-  task: 'Tarea',
+const typeLabels: Record<string, string> = {
+  homework: 'Deber', exam: 'Examen', event: 'Evento', match: 'Partido', task: 'Tarea',
 };
 
-const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [] }: AddTaskDialogProps) => {
+const dateLabels: Record<string, string> = {
+  homework: 'Día de entrega', exam: 'Día del examen', event: 'Día del evento',
+  match: 'Día del partido', task: 'Día de entrega',
+};
+
+const timeLabels: Record<string, string> = {
+  homework: 'Hora de entrega', exam: 'Hora del examen', event: 'Hora del evento',
+  match: 'Hora del partido', task: 'Hora de entrega',
+};
+
+const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = [] }: AddTaskDialogProps) => {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -35,32 +42,32 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [] }: AddTaskDial
   const [subject, setSubject] = useState('');
   const [rival, setRival] = useState('');
   const [homeAway, setHomeAway] = useState<'home' | 'away'>('home');
+  const [sportType, setSportType] = useState(sportTypes[0] || 'Fútbol');
 
   const showSubjects = (type === 'homework' || type === 'exam') && subjects.length > 0;
   const showMatchFields = type === 'match';
 
   const handleNotificationToggle = async (checked: boolean) => {
-    if (checked && 'Notification' in window) {
-      try {
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-          setNotificationsEnabled(true);
-          toast({ title: '🔔 Notificaciones activadas', description: 'Recibirás recordatorios.' });
-        } else if (permission === 'denied') {
-          toast({ title: 'Notificaciones bloqueadas', description: 'Ve a la configuración de tu navegador, busca los permisos de este sitio y permite las notificaciones.', variant: 'destructive' });
-          setNotificationsEnabled(false);
-        } else {
-          // default - user dismissed, don't show error
-          setNotificationsEnabled(false);
-        }
-      } catch {
-        toast({ title: 'Error', description: 'No se pudieron activar las notificaciones.', variant: 'destructive' });
+    if (!checked) { setNotificationsEnabled(false); return; }
+    if (!('Notification' in window)) {
+      toast({ title: 'No soportado', description: 'Tu navegador no soporta notificaciones.', variant: 'destructive' });
+      return;
+    }
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        setNotificationsEnabled(true);
+        toast({ title: '🔔 Notificaciones activadas', description: 'Recibirás recordatorios.' });
+      } else {
+        toast({
+          title: 'Notificaciones bloqueadas',
+          description: 'Actívalas en la configuración de tu navegador: Ajustes → Privacidad → Notificaciones → Permitir para este sitio.',
+          variant: 'destructive',
+        });
         setNotificationsEnabled(false);
       }
-    } else if (!('Notification' in window)) {
-      toast({ title: 'No soportado', description: 'Tu navegador no soporta notificaciones.', variant: 'destructive' });
-      setNotificationsEnabled(false);
-    } else {
+    } catch {
+      toast({ title: 'Error', description: 'No se pudieron activar las notificaciones.', variant: 'destructive' });
       setNotificationsEnabled(false);
     }
   };
@@ -68,24 +75,23 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [] }: AddTaskDial
   const handleSubmit = () => {
     if (!name || !dueDate) return;
 
-    const task: Task = {
-      id: crypto.randomUUID(),
+    const taskData: Partial<DbTask> = {
       name,
-      dueDate,
-      dueTime: dueTime || undefined,
-      reminderTime: notificationsEnabled && reminderTime ? reminderTime : undefined,
+      due_date: dueDate,
+      due_time: dueTime || null,
+      reminder_time: notificationsEnabled && reminderTime ? reminderTime : null,
       completed: false,
       type,
-      subject: showSubjects && subject ? subject : undefined,
-      rival: showMatchFields && rival ? rival : undefined,
-      homeAway: showMatchFields ? homeAway : undefined,
+      subject: showSubjects && subject ? subject : null,
+      rival: showMatchFields && rival ? rival : null,
+      home_away: showMatchFields ? homeAway : null,
+      sport_type: showMatchFields ? sportType : null,
     };
 
     // Schedule notification if enabled
-    if (notificationsEnabled && reminderTime && dueDate) {
+    if (notificationsEnabled && reminderTime && dueDate && 'Notification' in window && Notification.permission === 'granted') {
       const reminderDate = new Date(`${dueDate}T${reminderTime}:00`);
-      const now = new Date();
-      const delay = reminderDate.getTime() - now.getTime();
+      const delay = reminderDate.getTime() - Date.now();
       if (delay > 0) {
         setTimeout(() => {
           new Notification(`📚 Recordatorio: ${name}`, {
@@ -96,15 +102,10 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [] }: AddTaskDial
       }
     }
 
-    onAdd(task);
-    setName('');
-    setDueDate('');
-    setDueTime('');
-    setReminderTime('');
-    setNotificationsEnabled(false);
-    setSubject('');
-    setRival('');
-    setHomeAway('home');
+    onAdd(taskData);
+    setName(''); setDueDate(''); setDueTime(''); setReminderTime('');
+    setNotificationsEnabled(false); setSubject(''); setRival('');
+    setHomeAway('home'); setSportType(sportTypes[0] || 'Fútbol');
     setOpen(false);
   };
 
@@ -123,20 +124,16 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [] }: AddTaskDial
         <div className="space-y-4 mt-2">
           <div>
             <Label>Nombre</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={`Nombre del ${typeLabels[type].toLowerCase()}`} />
+            <Input value={name} onChange={e => setName(e.target.value)} placeholder={`Nombre del ${typeLabels[type].toLowerCase()}`} />
           </div>
 
           {showSubjects && (
             <div>
               <Label>Asignatura</Label>
               <Select value={subject} onValueChange={setSubject}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona asignatura" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Selecciona asignatura" /></SelectTrigger>
                 <SelectContent>
-                  {subjects.map(s => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                  ))}
+                  {subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -146,11 +143,22 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [] }: AddTaskDial
             <>
               <div>
                 <Label>Rival</Label>
-                <Input value={rival} onChange={(e) => setRival(e.target.value)} placeholder="Nombre del equipo rival" />
+                <Input value={rival} onChange={e => setRival(e.target.value)} placeholder="Nombre del equipo rival" />
               </div>
+              {sportTypes.length > 1 && (
+                <div>
+                  <Label>Deporte</Label>
+                  <Select value={sportType} onValueChange={setSportType}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {sportTypes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div>
                 <Label>Localización</Label>
-                <RadioGroup value={homeAway} onValueChange={(v) => setHomeAway(v as 'home' | 'away')} className="flex gap-4 mt-1">
+                <RadioGroup value={homeAway} onValueChange={v => setHomeAway(v as 'home' | 'away')} className="flex gap-4 mt-1">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="home" id="home" />
                     <Label htmlFor="home" className="cursor-pointer">🏠 Casa</Label>
@@ -165,12 +173,12 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [] }: AddTaskDial
           )}
 
           <div>
-            <Label>Día de entrega</Label>
-            <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+            <Label>{dateLabels[type] || 'Fecha'}</Label>
+            <Input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
           </div>
           <div>
-            <Label>Hora de entrega (opcional)</Label>
-            <Input type="time" value={dueTime} onChange={(e) => setDueTime(e.target.value)} />
+            <Label>{timeLabels[type] || 'Hora'} (opcional)</Label>
+            <Input type="time" value={dueTime} onChange={e => setDueTime(e.target.value)} />
           </div>
           <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
             <Label className="cursor-pointer">¿Activar recordatorio?</Label>
@@ -179,7 +187,7 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [] }: AddTaskDial
           {notificationsEnabled && (
             <div className="animate-slide-up">
               <Label>Hora del recordatorio</Label>
-              <Input type="time" value={reminderTime} onChange={(e) => setReminderTime(e.target.value)} />
+              <Input type="time" value={reminderTime} onChange={e => setReminderTime(e.target.value)} />
             </div>
           )}
           <Button onClick={handleSubmit} className="w-full" disabled={!name || !dueDate}>
