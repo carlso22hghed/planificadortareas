@@ -38,15 +38,18 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
   const [name, setName] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [dueTime, setDueTime] = useState('');
+  const [reminderDate, setReminderDate] = useState('');
   const [reminderTime, setReminderTime] = useState('');
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [subject, setSubject] = useState('');
   const [rival, setRival] = useState('');
   const [homeAway, setHomeAway] = useState<'home' | 'away'>('home');
   const [sportType, setSportType] = useState(sportTypes[0] || 'Fútbol');
+  const [location, setLocation] = useState('');
 
   const showSubjects = (type === 'homework' || type === 'exam') && subjects.length > 0;
   const showMatchFields = type === 'match';
+  const showLocation = type === 'event';
 
   const handleNotificationToggle = async (checked: boolean) => {
     if (!checked) { setNotificationsEnabled(false); return; }
@@ -62,7 +65,7 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
       } else {
         toast({
           title: 'Notificaciones bloqueadas',
-          description: 'Actívalas en la configuración de tu navegador: Ajustes → Privacidad → Notificaciones → Permitir para este sitio.',
+          description: 'Actívalas en la configuración de tu navegador.',
           variant: 'destructive',
         });
         setNotificationsEnabled(false);
@@ -75,6 +78,7 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
 
   const handleSubmit = () => {
     if (!name || !dueDate) return;
+    if (notificationsEnabled && reminderTime && !reminderDate) return;
 
     const taskData: Partial<DbTask> = {
       name,
@@ -87,25 +91,28 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
       rival: showMatchFields && rival ? rival : null,
       home_away: showMatchFields ? homeAway : null,
       sport_type: showMatchFields ? sportType : null,
-    };
+    } as any;
 
-    // Schedule notification if enabled
-    if (notificationsEnabled && reminderTime && dueDate && 'Notification' in window && Notification.permission === 'granted') {
-      const reminderDate = new Date(`${dueDate}T${reminderTime}:00`);
-      const delay = reminderDate.getTime() - Date.now();
+    if (showLocation && location) (taskData as any).location = location;
+    if (notificationsEnabled && reminderDate) (taskData as any).reminder_date = reminderDate;
+
+    // Schedule notification
+    if (notificationsEnabled && reminderTime && reminderDate && 'Notification' in window && Notification.permission === 'granted') {
+      const reminderDateObj = new Date(`${reminderDate}T${reminderTime}:00`);
+      const delay = reminderDateObj.getTime() - Date.now();
       if (delay > 0) {
         setTimeout(() => {
           new Notification(`📚 Recordatorio: ${name}`, {
             body: `${typeLabels[type]} para ${new Date(dueDate).toLocaleDateString('es-ES')}`,
-            icon: '/favicon.ico',
+            icon: '/logo.png',
           });
         }, delay);
       }
     }
 
     onAdd(taskData);
-    setName(''); setDueDate(''); setDueTime(''); setReminderTime('');
-    setNotificationsEnabled(false); setSubject(''); setRival('');
+    setName(''); setDueDate(''); setDueTime(''); setReminderTime(''); setReminderDate('');
+    setNotificationsEnabled(false); setSubject(''); setRival(''); setLocation('');
     setHomeAway('home'); setSportType(sportTypes[0] || 'Fútbol');
     setOpen(false);
   };
@@ -137,6 +144,13 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
                   {subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
+            </div>
+          )}
+
+          {showLocation && (
+            <div>
+              <Label>📍 Lugar del evento</Label>
+              <Input value={location} onChange={e => setLocation(e.target.value)} placeholder="Ej: Salón de actos" />
             </div>
           )}
 
@@ -186,12 +200,21 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
             <Switch checked={notificationsEnabled} onCheckedChange={handleNotificationToggle} />
           </div>
           {notificationsEnabled && (
-            <div className="animate-slide-up">
-              <Label>Hora del recordatorio</Label>
-              <Input type="time" value={reminderTime} onChange={e => setReminderTime(e.target.value)} />
+            <div className="animate-slide-up space-y-3">
+              <div>
+                <Label>📅 Fecha del recordatorio</Label>
+                <Input type="date" value={reminderDate} onChange={e => setReminderDate(e.target.value)} />
+              </div>
+              <div>
+                <Label>🕐 Hora del recordatorio</Label>
+                <Input type="time" value={reminderTime} onChange={e => setReminderTime(e.target.value)} />
+              </div>
+              {reminderTime && !reminderDate && (
+                <p className="text-xs text-destructive">Debes poner la fecha del recordatorio</p>
+              )}
             </div>
           )}
-          <Button onClick={handleSubmit} className="w-full" disabled={!name || !dueDate}>
+          <Button onClick={handleSubmit} className="w-full" disabled={!name || !dueDate || (notificationsEnabled && reminderTime && !reminderDate ? true : false)}>
             Añadir {typeLabels[type].toLowerCase()}
           </Button>
         </div>

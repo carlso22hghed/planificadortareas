@@ -52,6 +52,7 @@ export type Database = {
           email: string | null
           id: string
           is_active: boolean
+          last_location: string | null
           onboarding_completed: boolean
           role: string
           user_id: string
@@ -63,6 +64,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          last_location?: string | null
           onboarding_completed?: boolean
           role?: string
           user_id: string
@@ -74,8 +76,36 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          last_location?: string | null
           onboarding_completed?: boolean
           role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      schedule: {
+        Row: {
+          content: string
+          created_at: string
+          day_of_week: number
+          id: string
+          time_slot: string
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          day_of_week: number
+          id?: string
+          time_slot: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          time_slot?: string
           user_id?: string
         }
         Relationships: []
@@ -88,11 +118,14 @@ export type Database = {
           due_time: string | null
           home_away: string | null
           id: string
+          location: string | null
           name: string
+          reminder_date: string | null
           reminder_time: string | null
           rival: string | null
           sort_order: number
           sport_type: string | null
+          study_completed: boolean
           subject: string | null
           type: string
           user_id: string
@@ -104,11 +137,14 @@ export type Database = {
           due_time?: string | null
           home_away?: string | null
           id?: string
+          location?: string | null
           name: string
+          reminder_date?: string | null
           reminder_time?: string | null
           rival?: string | null
           sort_order?: number
           sport_type?: string | null
+          study_completed?: boolean
           subject?: string | null
           type: string
           user_id: string
@@ -120,11 +156,14 @@ export type Database = {
           due_time?: string | null
           home_away?: string | null
           id?: string
+          location?: string | null
           name?: string
+          reminder_date?: string | null
           reminder_time?: string | null
           rival?: string | null
           sort_order?: number
           sport_type?: string | null
+          study_completed?: boolean
           subject?: string | null
           type?: string
           user_id?: string

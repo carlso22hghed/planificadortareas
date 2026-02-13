@@ -1,14 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import type { DbTask, DbCountdown, TabType } from '@/types/app';
-import CountdownCard from '@/components/CountdownCard';
+import SortableCountdownItem from '@/components/SortableCountdownItem';
 import AddCountdownDialog from '@/components/AddCountdownDialog';
 import EditCountdownDialog from '@/components/EditCountdownDialog';
 import TaskList from '@/components/TaskList';
 import SettingsPanel from '@/components/SettingsPanel';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, ArrowUp, ArrowDown } from 'lucide-react';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 
@@ -40,44 +42,66 @@ const Index = () => {
     enabled: !!user,
   });
 
-  const moveCountdown = useCallback(async (index: number, direction: 'up' | 'down') => {
-    const swapIdx = direction === 'up' ? index - 1 : index + 1;
-    if (swapIdx < 0 || swapIdx >= countdowns.length) return;
-    const a = countdowns[index];
-    const b = countdowns[swapIdx];
-    const orderA = (a as any).sort_order || 0;
-    const orderB = (b as any).sort_order || 0;
-    await Promise.all([
-      supabase.from('countdowns').update({ sort_order: orderB }).eq('id', a.id),
-      supabase.from('countdowns').update({ sort_order: orderA }).eq('id', b.id),
-    ]);
+  // Drag sensors for countdowns
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { delay: 300, tolerance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 300, tolerance: 5 } }),
+  );
+
+  const handleCountdownDragEnd = useCallback(async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIdx = countdowns.findIndex(c => c.id === active.id);
+    const newIdx = countdowns.findIndex(c => c.id === over.id);
+    if (oldIdx < 0 || newIdx < 0) return;
+    const reordered = arrayMove(countdowns, oldIdx, newIdx);
+    await Promise.all(reordered.map((c, i) => supabase.from('countdowns').update({ sort_order: i }).eq('id', c.id)));
     queryClient.invalidateQueries({ queryKey: ['countdowns'] });
   }, [countdowns, queryClient]);
 
-  // Notification check: day before
+  // Notification check with custom reminder
   useEffect(() => {
     if (notifiedRef.current || !tasks.length) return;
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
 
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
-    const sessionKey = 'notified-' + tomorrowStr;
-    if (sessionStorage.getItem(sessionKey)) return;
-
-    const dueTomorrow = tasks.filter(t => !t.completed && t.due_date === tomorrowStr);
+    const now = new Date();
     const typeNames: Record<string, string> = {
       homework: 'deber', exam: 'examen', event: 'evento', match: 'partido', task: 'tarea',
     };
 
-    dueTomorrow.forEach(t => {
-      new Notification(`📚 Mañana: ${t.name}`, {
-        body: `Tienes un ${typeNames[t.type] || 'evento'} mañana`,
-        icon: '/favicon.ico',
-      });
+    tasks.filter(t => !t.completed).forEach(t => {
+      // Custom reminder date/time
+      if ((t as any).reminder_date && t.reminder_time) {
+        const reminderDate = new Date(`${(t as any).reminder_date}T${t.reminder_time}:00`);
+        const dueDate = new Date(`${t.due_date}T${t.due_time || '23:59'}:00`);
+        if (now >= reminderDate && now <= dueDate) {
+          const sessionKey = `notified-custom-${t.id}-${now.toDateString()}`;
+          if (!sessionStorage.getItem(sessionKey)) {
+            new Notification(`📚 Recordatorio: ${t.name}`, {
+              body: `Tienes un ${typeNames[t.type] || 'evento'} para ${new Date(t.due_date).toLocaleDateString('es-ES')}`,
+              icon: '/logo.png',
+            });
+            sessionStorage.setItem(sessionKey, 'true');
+          }
+        }
+      } else {
+        // Default: day before
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+        if (t.due_date === tomorrowStr) {
+          const sessionKey = `notified-${tomorrowStr}`;
+          if (!sessionStorage.getItem(sessionKey)) {
+            new Notification(`📚 Mañana: ${t.name}`, {
+              body: `Tienes un ${typeNames[t.type] || 'evento'} mañana`,
+              icon: '/logo.png',
+            });
+            sessionStorage.setItem(sessionKey, 'true');
+          }
+        }
+      }
     });
 
-    if (dueTomorrow.length > 0) sessionStorage.setItem(sessionKey, 'true');
     notifiedRef.current = true;
   }, [tasks]);
 
@@ -91,6 +115,13 @@ const Index = () => {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
     await supabase.from('tasks').update({ completed: !task.completed }).eq('id', id);
+    queryClient.invalidateQueries({ queryKey: ['tasks'] });
+  };
+
+  const toggleStudy = async (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    await supabase.from('tasks').update({ study_completed: !(task as any).study_completed }).eq('id', id);
     queryClient.invalidateQueries({ queryKey: ['tasks'] });
   };
 
@@ -153,12 +184,18 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col max-w-lg mx-auto">
       <header className="gradient-hero px-5 pt-8 pb-6 rounded-b-3xl flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold text-primary-foreground">📚 {settings.app_name}</h1>
-          <p className="text-primary-foreground/70 text-sm font-medium mt-0.5">{settings.school_name}</p>
-          {profile && <p className="text-primary-foreground/60 text-xs mt-0.5">Hola, {profile.display_name} 👋</p>}
+        <div className="flex items-center gap-3">
+          <img src="/logo.png" alt="Logo" className="w-10 h-10 rounded-xl" />
+          <div>
+            <h1 className="text-2xl font-extrabold text-primary-foreground">{settings.app_name}</h1>
+            <p className="text-primary-foreground/70 text-sm font-medium mt-0.5">{settings.school_name}</p>
+            {profile && <p className="text-primary-foreground/60 text-xs mt-0.5">Hola, {profile.display_name} 👋</p>}
+          </div>
         </div>
         <div className="flex items-center gap-1">
+          <button onClick={() => navigate('/schedule')} className="p-2 rounded-full hover:bg-primary-foreground/20 transition-colors text-primary-foreground">
+            <CalendarClock className="w-5 h-5" />
+          </button>
           {isAdmin && (
             <button onClick={() => navigate('/admin')} className="p-2 rounded-full hover:bg-primary-foreground/20 transition-colors text-primary-foreground text-xs font-bold">
               👥
@@ -172,14 +209,14 @@ const Index = () => {
         {activeTab === 'inicio' && (
           <div className="space-y-5 animate-slide-up">
             <div className="grid grid-cols-2 gap-3">
-              <div className="glass-card rounded-xl p-4 text-center">
+              <button onClick={() => setActiveTab('deberes')} className="glass-card rounded-xl p-4 text-center hover:ring-2 ring-primary/30 transition-all">
                 <p className="text-3xl font-extrabold text-primary">{pendingHomework}</p>
                 <p className="text-xs text-muted-foreground font-semibold mt-1">Deberes pendientes</p>
-              </div>
-              <div className="glass-card rounded-xl p-4 text-center">
+              </button>
+              <button onClick={() => setActiveTab('examenes')} className="glass-card rounded-xl p-4 text-center hover:ring-2 ring-primary/30 transition-all">
                 <p className="text-3xl font-extrabold text-exam">{pendingExams}</p>
                 <p className="text-xs text-muted-foreground font-semibold mt-1">Exámenes próximos</p>
-              </div>
+              </button>
             </div>
 
             <div>
@@ -193,23 +230,15 @@ const Index = () => {
                   <p className="text-sm text-muted-foreground">Añade un contador para ver cuánto falta</p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {countdowns.map((c, i) => (
-                    <div key={c.id} className="flex items-center gap-1">
-                      <div className="flex-1 min-w-0">
-                        <CountdownCard event={c} onRemove={removeCountdown} onEdit={setEditCountdown} />
-                      </div>
-                      <div className="flex flex-col gap-0.5 shrink-0">
-                        <button onClick={() => moveCountdown(i, 'up')} className="p-1 rounded hover:bg-muted transition-colors disabled:opacity-20" disabled={i === 0}>
-                          <ArrowUp className="w-3.5 h-3.5 text-muted-foreground" />
-                        </button>
-                        <button onClick={() => moveCountdown(i, 'down')} className="p-1 rounded hover:bg-muted transition-colors disabled:opacity-20" disabled={i >= countdowns.length - 1}>
-                          <ArrowDown className="w-3.5 h-3.5 text-muted-foreground" />
-                        </button>
-                      </div>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCountdownDragEnd}>
+                  <SortableContext items={countdowns.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-3">
+                      {countdowns.map(c => (
+                        <SortableCountdownItem key={c.id} event={c} onRemove={removeCountdown} onEdit={setEditCountdown} />
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </SortableContext>
+                </DndContext>
               )}
             </div>
           </div>
@@ -223,6 +252,7 @@ const Index = () => {
 
         {activeTab === 'examenes' && (
           <TaskList tasks={tasks} type="exam" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
+            onToggleStudy={toggleStudy}
             triggerLabel="Añadir examen" emptyMessage="No hay exámenes próximos" emptyEmoji="📝"
             subjects={allSubjects} sportTypes={settings.sport_types} />
         )}

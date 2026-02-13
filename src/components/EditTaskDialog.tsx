@@ -34,6 +34,7 @@ const EditTaskDialog = ({ task, open, onOpenChange, onSave, subjects = [], sport
   const [rival, setRival] = useState('');
   const [homeAway, setHomeAway] = useState<string>('home');
   const [sportType, setSportType] = useState('');
+  const [location, setLocation] = useState('');
 
   useEffect(() => {
     if (task) {
@@ -44,6 +45,7 @@ const EditTaskDialog = ({ task, open, onOpenChange, onSave, subjects = [], sport
       setRival(task.rival || '');
       setHomeAway(task.home_away || 'home');
       setSportType(task.sport_type || 'Fútbol');
+      setLocation((task as any).location || '');
     }
   }, [task]);
 
@@ -51,10 +53,11 @@ const EditTaskDialog = ({ task, open, onOpenChange, onSave, subjects = [], sport
 
   const showSubjects = (task.type === 'homework' || task.type === 'exam') && subjects.length > 0;
   const showMatchFields = task.type === 'match';
+  const showLocation = task.type === 'event';
 
   const handleSave = () => {
     if (!name || !dueDate) return;
-    onSave({
+    const updated = {
       ...task,
       name,
       due_date: dueDate,
@@ -63,7 +66,9 @@ const EditTaskDialog = ({ task, open, onOpenChange, onSave, subjects = [], sport
       rival: showMatchFields && rival ? rival : null,
       home_away: showMatchFields ? homeAway : null,
       sport_type: showMatchFields ? sportType : task.sport_type,
-    });
+    } as any;
+    if (showLocation) updated.location = location || null;
+    onSave(updated);
     onOpenChange(false);
   };
 
@@ -88,6 +93,13 @@ const EditTaskDialog = ({ task, open, onOpenChange, onSave, subjects = [], sport
                   {subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
+            </div>
+          )}
+
+          {showLocation && (
+            <div>
+              <Label>📍 Lugar del evento</Label>
+              <Input value={location} onChange={e => setLocation(e.target.value)} placeholder="Ej: Salón de actos" />
             </div>
           )}
 
