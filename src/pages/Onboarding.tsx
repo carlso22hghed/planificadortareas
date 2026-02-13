@@ -30,6 +30,7 @@ const Onboarding = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center space-y-2">
+          <img src="/logo.png" alt="Logo" className="w-16 h-16 mx-auto rounded-2xl" />
           <h1 className="text-3xl font-extrabold text-foreground">👋 ¡Bienvenido!</h1>
           <p className="text-muted-foreground text-sm">Cuéntanos un poco sobre ti</p>
         </div>
@@ -73,11 +74,11 @@ const Onboarding = () => {
           </div>
 
           <div className="space-y-2">
-            <Label className="font-bold">🏫 ¿Cuál es tu colegio?</Label>
+            <Label className="font-bold">🏫 Colegio / Espacio de trabajo</Label>
             <Input
               value={schoolName}
               onChange={e => setSchoolName(e.target.value)}
-              placeholder="Nombre de tu colegio"
+              placeholder="Nombre de tu colegio o espacio de trabajo"
             />
           </div>
 

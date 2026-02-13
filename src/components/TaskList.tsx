@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import type { DbTask } from '@/types/app';
-import TaskItem from './TaskItem';
+import SortableTaskItem from './SortableTaskItem';
 import AddTaskDialog from './AddTaskDialog';
 import EditTaskDialog from './EditTaskDialog';
-import { ArrowUp, ArrowDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface TaskListProps {
@@ -13,6 +14,7 @@ interface TaskListProps {
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdate: (task: DbTask) => void;
+  onToggleStudy?: (id: string) => void;
   triggerLabel: string;
   emptyMessage: string;
   emptyEmoji: string;
@@ -20,43 +22,48 @@ interface TaskListProps {
   sportTypes?: string[];
 }
 
-const TaskList = ({ tasks, type, onAdd, onToggle, onDelete, onUpdate, triggerLabel, emptyMessage, emptyEmoji, subjects, sportTypes }: TaskListProps) => {
+const TaskList = ({ tasks, type, onAdd, onToggle, onDelete, onUpdate, onToggleStudy, triggerLabel, emptyMessage, emptyEmoji, subjects, sportTypes }: TaskListProps) => {
   const [editTask, setEditTask] = useState<DbTask | null>(null);
 
   const filtered = tasks
     .filter(t => t.type === type)
     .sort((a, b) => {
       if (a.completed !== b.completed) return a.completed ? 1 : -1;
-      // Use sort_order first, then due_date
       if ((a as any).sort_order !== (b as any).sort_order) return ((a as any).sort_order || 0) - ((b as any).sort_order || 0);
       return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
     });
 
-  const moveTask = async (index: number, direction: 'up' | 'down') => {
+  // Group by subject for homework and exams
+  const shouldGroup = type === 'homework' || type === 'exam';
+  const grouped = shouldGroup ? groupBySubject(filtered) : null;
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { delay: 300, tolerance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 300, tolerance: 5 } }),
+  );
+
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
     const pending = filtered.filter(t => !t.completed);
-    const targetIdx = pending.findIndex(t => t.id === filtered[index].id);
-    if (targetIdx < 0) return;
-    const swapIdx = direction === 'up' ? targetIdx - 1 : targetIdx + 1;
-    if (swapIdx < 0 || swapIdx >= pending.length) return;
+    const oldIndex = pending.findIndex(t => t.id === active.id);
+    const newIndex = pending.findIndex(t => t.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const reordered = arrayMove(pending, oldIndex, newIndex);
+    const updates = reordered.map((t, i) => supabase.from('tasks').update({ sort_order: i }).eq('id', t.id));
+    await Promise.all(updates);
+    // Trigger refetch by updating the moved task
+    onUpdate({ ...reordered[newIndex], sort_order: newIndex } as any);
+  }, [filtered, onUpdate]);
 
-    const a = pending[targetIdx];
-    const b = pending[swapIdx];
-    const orderA = (a as any).sort_order || 0;
-    const orderB = (b as any).sort_order || 0;
-
-    await Promise.all([
-      supabase.from('tasks').update({ sort_order: orderB }).eq('id', a.id),
-      supabase.from('tasks').update({ sort_order: orderA }).eq('id', b.id),
-    ]);
-    // Trigger re-fetch by updating both
-    onUpdate({ ...a, sort_order: orderB } as any);
-  };
+  const pendingTasks = filtered.filter(t => !t.completed);
+  const completedTasks = filtered.filter(t => t.completed);
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground font-semibold">
-          {filtered.filter(t => !t.completed).length} pendiente{filtered.filter(t => !t.completed).length !== 1 ? 's' : ''}
+          {pendingTasks.length} pendiente{pendingTasks.length !== 1 ? 's' : ''}
         </p>
         <AddTaskDialog type={type} onAdd={onAdd} triggerLabel={triggerLabel} subjects={subjects} sportTypes={sportTypes} />
       </div>
@@ -66,34 +73,40 @@ const TaskList = ({ tasks, type, onAdd, onToggle, onDelete, onUpdate, triggerLab
           <p className="text-4xl mb-2">{emptyEmoji}</p>
           <p className="text-muted-foreground text-sm">{emptyMessage}</p>
         </div>
-      ) : (
-        <div className="space-y-2">
-          {filtered.map((task, i) => (
-            <div key={task.id} className="flex items-center gap-1">
-              <div className="flex-1 min-w-0">
-                <TaskItem task={task} onToggle={onToggle} onDelete={onDelete} onEdit={setEditTask} />
-              </div>
-              {!task.completed && (
-                <div className="flex flex-col gap-0.5 shrink-0">
-                  <button
-                    onClick={() => moveTask(i, 'up')}
-                    className="p-1 rounded hover:bg-muted transition-colors disabled:opacity-20"
-                    disabled={i === 0 || filtered[i - 1]?.completed}
-                  >
-                    <ArrowUp className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
-                  <button
-                    onClick={() => moveTask(i, 'down')}
-                    className="p-1 rounded hover:bg-muted transition-colors disabled:opacity-20"
-                    disabled={i >= filtered.length - 1 || filtered[i + 1]?.completed}
-                  >
-                    <ArrowDown className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
-                </div>
-              )}
+      ) : shouldGroup && grouped ? (
+        <div className="space-y-4">
+          {grouped.map(({ subject, tasks: groupTasks }) => (
+            <div key={subject}>
+              <p className="text-xs font-bold text-muted-foreground uppercase mb-2">{subject}</p>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={groupTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-2">
+                    {groupTasks.map(task => (
+                      <SortableTaskItem key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} onEdit={setEditTask} onToggleStudy={onToggleStudy} />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             </div>
           ))}
         </div>
+      ) : (
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={pendingTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-2">
+              {pendingTasks.map(task => (
+                <SortableTaskItem key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} onEdit={setEditTask} onToggleStudy={onToggleStudy} />
+              ))}
+            </div>
+          </SortableContext>
+          {completedTasks.length > 0 && (
+            <div className="space-y-2 mt-3">
+              {completedTasks.map(task => (
+                <SortableTaskItem key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} onEdit={setEditTask} onToggleStudy={onToggleStudy} />
+              ))}
+            </div>
+          )}
+        </DndContext>
       )}
 
       <EditTaskDialog
@@ -107,5 +120,15 @@ const TaskList = ({ tasks, type, onAdd, onToggle, onDelete, onUpdate, triggerLab
     </div>
   );
 };
+
+function groupBySubject(tasks: DbTask[]) {
+  const map = new Map<string, DbTask[]>();
+  tasks.forEach(t => {
+    const key = t.subject || 'Sin asignatura';
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(t);
+  });
+  return Array.from(map.entries()).map(([subject, tasks]) => ({ subject, tasks }));
+}
 
 export default TaskList;

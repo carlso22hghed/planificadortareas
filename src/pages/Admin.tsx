@@ -24,8 +24,6 @@ const Admin = () => {
   const [userCountdowns, setUserCountdowns] = useState<DbCountdown[]>([]);
   const [userSettings, setUserSettings] = useState<DbSettings | null>(null);
   const [loadingData, setLoadingData] = useState(false);
-
-  // Editing states
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [tempName, setTempName] = useState('');
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
@@ -33,19 +31,13 @@ const Admin = () => {
   const [editTask, setEditTask] = useState<DbTask | null>(null);
 
   useEffect(() => {
-    if (!isAdmin) {
-      navigate('/');
-      return;
-    }
+    if (!isAdmin) { navigate('/'); return; }
     supabase.from('profiles').select('*').eq('is_active', true).order('display_name')
       .then(({ data }) => setUsers(data || []));
   }, [isAdmin, navigate]);
 
   const toggleUser = async (userId: string) => {
-    if (expandedUser === userId) {
-      setExpandedUser(null);
-      return;
-    }
+    if (expandedUser === userId) { setExpandedUser(null); return; }
     setExpandedUser(userId);
     setLoadingData(true);
     const [tasksRes, countdownsRes, settingsRes] = await Promise.all([
@@ -98,16 +90,16 @@ const Admin = () => {
         <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="text-primary-foreground hover:bg-primary-foreground/20">
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        <h1 className="text-xl font-extrabold text-primary-foreground">👥 Usuarios</h1>
+        <div>
+          <h1 className="text-xl font-extrabold text-primary-foreground">👥 Usuarios</h1>
+          <p className="text-primary-foreground/70 text-sm font-medium">{users.length} usuario{users.length !== 1 ? 's' : ''} activo{users.length !== 1 ? 's' : ''}</p>
+        </div>
       </header>
 
       <main className="px-4 py-4 space-y-2">
         {users.map(u => (
           <div key={u.user_id} className="glass-card rounded-xl overflow-hidden">
-            <button
-              onClick={() => toggleUser(u.user_id)}
-              className="w-full flex items-center gap-3 p-4 text-left"
-            >
+            <button onClick={() => toggleUser(u.user_id)} className="w-full flex items-center gap-3 p-4 text-left">
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                 <User className="w-5 h-5 text-primary" />
               </div>
@@ -117,6 +109,9 @@ const Admin = () => {
                 <p className="text-[10px] text-muted-foreground">
                   📅 {new Date(u.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })} — {new Date(u.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                 </p>
+                {(u as any).last_location && (
+                  <p className="text-[10px] text-muted-foreground">📍 {(u as any).last_location}</p>
+                )}
               </div>
               <Badge variant="secondary" className="text-[10px] shrink-0">
                 {u.role === 'otro' ? u.custom_role || 'Otro' : u.role}
@@ -130,10 +125,9 @@ const Admin = () => {
                   <p className="text-sm text-muted-foreground py-2">Cargando...</p>
                 ) : (
                   <>
-                    {/* School */}
                     {userSettings && (
                       <div className="mt-3">
-                        <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Colegio</p>
+                        <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Colegio / Espacio de trabajo</p>
                         <p className="text-sm">{userSettings.school_name || 'Sin especificar'}</p>
                       </div>
                     )}
