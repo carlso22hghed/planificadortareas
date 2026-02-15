@@ -195,11 +195,14 @@ export type Database = {
           custom_subjects: string[]
           dark_mode: boolean
           enabled_subjects: string[]
+          grouping_mode: string
           id: string
           partidos_mode: string
+          schedule_tab_enabled: boolean
           school_name: string
           sport_types: string[]
           tareas_enabled: boolean
+          theme: string
           user_id: string
         }
         Insert: {
@@ -208,11 +211,14 @@ export type Database = {
           custom_subjects?: string[]
           dark_mode?: boolean
           enabled_subjects?: string[]
+          grouping_mode?: string
           id?: string
           partidos_mode?: string
+          schedule_tab_enabled?: boolean
           school_name?: string
           sport_types?: string[]
           tareas_enabled?: boolean
+          theme?: string
           user_id: string
         }
         Update: {
@@ -221,11 +227,14 @@ export type Database = {
           custom_subjects?: string[]
           dark_mode?: boolean
           enabled_subjects?: string[]
+          grouping_mode?: string
           id?: string
           partidos_mode?: string
+          schedule_tab_enabled?: boolean
           school_name?: string
           sport_types?: string[]
           tareas_enabled?: boolean
+          theme?: string
           user_id?: string
         }
         Relationships: []

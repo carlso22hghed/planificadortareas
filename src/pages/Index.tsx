@@ -9,13 +9,16 @@ import SortableCountdownItem from '@/components/SortableCountdownItem';
 import AddCountdownDialog from '@/components/AddCountdownDialog';
 import EditCountdownDialog from '@/components/EditCountdownDialog';
 import TaskList from '@/components/TaskList';
+import ScheduleInline from '@/components/ScheduleInline';
 import SettingsPanel from '@/components/SettingsPanel';
 import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
   const { user, profile, settings, updateSettings, isAdmin } = useAuth();
+  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('inicio');
@@ -157,18 +160,19 @@ const Index = () => {
 
   // Build tabs
   const buildTabs = () => {
-    const result: { id: TabType; label: string; icon: typeof Home }[] = [
-      { id: 'inicio', label: 'Inicio', icon: Home },
-      { id: 'deberes', label: 'Deberes', icon: BookOpen },
-      { id: 'examenes', label: 'Exámenes', icon: GraduationCap },
+    const result: { id: TabType; label: string; shortLabel: string; icon: typeof Home }[] = [
+      { id: 'inicio', label: 'Inicio', shortLabel: 'Ini.', icon: Home },
+      { id: 'deberes', label: 'Deberes', shortLabel: 'Deb.', icon: BookOpen },
+      { id: 'examenes', label: 'Exámenes', shortLabel: 'Exám.', icon: GraduationCap },
     ];
-    if (settings.tareas_enabled) result.push({ id: 'tareas', label: 'Tareas', icon: ClipboardList });
+    if (settings.tareas_enabled) result.push({ id: 'tareas', label: 'Tareas', shortLabel: 'Tar.', icon: ClipboardList });
     if (settings.partidos_mode === 'replace') {
-      result.push({ id: 'partidos', label: 'Partidos', icon: Trophy });
+      result.push({ id: 'partidos', label: 'Partidos', shortLabel: 'Part.', icon: Trophy });
     } else {
-      result.push({ id: 'eventos', label: 'Eventos', icon: Calendar });
-      if (settings.partidos_mode === 'new_tab') result.push({ id: 'partidos', label: 'Partidos', icon: Trophy });
+      result.push({ id: 'eventos', label: 'Eventos', shortLabel: 'Even.', icon: Calendar });
+      if (settings.partidos_mode === 'new_tab') result.push({ id: 'partidos', label: 'Partidos', shortLabel: 'Part.', icon: Trophy });
     }
+    if ((settings as any).schedule_tab_enabled) result.push({ id: 'horario' as TabType, label: 'Horario', shortLabel: 'Hor.', icon: CalendarClock });
     return result;
   };
 
@@ -247,14 +251,14 @@ const Index = () => {
         {activeTab === 'deberes' && (
           <TaskList tasks={tasks} type="homework" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
             triggerLabel="Añadir deber" emptyMessage="¡No tienes deberes pendientes!" emptyEmoji="🎉"
-            subjects={allSubjects} sportTypes={settings.sport_types} />
+            subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} />
         )}
 
         {activeTab === 'examenes' && (
           <TaskList tasks={tasks} type="exam" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
             onToggleStudy={toggleStudy}
             triggerLabel="Añadir examen" emptyMessage="No hay exámenes próximos" emptyEmoji="📝"
-            subjects={allSubjects} sportTypes={settings.sport_types} />
+            subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} />
         )}
 
         {activeTab === 'tareas' && (
@@ -273,6 +277,10 @@ const Index = () => {
           <TaskList tasks={tasks} type="match" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
             triggerLabel="Añadir partido" emptyMessage="No hay partidos programados" emptyEmoji="⚽"
             sportTypes={settings.sport_types} />
+        )}
+
+        {activeTab === ('horario' as TabType) && (
+          <ScheduleInline userId={user!.id} />
         )}
       </main>
 
@@ -293,7 +301,7 @@ const Index = () => {
                 className={cn('flex-1 flex flex-col items-center py-3 gap-1 transition-colors',
                   isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground')}>
                 <Icon className={cn('w-5 h-5', isActive && 'animate-pulse-soft')} />
-                <span className="text-[10px] font-bold uppercase tracking-wide">{tab.label}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wide">{isMobile ? tab.shortLabel : tab.label}</span>
               </button>
             );
           })}

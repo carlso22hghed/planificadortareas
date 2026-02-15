@@ -20,9 +20,10 @@ interface TaskListProps {
   emptyEmoji: string;
   subjects?: string[];
   sportTypes?: string[];
+  groupingMode?: string;
 }
 
-const TaskList = ({ tasks, type, onAdd, onToggle, onDelete, onUpdate, onToggleStudy, triggerLabel, emptyMessage, emptyEmoji, subjects, sportTypes }: TaskListProps) => {
+const TaskList = ({ tasks, type, onAdd, onToggle, onDelete, onUpdate, onToggleStudy, triggerLabel, emptyMessage, emptyEmoji, subjects, sportTypes, groupingMode = 'none' }: TaskListProps) => {
   const [editTask, setEditTask] = useState<DbTask | null>(null);
 
   const filtered = tasks
@@ -33,8 +34,8 @@ const TaskList = ({ tasks, type, onAdd, onToggle, onDelete, onUpdate, onToggleSt
       return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
     });
 
-  // Group by subject for homework and exams
-  const shouldGroup = type === 'homework' || type === 'exam';
+  // Group by subject based on grouping mode
+  const shouldGroup = (type === 'homework' || type === 'exam') && groupingMode !== 'none';
   const grouped = shouldGroup ? groupBySubject(filtered) : null;
 
   const sensors = useSensors(
@@ -75,9 +76,11 @@ const TaskList = ({ tasks, type, onAdd, onToggle, onDelete, onUpdate, onToggleSt
         </div>
       ) : shouldGroup && grouped ? (
         <div className="space-y-4">
-          {grouped.map(({ subject, tasks: groupTasks }) => (
+      {grouped.map(({ subject, tasks: groupTasks }) => (
             <div key={subject}>
-              <p className="text-xs font-bold text-muted-foreground uppercase mb-2">{subject}</p>
+              {groupingMode === 'subject_title' && (
+                <p className="text-xs font-bold text-muted-foreground uppercase mb-2">{subject}</p>
+              )}
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={groupTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
                   <div className="space-y-2">

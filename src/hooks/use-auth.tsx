@@ -62,6 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (settingsRes.data) {
       setSettings(settingsRes.data);
       document.documentElement.classList.toggle('dark', settingsRes.data.dark_mode);
+      document.documentElement.setAttribute('data-theme', (settingsRes.data as any).theme || 'default');
       // Check if name or school is missing (for users who completed onboarding but have empty values)
       const nameMissing = !profileRes.data?.display_name?.trim();
       const schoolMissing = !settingsRes.data.school_name?.trim();
@@ -124,6 +125,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if ('dark_mode' in updates) {
       document.documentElement.classList.toggle('dark', !!updates.dark_mode);
     }
+    if ('theme' in updates) {
+      document.documentElement.setAttribute('data-theme', (updates as any).theme || 'default');
+    }
     if ('school_name' in updates) {
       const schoolMissing = !updates.school_name?.toString().trim();
       const nameMissing = !profile?.display_name?.trim();
@@ -143,6 +147,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (data) {
       setSettings(data);
       document.documentElement.classList.toggle('dark', data.dark_mode);
+      document.documentElement.setAttribute('data-theme', (data as any).theme || 'default');
     }
   };
 
