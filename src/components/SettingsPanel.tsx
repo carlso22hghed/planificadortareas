@@ -88,6 +88,33 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-80px)] pr-4">
           <div className="space-y-6 mt-4 pb-8">
+            {/* Theme */}
+            <div className="space-y-3">
+              <Label className="font-bold">🎨 Tema</Label>
+              <RadioGroup
+                value={(settings as any).theme || 'default'}
+                onValueChange={value => onUpdate({ theme: value } as any)}
+                className="space-y-2"
+              >
+                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
+                  <RadioGroupItem value="default" id="t-default" />
+                  <Label htmlFor="t-default" className="cursor-pointer text-sm">Predeterminado</Label>
+                </div>
+                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
+                  <RadioGroupItem value="blue" id="t-blue" />
+                  <Label htmlFor="t-blue" className="cursor-pointer text-sm">Azul</Label>
+                </div>
+                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
+                  <RadioGroupItem value="green" id="t-green" />
+                  <Label htmlFor="t-green" className="cursor-pointer text-sm">Verde</Label>
+                </div>
+                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
+                  <RadioGroupItem value="orange" id="t-orange" />
+                  <Label htmlFor="t-orange" className="cursor-pointer text-sm">Naranja</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
             {/* Dark Mode */}
             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
               <Label className="cursor-pointer text-sm font-semibold">🌙 Modo oscuro</Label>
@@ -140,6 +167,38 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                 checked={settings.tareas_enabled}
                 onCheckedChange={checked => onUpdate({ tareas_enabled: checked })}
               />
+            </div>
+
+            {/* Schedule Tab */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+              <Label className="cursor-pointer text-sm font-semibold">Pestaña de Horario</Label>
+              <Switch
+                checked={(settings as any).schedule_tab_enabled || false}
+                onCheckedChange={checked => onUpdate({ schedule_tab_enabled: checked } as any)}
+              />
+            </div>
+
+            {/* Grouping Mode */}
+            <div className="space-y-3">
+              <Label className="font-bold">Agrupación por asignatura</Label>
+              <RadioGroup
+                value={(settings as any).grouping_mode || 'subject_title'}
+                onValueChange={value => onUpdate({ grouping_mode: value } as any)}
+                className="space-y-2"
+              >
+                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
+                  <RadioGroupItem value="none" id="g-none" />
+                  <Label htmlFor="g-none" className="cursor-pointer text-sm">No agrupar</Label>
+                </div>
+                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
+                  <RadioGroupItem value="subject_no_title" id="g-no-title" />
+                  <Label htmlFor="g-no-title" className="cursor-pointer text-sm">Agrupar sin título</Label>
+                </div>
+                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
+                  <RadioGroupItem value="subject_title" id="g-title" />
+                  <Label htmlFor="g-title" className="cursor-pointer text-sm">Agrupar con título</Label>
+                </div>
+              </RadioGroup>
             </div>
 
             {/* Partidos Mode */}

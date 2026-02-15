@@ -151,6 +151,24 @@
 }
 
 @layer base {
+  [data-theme="blue"] {
+    --primary: 210 100% 50%;
+    --primary-foreground: 210 100% 96%;
+    --ring: 210 100% 50%;
+  }
+  [data-theme="green"] {
+    --primary: 152 58% 46%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 152 58% 46%;
+  }
+  [data-theme="orange"] {
+    --primary: 28 92% 56%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 28 92% 56%;
+  }
+}
+
+@layer base {
   * {
     @apply border-border;
   }
