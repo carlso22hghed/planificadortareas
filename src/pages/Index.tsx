@@ -253,11 +253,11 @@ const Index = () => {
           {activeTab === 'inicio' && (
             <div className="space-y-5 animate-slide-up">
               <div className="grid grid-cols-2 gap-3">
-                <button onClick={() => setActiveTab('deberes')} className="glass-card rounded-xl p-4 text-center hover:ring-2 ring-primary/30 transition-all">
+                <button onClick={() => setActiveTab('deberes')} className="glass-card rounded-2xl p-4 text-center hover:ring-2 ring-primary/30 transition-all">
                   <p className="text-3xl font-extrabold text-primary">{pendingHomework}</p>
                   <p className="text-xs text-muted-foreground font-semibold mt-1">Deberes pendientes</p>
                 </button>
-                <button onClick={() => setActiveTab('examenes')} className="glass-card rounded-xl p-4 text-center hover:ring-2 ring-primary/30 transition-all">
+                <button onClick={() => setActiveTab('examenes')} className="glass-card rounded-2xl p-4 text-center hover:ring-2 ring-primary/30 transition-all">
                   <p className="text-3xl font-extrabold text-exam">{pendingExams}</p>
                   <p className="text-xs text-muted-foreground font-semibold mt-1">Exámenes próximos</p>
                 </button>
@@ -269,7 +269,7 @@ const Index = () => {
                   <AddCountdownDialog onAdd={addCountdown} />
                 </div>
                 {countdowns.length === 0 ? (
-                  <div className="glass-card rounded-xl p-6 text-center">
+                  <div className="glass-card rounded-2xl p-6 text-center">
                     <p className="text-3xl mb-2">🏖️</p>
                     <p className="text-sm text-muted-foreground">Añade un contador para ver cuánto falta</p>
                   </div>

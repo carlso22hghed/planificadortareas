@@ -92,11 +92,11 @@ const AdminUserViewInner = ({ userId, profile, onBack }: AdminUserViewProps) => 
         {activeTab === 'inicio' && (
           <div className="space-y-5 animate-slide-up">
             <div className="grid grid-cols-2 gap-3">
-              <div className="glass-card rounded-xl p-4 text-center">
+              <div className="glass-card rounded-2xl p-4 text-center">
                 <p className="text-3xl font-extrabold text-primary">{pendingHomework}</p>
                 <p className="text-xs text-muted-foreground font-semibold mt-1">Deberes pendientes</p>
               </div>
-              <div className="glass-card rounded-xl p-4 text-center">
+              <div className="glass-card rounded-2xl p-4 text-center">
                 <p className="text-3xl font-extrabold text-exam">{pendingExams}</p>
                 <p className="text-xs text-muted-foreground font-semibold mt-1">Exámenes próximos</p>
               </div>
@@ -108,7 +108,7 @@ const AdminUserViewInner = ({ userId, profile, onBack }: AdminUserViewProps) => 
               ) : (
                 <div className="space-y-3">
                   {countdowns.map(c => (
-                    <div key={c.id} className="glass-card rounded-xl p-4">
+                    <div key={c.id} className="glass-card rounded-2xl p-4">
                       <p className="font-semibold text-sm">{c.name}</p>
                       <p className="text-xs text-muted-foreground">{new Date(c.target_date).toLocaleDateString('es-ES')}</p>
                     </div>
@@ -171,7 +171,7 @@ const ReadOnlyTaskList = ({ tasks, type, groupingMode }: { tasks: DbTask[]; type
   return (
     <div className="space-y-2">
       {filtered.map(t => (
-        <div key={t.id} className={cn('glass-card rounded-xl p-4', t.completed && 'opacity-50')}>
+        <div key={t.id} className={cn('glass-card rounded-2xl p-4', t.completed && 'opacity-50')}>
           <div className="flex items-center gap-3">
             <span className="shrink-0">{t.completed ? '✅' : '⬜'}</span>
             <div className="flex-1 min-w-0">
