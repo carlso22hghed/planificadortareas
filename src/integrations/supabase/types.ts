@@ -206,6 +206,7 @@ export type Database = {
           notification_sound: boolean
           partidos_mode: string
           schedule_tab_enabled: boolean
+          school_background: string
           school_name: string
           sport_types: string[]
           tareas_enabled: boolean
@@ -226,6 +227,7 @@ export type Database = {
           notification_sound?: boolean
           partidos_mode?: string
           schedule_tab_enabled?: boolean
+          school_background?: string
           school_name?: string
           sport_types?: string[]
           tareas_enabled?: boolean
@@ -246,6 +248,7 @@ export type Database = {
           notification_sound?: boolean
           partidos_mode?: string
           schedule_tab_enabled?: boolean
+          school_background?: string
           school_name?: string
           sport_types?: string[]
           tareas_enabled?: boolean
