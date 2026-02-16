@@ -38,7 +38,7 @@ const CountdownCard = ({ event, onRemove, onEdit }: CountdownCardProps) => {
             { value: seconds, label: 'seg' },
           ].map(item => (
             <div key={item.label}>
-              <div className="text-2xl font-extrabold text-primary tabular-nums">{item.value}</div>
+              <div className="text-4xl font-extrabold text-primary tabular-nums">{item.value}</div>
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{item.label}</div>
             </div>
           ))}
