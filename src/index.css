@@ -242,13 +242,13 @@
 }
 
 [data-school-bg="chalkboard"] .school-bg-container {
-  background: linear-gradient(170deg, hsl(155 25% 20%), hsl(160 20% 16%), hsl(150 18% 14%)) !important;
-  color: hsl(0 0% 90%);
+  background: linear-gradient(170deg, hsl(155 30% 32%), hsl(160 25% 28%), hsl(150 22% 25%)) !important;
+  color: hsl(0 0% 95%);
 }
 [data-school-bg="chalkboard"] .school-bg-container .glass-card {
-  background: hsl(155 15% 22% / 0.85);
-  border-color: hsl(155 12% 30%);
-  color: hsl(0 0% 88%);
+  background: hsl(155 18% 35% / 0.85);
+  border-color: hsl(155 14% 42%);
+  color: hsl(0 0% 93%);
 }
 
 [data-school-bg="pastel"] .school-bg-container {
