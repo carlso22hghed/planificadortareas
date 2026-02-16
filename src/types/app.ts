@@ -59,12 +59,13 @@ export const ALL_SUBJECTS = [
   'Otra',
 ];
 
-export const ALL_SPORT_TYPES = ['Fútbol', 'Baloncesto', 'Voleibol'];
+export const ALL_SPORT_TYPES = ['Fútbol', 'Baloncesto', 'Voleibol', 'Golf'];
 
 export const SPORT_EMOJIS: Record<string, string> = {
   'Fútbol': '⚽',
   'Baloncesto': '🏀',
   'Voleibol': '🏐',
+  'Golf': '⛳',
 };
 
 export const DEFAULT_ENABLED_SUBJECTS = [
