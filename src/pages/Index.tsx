@@ -59,6 +59,15 @@ const Index = () => {
     queryClient.invalidateQueries({ queryKey: ['countdowns'] });
   }, [countdowns, queryClient]);
 
+  const playNotificationSound = useCallback(() => {
+    if (!settings || (settings as any).notification_sound === false) return;
+    try {
+      const audio = new Audio('/notification-sound.mp3');
+      audio.volume = 0.7;
+      audio.play().catch(() => {});
+    } catch {}
+  }, [settings]);
+
   // Notification check
   useEffect(() => {
     if (notifiedRef.current || !tasks.length) return;
@@ -68,6 +77,8 @@ const Index = () => {
     const typeNames: Record<string, string> = {
       homework: 'deber', exam: 'examen', event: 'evento', match: 'partido', task: 'tarea',
     };
+
+    let didNotify = false;
 
     tasks.filter(t => !t.completed).forEach(t => {
       if (t.reminder_date && t.reminder_time) {
@@ -81,6 +92,7 @@ const Index = () => {
               icon: '/logo.png',
             });
             sessionStorage.setItem(sessionKey, 'true');
+            didNotify = true;
           }
         }
       } else {
@@ -95,13 +107,15 @@ const Index = () => {
               icon: '/logo.png',
             });
             sessionStorage.setItem(sessionKey, 'true');
+            didNotify = true;
           }
         }
       }
     });
 
+    if (didNotify) playNotificationSound();
     notifiedRef.current = true;
-  }, [tasks]);
+  }, [tasks, playNotificationSound]);
 
   const addTask = async (taskData: Partial<DbTask>) => {
     await supabase.from('tasks').insert({ ...taskData, user_id: user!.id } as any);

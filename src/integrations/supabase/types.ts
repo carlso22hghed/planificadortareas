@@ -203,6 +203,7 @@ export type Database = {
           grouping_mode: string
           id: string
           nav_position: string
+          notification_sound: boolean
           partidos_mode: string
           schedule_tab_enabled: boolean
           school_name: string
@@ -222,6 +223,7 @@ export type Database = {
           grouping_mode?: string
           id?: string
           nav_position?: string
+          notification_sound?: boolean
           partidos_mode?: string
           schedule_tab_enabled?: boolean
           school_name?: string
@@ -241,6 +243,7 @@ export type Database = {
           grouping_mode?: string
           id?: string
           nav_position?: string
+          notification_sound?: boolean
           partidos_mode?: string
           schedule_tab_enabled?: boolean
           school_name?: string

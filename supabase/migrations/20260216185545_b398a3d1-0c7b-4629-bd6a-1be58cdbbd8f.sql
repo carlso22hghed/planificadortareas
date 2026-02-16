@@ -1,0 +1,1 @@
+ALTER TABLE public.user_settings ADD COLUMN notification_sound boolean NOT NULL DEFAULT true;

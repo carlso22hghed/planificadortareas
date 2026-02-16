@@ -106,6 +106,11 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
             body: `${typeLabels[type]} para ${new Date(dueDate).toLocaleDateString('es-ES')}`,
             icon: '/logo.png',
           });
+          try {
+            const audio = new Audio('/notification-sound.mp3');
+            audio.volume = 0.7;
+            audio.play().catch(() => {});
+          } catch {}
         }, delay);
       }
     }
