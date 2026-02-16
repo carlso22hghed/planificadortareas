@@ -191,75 +191,69 @@
   background: linear-gradient(135deg, hsl(217 72% 52%), hsl(280 60% 58%));
 }
 
-/* School backgrounds */
-[data-design="school"][data-school-bg="gradient"] {
+/* School backgrounds - applied via class on container */
+[data-design="school"] .school-bg-container {
   background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(250 80% 96%) 100%);
 }
-.dark [data-design="school"][data-school-bg="gradient"],
-[data-design="school"][data-school-bg="gradient"].dark {
+.dark [data-design="school"] .school-bg-container {
   background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(250 40% 14%) 100%);
 }
 
-[data-design="school"][data-school-bg="notebook"] {
-  background-image: repeating-linear-gradient(
+[data-school-bg="notebook"] .school-bg-container {
+  background: hsl(var(--background)) repeating-linear-gradient(
     0deg,
     transparent,
     transparent 31px,
     hsl(210 40% 85% / 0.4) 31px,
     hsl(210 40% 85% / 0.4) 32px
-  );
-  background-color: hsl(var(--background));
+  ) !important;
 }
-.dark [data-design="school"][data-school-bg="notebook"],
-[data-design="school"][data-school-bg="notebook"].dark {
-  background-image: repeating-linear-gradient(
+.dark [data-school-bg="notebook"] .school-bg-container {
+  background: hsl(var(--background)) repeating-linear-gradient(
     0deg,
     transparent,
     transparent 31px,
     hsl(210 20% 30% / 0.3) 31px,
     hsl(210 20% 30% / 0.3) 32px
-  );
+  ) !important;
 }
 
-[data-design="school"][data-school-bg="dots"] {
-  background-image: radial-gradient(circle, hsl(var(--primary) / 0.12) 1px, transparent 1px);
-  background-size: 20px 20px;
-  background-color: hsl(var(--background));
+[data-school-bg="dots"] .school-bg-container {
+  background-color: hsl(var(--background)) !important;
+  background-image: radial-gradient(circle, hsl(var(--primary) / 0.12) 1px, transparent 1px) !important;
+  background-size: 20px 20px !important;
 }
-.dark [data-design="school"][data-school-bg="dots"],
-[data-design="school"][data-school-bg="dots"].dark {
-  background-image: radial-gradient(circle, hsl(var(--primary) / 0.15) 1px, transparent 1px);
+.dark [data-school-bg="dots"] .school-bg-container {
+  background-image: radial-gradient(circle, hsl(var(--primary) / 0.15) 1px, transparent 1px) !important;
 }
 
-[data-design="school"][data-school-bg="grid"] {
+[data-school-bg="grid"] .school-bg-container {
+  background-color: hsl(var(--background)) !important;
   background-image:
     linear-gradient(hsl(210 40% 85% / 0.3) 1px, transparent 1px),
-    linear-gradient(90deg, hsl(210 40% 85% / 0.3) 1px, transparent 1px);
-  background-size: 24px 24px;
-  background-color: hsl(var(--background));
+    linear-gradient(90deg, hsl(210 40% 85% / 0.3) 1px, transparent 1px) !important;
+  background-size: 24px 24px !important;
 }
-.dark [data-design="school"][data-school-bg="grid"],
-[data-design="school"][data-school-bg="grid"].dark {
+.dark [data-school-bg="grid"] .school-bg-container {
   background-image:
     linear-gradient(hsl(210 20% 30% / 0.3) 1px, transparent 1px),
-    linear-gradient(90deg, hsl(210 20% 30% / 0.3) 1px, transparent 1px);
+    linear-gradient(90deg, hsl(210 20% 30% / 0.3) 1px, transparent 1px) !important;
 }
 
-[data-design="school"][data-school-bg="chalkboard"] {
-  background-color: hsl(160 20% 18%);
+[data-school-bg="chalkboard"] .school-bg-container {
+  background-color: hsl(160 20% 18%) !important;
   color: hsl(0 0% 92%);
 }
-[data-design="school"][data-school-bg="chalkboard"] .glass-card {
+[data-school-bg="chalkboard"] .school-bg-container .glass-card {
   background: hsl(160 15% 22% / 0.8);
   border-color: hsl(160 10% 30%);
 }
 
-[data-design="school"][data-school-bg="pastel"] {
-  background: linear-gradient(135deg, hsl(340 60% 94%), hsl(200 60% 94%), hsl(140 50% 94%));
+[data-school-bg="pastel"] .school-bg-container {
+  background: linear-gradient(135deg, hsl(340 60% 94%), hsl(200 60% 94%), hsl(140 50% 94%)) !important;
 }
-.dark [data-design="school"][data-school-bg="pastel"],
-[data-design="school"][data-school-bg="pastel"].dark {
-  background: linear-gradient(135deg, hsl(340 30% 16%), hsl(200 30% 16%), hsl(140 25% 16%));
+.dark [data-school-bg="pastel"] .school-bg-container {
+  background: linear-gradient(135deg, hsl(340 30% 16%), hsl(200 30% 16%), hsl(140 25% 16%)) !important;
 }
 
 @layer base {
