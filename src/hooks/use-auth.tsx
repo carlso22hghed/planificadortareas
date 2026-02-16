@@ -64,6 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       document.documentElement.classList.toggle('dark', settingsRes.data.dark_mode);
       document.documentElement.setAttribute('data-theme', (settingsRes.data as any).theme || 'default');
       document.documentElement.setAttribute('data-design', (settingsRes.data as any).design_style || 'minimalist');
+      document.documentElement.setAttribute('data-school-bg', (settingsRes.data as any).school_background || 'gradient');
       document.body.style.fontFamily = `'${(settingsRes.data as any).font_family || 'Nunito'}', sans-serif`;
       // Check if name or school is missing (for users who completed onboarding but have empty values)
       const nameMissing = !profileRes.data?.display_name?.trim();
@@ -133,6 +134,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if ('design_style' in updates) {
       document.documentElement.setAttribute('data-design', (updates as any).design_style || 'minimalist');
     }
+    if ('school_background' in updates) {
+      document.documentElement.setAttribute('data-school-bg', (updates as any).school_background || 'gradient');
+    }
     if ('font_family' in updates) {
       document.body.style.fontFamily = `'${(updates as any).font_family || 'Nunito'}', sans-serif`;
     }
@@ -157,6 +161,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       document.documentElement.classList.toggle('dark', data.dark_mode);
       document.documentElement.setAttribute('data-theme', (data as any).theme || 'default');
       document.documentElement.setAttribute('data-design', (data as any).design_style || 'minimalist');
+      document.documentElement.setAttribute('data-school-bg', (data as any).school_background || 'gradient');
       document.body.style.fontFamily = `'${(data as any).font_family || 'Nunito'}', sans-serif`;
     }
   };
