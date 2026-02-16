@@ -1,0 +1,1 @@
+ALTER TABLE public.user_settings ADD COLUMN school_background text NOT NULL DEFAULT 'gradient';

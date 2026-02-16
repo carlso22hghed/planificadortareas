@@ -122,6 +122,36 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
               </RadioGroup>
             </div>
 
+            {/* School Background (only when school design) */}
+            {(settings as any).design_style === 'school' && (
+              <div className="space-y-3">
+                <Label className="font-bold">🖼️ Fondo escolar</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: 'gradient', label: 'Degradado', emoji: '🌈' },
+                    { value: 'notebook', label: 'Cuaderno', emoji: '📓' },
+                    { value: 'dots', label: 'Puntos', emoji: '⚫' },
+                    { value: 'grid', label: 'Cuadrícula', emoji: '📐' },
+                    { value: 'chalkboard', label: 'Pizarra', emoji: '🟢' },
+                    { value: 'pastel', label: 'Pastel', emoji: '🎀' },
+                  ].map(bg => (
+                    <button
+                      key={bg.value}
+                      onClick={() => onUpdate({ school_background: bg.value } as any)}
+                      className={`p-3 rounded-xl text-center text-xs font-semibold transition-all ${
+                        ((settings as any).school_background || 'gradient') === bg.value
+                          ? 'bg-primary/15 ring-2 ring-primary text-primary'
+                          : 'bg-muted/50 hover:bg-muted'
+                      }`}
+                    >
+                      <span className="text-lg block mb-1">{bg.emoji}</span>
+                      {bg.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Theme */}
             <div className="space-y-3">
               <Label className="font-bold">🎨 Tema de color</Label>
