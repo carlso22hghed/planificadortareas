@@ -89,6 +89,7 @@ export type Database = {
           created_at: string
           day_of_week: number
           id: string
+          schedule_name: string
           time_slot: string
           user_id: string
         }
@@ -97,6 +98,7 @@ export type Database = {
           created_at?: string
           day_of_week: number
           id?: string
+          schedule_name?: string
           time_slot: string
           user_id: string
         }
@@ -105,6 +107,7 @@ export type Database = {
           created_at?: string
           day_of_week?: number
           id?: string
+          schedule_name?: string
           time_slot?: string
           user_id?: string
         }
@@ -194,9 +197,12 @@ export type Database = {
           created_at: string
           custom_subjects: string[]
           dark_mode: boolean
+          design_style: string
           enabled_subjects: string[]
+          font_family: string
           grouping_mode: string
           id: string
+          nav_position: string
           partidos_mode: string
           schedule_tab_enabled: boolean
           school_name: string
@@ -210,9 +216,12 @@ export type Database = {
           created_at?: string
           custom_subjects?: string[]
           dark_mode?: boolean
+          design_style?: string
           enabled_subjects?: string[]
+          font_family?: string
           grouping_mode?: string
           id?: string
+          nav_position?: string
           partidos_mode?: string
           schedule_tab_enabled?: boolean
           school_name?: string
@@ -226,9 +235,12 @@ export type Database = {
           created_at?: string
           custom_subjects?: string[]
           dark_mode?: boolean
+          design_style?: string
           enabled_subjects?: string[]
+          font_family?: string
           grouping_mode?: string
           id?: string
+          nav_position?: string
           partidos_mode?: string
           schedule_tab_enabled?: boolean
           school_name?: string

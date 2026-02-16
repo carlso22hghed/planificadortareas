@@ -4,14 +4,29 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Settings, Pencil, Check, LogOut, Plus } from 'lucide-react';
+import { Settings, Pencil, Check, LogOut, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ALL_SUBJECTS, ALL_SPORT_TYPES, SPORT_EMOJIS } from '@/types/app';
 import type { DbSettings } from '@/types/app';
 import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+
+const FONT_OPTIONS = [
+  { value: 'Nunito', label: 'Nunito' },
+  { value: 'Lato', label: 'Lato' },
+  { value: 'Montserrat', label: 'Montserrat' },
+  { value: 'Space Grotesk', label: 'Space Grotesk' },
+  { value: 'Lora', label: 'Lora' },
+  { value: 'EB Garamond', label: 'EB Garamond' },
+  { value: 'Cormorant Garamond', label: 'Cormorant Garamond' },
+  { value: 'Space Mono', label: 'Space Mono' },
+  { value: 'IBM Plex Mono', label: 'IBM Plex Mono' },
+  { value: 'Fira Code', label: 'Fira Code' },
+];
 
 interface SettingsPanelProps {
   settings: DbSettings;
@@ -26,6 +41,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
   const [editingSchool, setEditingSchool] = useState(false);
   const [tempSchool, setTempSchool] = useState(settings.school_name);
   const [newSubject, setNewSubject] = useState('');
+  const [fontOpen, setFontOpen] = useState(false);
 
   const saveName = () => {
     onUpdate({ app_name: tempName || 'Cosas que Hacer' });
@@ -47,7 +63,6 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
   const addCustomSubject = () => {
     if (!newSubject.trim()) return;
     const name = newSubject.trim();
-    // Auto-enable the custom subject
     onUpdate({
       custom_subjects: [...settings.custom_subjects, name],
       enabled_subjects: settings.enabled_subjects.includes(name)
@@ -63,7 +78,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
 
   const toggleSportType = (sport: string) => {
     const enabled = settings.sport_types.includes(sport);
-    if (sport === 'Fútbol' && enabled && settings.sport_types.length === 1) return; // keep at least fútbol
+    if (sport === 'Fútbol' && enabled && settings.sport_types.length === 1) return;
     const newTypes = enabled
       ? settings.sport_types.filter(s => s !== sport)
       : [...settings.sport_types, sport];
@@ -88,32 +103,68 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-80px)] pr-4">
           <div className="space-y-6 mt-4 pb-8">
+            {/* Design Style */}
+            <div className="space-y-3">
+              <Label className="font-bold">🎨 Estilo de diseño</Label>
+              <RadioGroup
+                value={(settings as any).design_style || 'minimalist'}
+                onValueChange={value => onUpdate({ design_style: value } as any)}
+                className="space-y-2"
+              >
+                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
+                  <RadioGroupItem value="minimalist" id="ds-min" />
+                  <Label htmlFor="ds-min" className="cursor-pointer text-sm">Minimalista</Label>
+                </div>
+                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
+                  <RadioGroupItem value="school" id="ds-school" />
+                  <Label htmlFor="ds-school" className="cursor-pointer text-sm">Escolar</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
             {/* Theme */}
             <div className="space-y-3">
-              <Label className="font-bold">🎨 Tema</Label>
+              <Label className="font-bold">🎨 Tema de color</Label>
               <RadioGroup
                 value={(settings as any).theme || 'default'}
                 onValueChange={value => onUpdate({ theme: value } as any)}
                 className="space-y-2"
               >
-                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
-                  <RadioGroupItem value="default" id="t-default" />
-                  <Label htmlFor="t-default" className="cursor-pointer text-sm">Predeterminado</Label>
-                </div>
-                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
-                  <RadioGroupItem value="blue" id="t-blue" />
-                  <Label htmlFor="t-blue" className="cursor-pointer text-sm">Azul</Label>
-                </div>
-                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
-                  <RadioGroupItem value="green" id="t-green" />
-                  <Label htmlFor="t-green" className="cursor-pointer text-sm">Verde</Label>
-                </div>
-                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
-                  <RadioGroupItem value="orange" id="t-orange" />
-                  <Label htmlFor="t-orange" className="cursor-pointer text-sm">Naranja</Label>
-                </div>
+                {[
+                  { value: 'default', label: 'Predeterminado' },
+                  { value: 'blue', label: 'Azul' },
+                  { value: 'green', label: 'Verde' },
+                  { value: 'orange', label: 'Naranja' },
+                ].map(t => (
+                  <div key={t.value} className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
+                    <RadioGroupItem value={t.value} id={`t-${t.value}`} />
+                    <Label htmlFor={`t-${t.value}`} className="cursor-pointer text-sm">{t.label}</Label>
+                  </div>
+                ))}
               </RadioGroup>
             </div>
+
+            {/* Font Family */}
+            <Collapsible open={fontOpen} onOpenChange={setFontOpen}>
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-muted/50">
+                <Label className="font-bold cursor-pointer">🔤 Tipo de Letra</Label>
+                {fontOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-2 space-y-1">
+                {FONT_OPTIONS.map(font => (
+                  <button
+                    key={font.value}
+                    onClick={() => onUpdate({ font_family: font.value } as any)}
+                    className={`w-full text-left p-3 rounded-lg text-sm transition-colors ${
+                      (settings as any).font_family === font.value ? 'bg-primary/10 text-primary font-semibold' : 'bg-muted/30 hover:bg-muted/50'
+                    }`}
+                    style={{ fontFamily: font.value }}
+                  >
+                    {font.label}
+                  </button>
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
 
             {/* Dark Mode */}
             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
@@ -122,6 +173,25 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                 checked={settings.dark_mode}
                 onCheckedChange={checked => onUpdate({ dark_mode: checked })}
               />
+            </div>
+
+            {/* Nav Position */}
+            <div className="space-y-3">
+              <Label className="font-bold">📱 Posición de pestañas</Label>
+              <RadioGroup
+                value={(settings as any).nav_position || 'bottom'}
+                onValueChange={value => onUpdate({ nav_position: value } as any)}
+                className="space-y-2"
+              >
+                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
+                  <RadioGroupItem value="bottom" id="nav-bottom" />
+                  <Label htmlFor="nav-bottom" className="cursor-pointer text-sm">Barra inferior</Label>
+                </div>
+                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
+                  <RadioGroupItem value="left" id="nav-left" />
+                  <Label htmlFor="nav-left" className="cursor-pointer text-sm">Lateral izquierda</Label>
+                </div>
+              </RadioGroup>
             </div>
 
             {/* App Name */}
@@ -144,7 +214,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
 
             {/* School Name */}
             <div className="space-y-2">
-              <Label className="font-bold">Colegio</Label>
+              <Label className="font-bold">Colegio / Espacio de trabajo</Label>
               {editingSchool ? (
                 <div className="flex gap-2">
                   <Input value={tempSchool} onChange={e => setTempSchool(e.target.value)} />
@@ -171,7 +241,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
 
             {/* Schedule Tab */}
             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-              <Label className="cursor-pointer text-sm font-semibold">Pestaña de Horario</Label>
+              <Label className="cursor-pointer text-sm font-semibold">Pestaña de Horario (abajo)</Label>
               <Switch
                 checked={(settings as any).schedule_tab_enabled || false}
                 onCheckedChange={checked => onUpdate({ schedule_tab_enabled: checked } as any)}
@@ -186,18 +256,16 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                 onValueChange={value => onUpdate({ grouping_mode: value } as any)}
                 className="space-y-2"
               >
-                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
-                  <RadioGroupItem value="none" id="g-none" />
-                  <Label htmlFor="g-none" className="cursor-pointer text-sm">No agrupar</Label>
-                </div>
-                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
-                  <RadioGroupItem value="subject_no_title" id="g-no-title" />
-                  <Label htmlFor="g-no-title" className="cursor-pointer text-sm">Agrupar sin título</Label>
-                </div>
-                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
-                  <RadioGroupItem value="subject_title" id="g-title" />
-                  <Label htmlFor="g-title" className="cursor-pointer text-sm">Agrupar con título</Label>
-                </div>
+                {[
+                  { value: 'none', label: 'No agrupar' },
+                  { value: 'subject_no_title', label: 'Agrupar sin título' },
+                  { value: 'subject_title', label: 'Agrupar con título' },
+                ].map(g => (
+                  <div key={g.value} className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
+                    <RadioGroupItem value={g.value} id={`g-${g.value}`} />
+                    <Label htmlFor={`g-${g.value}`} className="cursor-pointer text-sm">{g.label}</Label>
+                  </div>
+                ))}
               </RadioGroup>
             </div>
 
@@ -209,18 +277,16 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                 onValueChange={value => onUpdate({ partidos_mode: value })}
                 className="space-y-2"
               >
-                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
-                  <RadioGroupItem value="off" id="p-off" />
-                  <Label htmlFor="p-off" className="cursor-pointer text-sm">Desactivada</Label>
-                </div>
-                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
-                  <RadioGroupItem value="replace" id="p-replace" />
-                  <Label htmlFor="p-replace" className="cursor-pointer text-sm">Reemplazar pestaña de Eventos</Label>
-                </div>
-                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
-                  <RadioGroupItem value="new_tab" id="p-new" />
-                  <Label htmlFor="p-new" className="cursor-pointer text-sm">Añadir como pestaña nueva</Label>
-                </div>
+                {[
+                  { value: 'off', label: 'Desactivada' },
+                  { value: 'replace', label: 'Reemplazar Eventos' },
+                  { value: 'new_tab', label: 'Añadir como pestaña nueva' },
+                ].map(p => (
+                  <div key={p.value} className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
+                    <RadioGroupItem value={p.value} id={`p-${p.value}`} />
+                    <Label htmlFor={`p-${p.value}`} className="cursor-pointer text-sm">{p.label}</Label>
+                  </div>
+                ))}
               </RadioGroup>
             </div>
 
@@ -247,7 +313,6 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                 <span className="text-xs text-muted-foreground">{settings.enabled_subjects.length} activas</span>
               </div>
 
-              {/* Custom subjects */}
               {settings.custom_subjects.length > 0 && (
                 <div className="space-y-1">
                   <p className="text-xs font-bold text-muted-foreground">Personalizadas:</p>
@@ -260,7 +325,6 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                 </div>
               )}
 
-              {/* Add custom subject */}
               <div className="flex gap-2">
                 <Input
                   value={newSubject}
