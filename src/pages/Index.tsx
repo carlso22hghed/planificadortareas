@@ -227,10 +227,7 @@ const Index = () => {
   );
 
   return (
-    <div
-      className={cn('min-h-screen bg-background flex', isLeftNav ? 'flex-row' : 'flex-col', 'max-w-4xl mx-auto')}
-      data-school-bg={(settings as any).design_style === 'school' ? ((settings as any).school_background || 'gradient') : undefined}
-    >
+    <div className={cn('min-h-screen bg-background flex', isLeftNav ? 'flex-row' : 'flex-col', 'max-w-4xl mx-auto')}>
       {/* Left sidebar nav */}
       {isLeftNav && (
         <nav className="w-48 shrink-0 bg-card/90 backdrop-blur-md border-r border-border flex flex-col pt-4 fixed left-0 top-0 bottom-0 z-40 max-w-[calc(50%-256px+192px)]">
