@@ -134,6 +134,11 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                     { value: 'grid', label: 'Cuadrícula', emoji: '📐' },
                     { value: 'chalkboard', label: 'Pizarra', emoji: '🟢' },
                     { value: 'pastel', label: 'Pastel', emoji: '🎀' },
+                    { value: 'sunset', label: 'Atardecer', emoji: '🌅' },
+                    { value: 'mountains', label: 'Montañas', emoji: '🏔️' },
+                    { value: 'ocean', label: 'Océano', emoji: '🌊' },
+                    { value: 'forest', label: 'Bosque', emoji: '🌲' },
+                    { value: 'sky', label: 'Cielo', emoji: '☁️' },
                   ].map(bg => (
                     <button
                       key={bg.value}
