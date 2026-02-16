@@ -43,7 +43,7 @@ const Admin = () => {
           <button
             key={u.user_id}
             onClick={() => setSelectedUser(u)}
-            className="w-full glass-card rounded-xl p-4 flex items-center gap-3 text-left hover:ring-2 ring-primary/30 transition-all"
+            className="w-full glass-card rounded-2xl p-4 flex items-center gap-3 text-left hover:ring-2 ring-primary/30 transition-all"
           >
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
               <User className="w-5 h-5 text-primary" />

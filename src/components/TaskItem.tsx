@@ -18,7 +18,7 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
 
   return (
     <div className={cn(
-      'glass-card rounded-xl p-4 animate-slide-up transition-all',
+      'glass-card rounded-2xl p-4 animate-slide-up transition-all',
       task.completed && 'opacity-50'
     )}>
       <div className="flex items-center gap-3">

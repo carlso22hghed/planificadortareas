@@ -12,7 +12,7 @@ const CountdownCard = ({ event, onRemove, onEdit }: CountdownCardProps) => {
   const { days, hours, minutes, seconds, expired } = useCountdown(event.target_date, event.target_time);
 
   return (
-    <div className="glass-card rounded-xl p-4 animate-slide-up relative group">
+    <div className="glass-card rounded-2xl p-4 animate-slide-up relative group">
       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
         <button onClick={() => onEdit(event)} className="p-1 rounded-full hover:bg-muted">
           <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
