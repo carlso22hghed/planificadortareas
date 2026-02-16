@@ -258,6 +258,98 @@
   background: linear-gradient(135deg, hsl(340 30% 14%) 0%, hsl(50 25% 13%) 33%, hsl(200 30% 14%) 66%, hsl(140 25% 13%) 100%) !important;
 }
 
+/* Landscape backgrounds */
+[data-school-bg="sunset"] .school-bg-container {
+  background: linear-gradient(180deg, hsl(30 90% 65%) 0%, hsl(15 85% 55%) 30%, hsl(340 70% 50%) 55%, hsl(270 50% 35%) 80%, hsl(250 40% 20%) 100%) !important;
+}
+[data-school-bg="sunset"] .school-bg-container .glass-card {
+  background: hsl(340 40% 30% / 0.7);
+  border-color: hsl(340 50% 45% / 0.4);
+  color: hsl(0 0% 95%);
+}
+.dark [data-school-bg="sunset"] .school-bg-container {
+  background: linear-gradient(180deg, hsl(30 60% 30%) 0%, hsl(15 55% 25%) 30%, hsl(340 45% 22%) 55%, hsl(270 35% 15%) 80%, hsl(250 30% 8%) 100%) !important;
+}
+
+[data-school-bg="mountains"] .school-bg-container {
+  background:
+    linear-gradient(180deg, hsl(200 60% 75%) 0%, hsl(200 50% 82%) 40%, transparent 40%),
+    linear-gradient(160deg, hsl(210 20% 45%) 35%, transparent 35%),
+    linear-gradient(200deg, hsl(200 15% 50%) 30%, transparent 30%),
+    linear-gradient(175deg, hsl(150 30% 40%) 25%, transparent 25%),
+    linear-gradient(180deg, hsl(120 25% 50%) 60%, hsl(90 30% 45%) 80%, hsl(80 25% 40%) 100%) !important;
+}
+[data-school-bg="mountains"] .school-bg-container .glass-card {
+  background: hsl(200 30% 92% / 0.85);
+  border-color: hsl(200 20% 75%);
+  color: hsl(200 20% 15%);
+}
+.dark [data-school-bg="mountains"] .school-bg-container {
+  background:
+    linear-gradient(180deg, hsl(220 30% 20%) 0%, hsl(220 25% 25%) 40%, transparent 40%),
+    linear-gradient(160deg, hsl(210 15% 18%) 35%, transparent 35%),
+    linear-gradient(200deg, hsl(200 12% 22%) 30%, transparent 30%),
+    linear-gradient(175deg, hsl(150 15% 16%) 25%, transparent 25%),
+    linear-gradient(180deg, hsl(120 12% 15%) 60%, hsl(90 15% 12%) 80%, hsl(80 12% 10%) 100%) !important;
+}
+.dark [data-school-bg="mountains"] .school-bg-container .glass-card {
+  background: hsl(220 15% 15% / 0.85);
+  border-color: hsl(220 10% 25%);
+  color: hsl(0 0% 92%);
+}
+
+[data-school-bg="ocean"] .school-bg-container {
+  background: linear-gradient(180deg, hsl(195 70% 75%) 0%, hsl(200 65% 60%) 35%, hsl(205 70% 50%) 55%, hsl(210 75% 42%) 75%, hsl(215 65% 35%) 100%) !important;
+}
+[data-school-bg="ocean"] .school-bg-container .glass-card {
+  background: hsl(200 50% 92% / 0.8);
+  border-color: hsl(200 40% 70%);
+  color: hsl(210 40% 15%);
+}
+.dark [data-school-bg="ocean"] .school-bg-container {
+  background: linear-gradient(180deg, hsl(210 40% 18%) 0%, hsl(210 45% 15%) 35%, hsl(215 50% 12%) 55%, hsl(220 45% 10%) 75%, hsl(225 40% 8%) 100%) !important;
+}
+.dark [data-school-bg="ocean"] .school-bg-container .glass-card {
+  background: hsl(210 25% 14% / 0.85);
+  border-color: hsl(210 20% 22%);
+  color: hsl(0 0% 92%);
+}
+
+[data-school-bg="forest"] .school-bg-container {
+  background: linear-gradient(180deg, hsl(140 35% 75%) 0%, hsl(145 45% 55%) 25%, hsl(150 50% 38%) 50%, hsl(155 45% 28%) 75%, hsl(140 35% 20%) 100%) !important;
+}
+[data-school-bg="forest"] .school-bg-container .glass-card {
+  background: hsl(140 25% 92% / 0.85);
+  border-color: hsl(140 20% 65%);
+  color: hsl(150 30% 12%);
+}
+.dark [data-school-bg="forest"] .school-bg-container {
+  background: linear-gradient(180deg, hsl(145 20% 18%) 0%, hsl(150 25% 14%) 25%, hsl(155 30% 10%) 50%, hsl(155 25% 8%) 75%, hsl(140 20% 6%) 100%) !important;
+}
+.dark [data-school-bg="forest"] .school-bg-container .glass-card {
+  background: hsl(150 15% 13% / 0.85);
+  border-color: hsl(150 12% 20%);
+  color: hsl(0 0% 92%);
+}
+
+[data-school-bg="sky"] .school-bg-container {
+  background: linear-gradient(180deg, hsl(210 80% 58%) 0%, hsl(205 70% 68%) 40%, hsl(200 60% 80%) 70%, hsl(40 50% 90%) 100%) !important;
+  position: relative;
+}
+[data-school-bg="sky"] .school-bg-container .glass-card {
+  background: hsl(210 50% 95% / 0.85);
+  border-color: hsl(210 40% 80%);
+  color: hsl(210 30% 15%);
+}
+.dark [data-school-bg="sky"] .school-bg-container {
+  background: linear-gradient(180deg, hsl(230 35% 15%) 0%, hsl(225 30% 20%) 40%, hsl(220 25% 28%) 70%, hsl(215 20% 18%) 100%) !important;
+}
+.dark [data-school-bg="sky"] .school-bg-container .glass-card {
+  background: hsl(225 15% 15% / 0.85);
+  border-color: hsl(225 10% 25%);
+  color: hsl(0 0% 92%);
+}
+
 @layer base {
   * {
     @apply border-border;
