@@ -168,6 +168,29 @@
   }
 }
 
+/* Minimalist design (default) */
+[data-design="minimalist"] {
+  --radius: 0.75rem;
+}
+
+[data-design="minimalist"] .glass-card {
+  @apply bg-card border border-border/30 shadow-none;
+}
+
+[data-design="minimalist"] .gradient-hero {
+  background: hsl(var(--primary));
+  border-radius: 0;
+}
+
+/* School design */
+[data-design="school"] {
+  --radius: 1.25rem;
+}
+
+[data-design="school"] .gradient-hero {
+  background: linear-gradient(135deg, hsl(217 72% 52%), hsl(280 60% 58%));
+}
+
 @layer base {
   * {
     @apply border-border;

@@ -50,9 +50,9 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
             {task.sport_type && task.type === 'match' && (
               <Badge variant="outline" className="text-[10px] px-1.5 py-0">{task.sport_type}</Badge>
             )}
-            {(task as any).location && (
+            {task.location && (
               <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-                <MapPin className="w-3 h-3" />{(task as any).location}
+                <MapPin className="w-3 h-3" />{task.location}
               </span>
             )}
             {task.home_away && task.type === 'match' && (
@@ -64,6 +64,17 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
+          {/* Study checkbox at same height for exams */}
+          {isExam && !task.completed && onToggleStudy && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onToggleStudy(task.id); }}
+              title="Estudiar / Practicar"
+              className={cn('w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors mr-1',
+                task.study_completed ? 'bg-success border-success' : 'border-muted-foreground/30 hover:border-primary')}
+            >
+              {task.study_completed && <Check className="w-3 h-3 text-success-foreground" />}
+            </button>
+          )}
           <button onClick={(e) => { e.stopPropagation(); onEdit(task); }} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
             <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
@@ -73,20 +84,11 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
         </div>
       </div>
 
-      {/* Study/Practice sub-checkbox for exams */}
+      {/* Study label below for exams */}
       {isExam && !task.completed && (
-        <div className="mt-2 ml-9 flex items-center gap-2">
-          <button
-            onClick={(e) => { e.stopPropagation(); onToggleStudy?.(task.id); }}
-            className={cn('w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors',
-              (task as any).study_completed ? 'bg-success border-success' : 'border-muted-foreground/30 hover:border-primary')}
-          >
-            {(task as any).study_completed && <Check className="w-2.5 h-2.5 text-success-foreground" />}
-          </button>
-          <span className={cn('text-xs text-muted-foreground', (task as any).study_completed && 'line-through')}>
-            Estudiar / Practicar
-          </span>
-        </div>
+        <p className="ml-9 mt-1 text-[10px] text-muted-foreground">
+          {task.study_completed ? '✅' : '📖'} Estudiar / Practicar
+        </p>
       )}
     </div>
   );

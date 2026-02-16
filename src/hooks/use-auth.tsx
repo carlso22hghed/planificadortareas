@@ -63,6 +63,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSettings(settingsRes.data);
       document.documentElement.classList.toggle('dark', settingsRes.data.dark_mode);
       document.documentElement.setAttribute('data-theme', (settingsRes.data as any).theme || 'default');
+      document.documentElement.setAttribute('data-design', (settingsRes.data as any).design_style || 'minimalist');
+      document.body.style.fontFamily = `'${(settingsRes.data as any).font_family || 'Nunito'}', sans-serif`;
       // Check if name or school is missing (for users who completed onboarding but have empty values)
       const nameMissing = !profileRes.data?.display_name?.trim();
       const schoolMissing = !settingsRes.data.school_name?.trim();
@@ -128,6 +130,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if ('theme' in updates) {
       document.documentElement.setAttribute('data-theme', (updates as any).theme || 'default');
     }
+    if ('design_style' in updates) {
+      document.documentElement.setAttribute('data-design', (updates as any).design_style || 'minimalist');
+    }
+    if ('font_family' in updates) {
+      document.body.style.fontFamily = `'${(updates as any).font_family || 'Nunito'}', sans-serif`;
+    }
     if ('school_name' in updates) {
       const schoolMissing = !updates.school_name?.toString().trim();
       const nameMissing = !profile?.display_name?.trim();
@@ -148,6 +156,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSettings(data);
       document.documentElement.classList.toggle('dark', data.dark_mode);
       document.documentElement.setAttribute('data-theme', (data as any).theme || 'default');
+      document.documentElement.setAttribute('data-design', (data as any).design_style || 'minimalist');
+      document.body.style.fontFamily = `'${(data as any).font_family || 'Nunito'}', sans-serif`;
     }
   };
 
