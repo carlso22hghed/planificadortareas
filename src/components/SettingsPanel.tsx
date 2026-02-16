@@ -175,6 +175,15 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
               />
             </div>
 
+            {/* Notification Sound */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+              <Label className="cursor-pointer text-sm font-semibold">🔊 Sonido de notificación</Label>
+              <Switch
+                checked={(settings as any).notification_sound !== false}
+                onCheckedChange={checked => onUpdate({ notification_sound: checked } as any)}
+              />
+            </div>
+
             {/* Nav Position */}
             <div className="space-y-3">
               <Label className="font-bold">📱 Posición de pestañas</Label>
