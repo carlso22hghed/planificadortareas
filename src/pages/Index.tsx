@@ -11,6 +11,7 @@ import EditCountdownDialog from '@/components/EditCountdownDialog';
 import TaskList from '@/components/TaskList';
 import ScheduleInline from '@/components/ScheduleInline';
 import SettingsPanel from '@/components/SettingsPanel';
+import SupportDialog from '@/components/SupportDialog';
 import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -260,6 +261,7 @@ const Index = () => {
                 <CalendarClock className="w-5 h-5" />
               </button>
             )}
+            <SupportDialog />
             {isAdmin && (
               <button onClick={() => navigate('/admin')} className="p-2 rounded-full hover:bg-primary-foreground/20 transition-colors text-primary-foreground text-xs font-bold">
                 👥
