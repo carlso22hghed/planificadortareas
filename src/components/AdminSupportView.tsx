@@ -50,7 +50,7 @@ const AdminSupportView = () => {
 
   const profileMap = Object.fromEntries(profiles.map(p => [p.user_id, p]));
 
-  const handleReply = async (ticketId: string) => {
+  const handleReplyAndClose = async (ticketId: string) => {
     const reply = (replyText[ticketId] || '').trim();
     if (!reply) return;
     const { error } = await supabase
@@ -60,14 +60,36 @@ const AdminSupportView = () => {
     if (error) {
       toast({ title: 'Error', description: 'No se pudo enviar la respuesta.', variant: 'destructive' });
     } else {
-      toast({ title: '✅ Respondido', description: 'El ticket ha sido cerrado.' });
+      toast({ title: '✅ Respondido y cerrado' });
       setReplyText(prev => ({ ...prev, [ticketId]: '' }));
       queryClient.invalidateQueries({ queryKey: ['admin_support_tickets'] });
     }
   };
 
+  const handleReplyAndKeepOpen = async (ticketId: string) => {
+    const reply = (replyText[ticketId] || '').trim();
+    if (!reply) return;
+    const { error } = await supabase
+      .from('support_tickets' as any)
+      .update({ admin_reply: reply })
+      .eq('id', ticketId);
+    if (error) {
+      toast({ title: 'Error', description: 'No se pudo enviar la respuesta.', variant: 'destructive' });
+    } else {
+      toast({ title: '✅ Respondido', description: 'El ticket sigue abierto.' });
+      setReplyText(prev => ({ ...prev, [ticketId]: '' }));
+      queryClient.invalidateQueries({ queryKey: ['admin_support_tickets'] });
+    }
+  };
+
+  const handleCloseDirectly = async (ticketId: string) => {
+    await supabase.from('support_tickets' as any).update({ status: 'closed' }).eq('id', ticketId);
+    toast({ title: 'Ticket cerrado' });
+    queryClient.invalidateQueries({ queryKey: ['admin_support_tickets'] });
+  };
+
   const handleReopen = async (ticketId: string) => {
-    await supabase.from('support_tickets' as any).update({ status: 'open', admin_reply: null }).eq('id', ticketId);
+    await supabase.from('support_tickets' as any).update({ status: 'open' }).eq('id', ticketId);
     queryClient.invalidateQueries({ queryKey: ['admin_support_tickets'] });
   };
 
@@ -132,10 +154,20 @@ const AdminSupportView = () => {
                   onChange={e => setReplyText(prev => ({ ...prev, [ticket.id]: e.target.value }))}
                   className="resize-none text-sm min-h-[80px]"
                 />
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={() => handleReply(ticket.id)} disabled={!replyText[ticket.id]?.trim()} className="gap-1.5 flex-1">
+                <div className="flex flex-wrap gap-2">
+                  {ticket.status === 'open' && (
+                    <Button size="sm" variant="destructive" onClick={() => handleCloseDirectly(ticket.id)} className="gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Cerrar
+                    </Button>
+                  )}
+                  <Button size="sm" onClick={() => handleReplyAndClose(ticket.id)} disabled={!replyText[ticket.id]?.trim()} className="gap-1.5">
                     <MessageSquareReply className="w-3.5 h-3.5" />
                     Responder y cerrar
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleReplyAndKeepOpen(ticket.id)} disabled={!replyText[ticket.id]?.trim()} className="gap-1.5">
+                    <MessageSquareReply className="w-3.5 h-3.5" />
+                    Responder (abierto)
                   </Button>
                   {ticket.status === 'closed' && (
                     <Button size="sm" variant="outline" onClick={() => handleReopen(ticket.id)}>
