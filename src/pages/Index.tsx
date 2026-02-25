@@ -85,14 +85,21 @@ const Index = () => {
       if (t.reminder_date && t.reminder_time) {
         const reminderDate = new Date(`${t.reminder_date}T${t.reminder_time}:00`);
         const dueDate = new Date(`${t.due_date}T${t.due_time || '23:59'}:00`);
+        const frequency = (t as any).reminder_frequency as number | null;
+
         if (now >= reminderDate && now <= dueDate) {
-          const sessionKey = `notified-custom-${t.id}-${now.toDateString()}`;
-          if (!sessionStorage.getItem(sessionKey)) {
+          // Check if we should notify based on frequency
+          const sessionKey = `notified-custom-${t.id}`;
+          const lastNotified = sessionStorage.getItem(sessionKey);
+          const lastNotifiedTime = lastNotified ? parseInt(lastNotified) : 0;
+          const freqMs = frequency && frequency > 0 ? frequency * 60 * 1000 : Infinity;
+          
+          if (!lastNotified || (frequency && frequency > 0 && (now.getTime() - lastNotifiedTime) >= freqMs)) {
             new Notification(`📚 Recordatorio: ${t.name}`, {
               body: `Tienes un ${typeNames[t.type] || 'evento'} para ${new Date(t.due_date).toLocaleDateString('es-ES')}`,
               icon: '/logo.png',
             });
-            sessionStorage.setItem(sessionKey, 'true');
+            sessionStorage.setItem(sessionKey, String(now.getTime()));
             didNotify = true;
           }
         }
@@ -231,7 +238,6 @@ const Index = () => {
     <div className={cn(
       'min-h-screen flex',
       isLeftNav ? 'flex-row' : 'flex-col',
-      'max-w-4xl mx-auto',
       (settings as any).design_style === 'school' ? 'school-bg-container' : 'bg-background'
     )}>
 
@@ -245,7 +251,7 @@ const Index = () => {
         </nav>
       )}
 
-      <div className={cn('flex-1 flex flex-col', isLeftNav && 'ml-48')}>
+      <div className={cn('flex-1 flex flex-col max-w-4xl mx-auto w-full', isLeftNav && 'ml-48')}>
         <header className="gradient-hero px-5 pt-8 pb-6 rounded-b-3xl flex items-start justify-between">
           <div className="flex items-center gap-3">
             {!isLeftNav && <img src="/logo.png" alt="Logo" className="w-10 h-10 rounded-xl" />}

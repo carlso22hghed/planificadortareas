@@ -198,6 +198,10 @@
 }
 
 /* School backgrounds - applied via class on container */
+.school-bg-container {
+  min-height: 100vh;
+}
+
 [data-design="school"] .school-bg-container,
 [data-school-bg="gradient"] .school-bg-container {
   background: linear-gradient(160deg, hsl(250 70% 95%) 0%, hsl(210 80% 92%) 40%, hsl(280 60% 93%) 100%) !important;

@@ -154,6 +154,7 @@ export type Database = {
           location: string | null
           name: string
           reminder_date: string | null
+          reminder_frequency: number | null
           reminder_time: string | null
           rival: string | null
           sort_order: number
@@ -173,6 +174,7 @@ export type Database = {
           location?: string | null
           name: string
           reminder_date?: string | null
+          reminder_frequency?: number | null
           reminder_time?: string | null
           rival?: string | null
           sort_order?: number
@@ -192,6 +194,7 @@ export type Database = {
           location?: string | null
           name?: string
           reminder_date?: string | null
+          reminder_frequency?: number | null
           reminder_time?: string | null
           rival?: string | null
           sort_order?: number

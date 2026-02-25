@@ -41,6 +41,7 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
   const [reminderDate, setReminderDate] = useState('');
   const [reminderTime, setReminderTime] = useState('');
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [reminderFrequency, setReminderFrequency] = useState<number>(0);
   const [subject, setSubject] = useState('');
   const [rival, setRival] = useState('');
   const [homeAway, setHomeAway] = useState<'home' | 'away'>('home');
@@ -95,29 +96,42 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
 
     if (showLocation && location) (taskData as any).location = location;
     if (notificationsEnabled && reminderDate) (taskData as any).reminder_date = reminderDate;
+    if (notificationsEnabled && reminderFrequency > 0) (taskData as any).reminder_frequency = reminderFrequency;
 
-    // Schedule notification
+    // Schedule notification (initial + repeating)
     if (notificationsEnabled && reminderTime && reminderDate && 'Notification' in window && Notification.permission === 'granted') {
       const reminderDateObj = new Date(`${reminderDate}T${reminderTime}:00`);
+      const dueDateTime = new Date(`${dueDate}T${dueTime || '23:59'}:00`);
       const delay = reminderDateObj.getTime() - Date.now();
+
+      const sendNotification = () => {
+        new Notification(`📚 Recordatorio: ${name}`, {
+          body: `${typeLabels[type]} para ${new Date(dueDate).toLocaleDateString('es-ES')}`,
+          icon: '/logo.png',
+        });
+        try {
+          const audio = new Audio('/notification-sound.mp3');
+          audio.volume = 0.7;
+          audio.play().catch(() => {});
+        } catch {}
+      };
+
       if (delay > 0) {
         setTimeout(() => {
-          new Notification(`📚 Recordatorio: ${name}`, {
-            body: `${typeLabels[type]} para ${new Date(dueDate).toLocaleDateString('es-ES')}`,
-            icon: '/logo.png',
-          });
-          try {
-            const audio = new Audio('/notification-sound.mp3');
-            audio.volume = 0.7;
-            audio.play().catch(() => {});
-          } catch {}
+          sendNotification();
+          if (reminderFrequency > 0) {
+            const interval = setInterval(() => {
+              if (Date.now() >= dueDateTime.getTime()) { clearInterval(interval); return; }
+              sendNotification();
+            }, reminderFrequency * 60 * 1000);
+          }
         }, delay);
       }
     }
 
     onAdd(taskData);
     setName(''); setDueDate(''); setDueTime(''); setReminderTime(''); setReminderDate('');
-    setNotificationsEnabled(false); setSubject(''); setRival(''); setLocation('');
+    setNotificationsEnabled(false); setReminderFrequency(0); setSubject(''); setRival(''); setLocation('');
     setHomeAway('home'); setSportType(sportTypes[0] || 'Fútbol');
     setOpen(false);
   };
@@ -213,6 +227,20 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
               <div>
                 <Label>🕐 Hora del recordatorio</Label>
                 <Input type="time" value={reminderTime} onChange={e => setReminderTime(e.target.value)} />
+              </div>
+              <div>
+                <Label>🔁 Frecuencia de repetición</Label>
+                <Select value={String(reminderFrequency)} onValueChange={v => setReminderFrequency(Number(v))}>
+                  <SelectTrigger><SelectValue placeholder="Sin repetición" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Sin repetición</SelectItem>
+                    <SelectItem value="5">Cada 5 minutos</SelectItem>
+                    <SelectItem value="10">Cada 10 minutos</SelectItem>
+                    <SelectItem value="15">Cada 15 minutos</SelectItem>
+                    <SelectItem value="30">Cada 30 minutos</SelectItem>
+                    <SelectItem value="60">Cada 1 hora</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               {reminderTime && !reminderDate && (
                 <p className="text-xs text-destructive">Debes poner la fecha del recordatorio</p>
