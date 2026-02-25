@@ -4,11 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Plus } from 'lucide-react';
 import type { DbTask } from '@/types/app';
 import { SPORT_EMOJIS } from '@/types/app';
+import { getSportEmoji } from '@/lib/sport-emojis';
 import { toast } from '@/hooks/use-toast';
 
 interface AddTaskDialogProps {
@@ -22,12 +24,10 @@ interface AddTaskDialogProps {
 const typeLabels: Record<string, string> = {
   homework: 'Deber', exam: 'Examen', event: 'Evento', match: 'Partido', task: 'Tarea',
 };
-
 const dateLabels: Record<string, string> = {
   homework: 'Día de entrega', exam: 'Día del examen', event: 'Día del evento',
   match: 'Día del partido', task: 'Día de entrega',
 };
-
 const timeLabels: Record<string, string> = {
   homework: 'Hora de entrega', exam: 'Hora del examen', event: 'Hora del evento',
   match: 'Hora del partido', task: 'Hora de entrega',
@@ -36,6 +36,9 @@ const timeLabels: Record<string, string> = {
 const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = [] }: AddTaskDialogProps) => {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [importance, setImportance] = useState('normal');
+  const [customImportance, setCustomImportance] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [dueTime, setDueTime] = useState('');
   const [reminderDate, setReminderDate] = useState('');
@@ -51,6 +54,7 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
   const showSubjects = (type === 'homework' || type === 'exam') && subjects.length > 0;
   const showMatchFields = type === 'match';
   const showLocation = type === 'event';
+  const showImportance = type !== 'match' && type !== 'event';
 
   const handleNotificationToggle = async (checked: boolean) => {
     if (!checked) { setNotificationsEnabled(false); return; }
@@ -64,11 +68,7 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
         setNotificationsEnabled(true);
         toast({ title: '🔔 Notificaciones activadas', description: 'Recibirás recordatorios.' });
       } else {
-        toast({
-          title: 'Notificaciones bloqueadas',
-          description: 'Actívalas en la configuración de tu navegador.',
-          variant: 'destructive',
-        });
+        toast({ title: 'Notificaciones bloqueadas', description: 'Actívalas en la configuración de tu navegador.', variant: 'destructive' });
         setNotificationsEnabled(false);
       }
     } catch {
@@ -78,12 +78,14 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
   };
 
   const handleSubmit = () => {
-    if (!name || !dueDate) return;
+    if (!name) return;
     if (notificationsEnabled && reminderTime && !reminderDate) return;
+
+    const finalImportance = importance === 'otro' ? (customImportance || 'normal') : importance;
 
     const taskData: Partial<DbTask> = {
       name,
-      due_date: dueDate,
+      due_date: dueDate || null,
       due_time: dueTime || null,
       reminder_time: notificationsEnabled && reminderTime ? reminderTime : null,
       completed: false,
@@ -94,26 +96,24 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
       sport_type: showMatchFields ? sportType : null,
     } as any;
 
+    if (description) (taskData as any).description = description;
+    if (showImportance && finalImportance !== 'normal') (taskData as any).importance = finalImportance;
     if (showLocation && location) (taskData as any).location = location;
     if (notificationsEnabled && reminderDate) (taskData as any).reminder_date = reminderDate;
     if (notificationsEnabled && reminderFrequency > 0) (taskData as any).reminder_frequency = reminderFrequency;
 
-    // Schedule notification (initial + repeating)
+    // Schedule notification
     if (notificationsEnabled && reminderTime && reminderDate && 'Notification' in window && Notification.permission === 'granted') {
       const reminderDateObj = new Date(`${reminderDate}T${reminderTime}:00`);
-      const dueDateTime = new Date(`${dueDate}T${dueTime || '23:59'}:00`);
+      const dueDateTime = dueDate ? new Date(`${dueDate}T${dueTime || '23:59'}:00`) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
       const delay = reminderDateObj.getTime() - Date.now();
 
       const sendNotification = () => {
         new Notification(`📚 Recordatorio: ${name}`, {
-          body: `${typeLabels[type]} para ${new Date(dueDate).toLocaleDateString('es-ES')}`,
+          body: dueDate ? `${typeLabels[type]} para ${new Date(dueDate).toLocaleDateString('es-ES')}` : `${typeLabels[type]}: ${name}`,
           icon: '/logo.png',
         });
-        try {
-          const audio = new Audio('/notification-sound.mp3');
-          audio.volume = 0.7;
-          audio.play().catch(() => {});
-        } catch {}
+        try { const audio = new Audio('/notification-sound.mp3'); audio.volume = 0.7; audio.play().catch(() => {}); } catch {}
       };
 
       if (delay > 0) {
@@ -130,7 +130,8 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
     }
 
     onAdd(taskData);
-    setName(''); setDueDate(''); setDueTime(''); setReminderTime(''); setReminderDate('');
+    setName(''); setDescription(''); setImportance('normal'); setCustomImportance('');
+    setDueDate(''); setDueTime(''); setReminderTime(''); setReminderDate('');
     setNotificationsEnabled(false); setReminderFrequency(0); setSubject(''); setRival(''); setLocation('');
     setHomeAway('home'); setSportType(sportTypes[0] || 'Fútbol');
     setOpen(false);
@@ -154,6 +155,11 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
             <Input value={name} onChange={e => setName(e.target.value)} placeholder={`Nombre del ${typeLabels[type].toLowerCase()}`} />
           </div>
 
+          <div>
+            <Label>Descripción (opcional)</Label>
+            <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Describe la tarea..." className="resize-none" rows={2} />
+          </div>
+
           {showSubjects && (
             <div>
               <Label>Asignatura</Label>
@@ -163,6 +169,25 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
                   {subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
+            </div>
+          )}
+
+          {showImportance && (
+            <div>
+              <Label>Importancia</Label>
+              <Select value={importance} onValueChange={setImportance}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="importante">❗ Importante</SelectItem>
+                  <SelectItem value="urgente">🔴 Urgente</SelectItem>
+                  <SelectItem value="voluntario">💚 Voluntario</SelectItem>
+                  <SelectItem value="otro">✏️ Otro</SelectItem>
+                </SelectContent>
+              </Select>
+              {importance === 'otro' && (
+                <Input value={customImportance} onChange={e => setCustomImportance(e.target.value)} placeholder="Escribe la importancia" className="mt-2" />
+              )}
             </div>
           )}
 
@@ -185,7 +210,7 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
                   <Select value={sportType} onValueChange={setSportType}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {sportTypes.map(s => <SelectItem key={s} value={s}>{SPORT_EMOJIS[s] || '🏅'} {s}</SelectItem>)}
+                      {sportTypes.map(s => <SelectItem key={s} value={s}>{SPORT_EMOJIS[s] || getSportEmoji(s)} {s}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -207,7 +232,7 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
           )}
 
           <div>
-            <Label>{dateLabels[type] || 'Fecha'}</Label>
+            <Label>{dateLabels[type] || 'Fecha'} (opcional)</Label>
             <Input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
           </div>
           <div>
@@ -247,7 +272,7 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
               )}
             </div>
           )}
-          <Button onClick={handleSubmit} className="w-full" disabled={!name || !dueDate || (notificationsEnabled && reminderTime && !reminderDate ? true : false)}>
+          <Button onClick={handleSubmit} className="w-full" disabled={!name || (notificationsEnabled && reminderTime && !reminderDate ? true : false)}>
             Añadir {typeLabels[type].toLowerCase()}
           </Button>
         </div>

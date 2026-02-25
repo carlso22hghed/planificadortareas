@@ -12,7 +12,9 @@ import TaskList from '@/components/TaskList';
 import ScheduleInline from '@/components/ScheduleInline';
 import SettingsPanel from '@/components/SettingsPanel';
 import SupportDialog from '@/components/SupportDialog';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock } from 'lucide-react';
+import DontForgetPage from '@/components/DontForgetPage';
+import NotesPage from '@/components/NotesPage';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -189,7 +191,9 @@ const Index = () => {
       result.push({ id: 'eventos', label: 'Eventos', shortLabel: 'Even.', icon: Calendar });
       if (settings.partidos_mode === 'new_tab') result.push({ id: 'partidos', label: 'Partidos', shortLabel: 'Part.', icon: Trophy });
     }
-    if (scheduleTabEnabled) result.push({ id: 'horario' as TabType, label: 'Horario', shortLabel: 'Hor.', icon: CalendarClock });
+    if (scheduleTabEnabled) result.push({ id: 'horario', label: 'Horario', shortLabel: 'Hor.', icon: CalendarClock });
+    if ((settings as any).dont_forget_enabled) result.push({ id: 'no-olvidar', label: '¡No olvidar!', shortLabel: '¡No!', icon: AlertTriangle });
+    if ((settings as any).notes_enabled) result.push({ id: 'notas', label: 'Notas', shortLabel: 'Not.', icon: FileText });
     return result;
   };
 
@@ -347,9 +351,13 @@ const Index = () => {
               sportTypes={settings.sport_types} />
           )}
 
-          {activeTab === ('horario' as TabType) && (
+          {activeTab === 'horario' && (
             <ScheduleInline userId={user!.id} />
           )}
+
+          {activeTab === 'no-olvidar' && <DontForgetPage />}
+
+          {activeTab === 'notas' && <NotesPage />}
         </main>
 
         <EditCountdownDialog

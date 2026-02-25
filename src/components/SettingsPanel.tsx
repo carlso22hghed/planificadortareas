@@ -9,7 +9,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ALL_SUBJECTS, ALL_SPORT_TYPES, SPORT_EMOJIS, CUSTOM_SPORT_EMOJI } from '@/types/app';
+import { ALL_SUBJECTS, ALL_SPORT_TYPES, SPORT_EMOJIS } from '@/types/app';
+import { getSportEmoji } from '@/lib/sport-emojis';
 import type { DbSettings } from '@/types/app';
 import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
@@ -183,7 +184,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
             {/* Font Family */}
             <Collapsible open={fontOpen} onOpenChange={setFontOpen}>
               <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-muted/50">
-                <Label className="font-bold cursor-pointer">🔤 Tipo de Letra</Label>
+                <Label className="font-bold cursor-pointer">🔤 Tipografía</Label>
                 {fontOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2 space-y-1">
@@ -288,12 +289,29 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
               <Label className="cursor-pointer text-sm font-semibold">Pestaña de Horario (abajo)</Label>
               <Switch
-                checked={(settings as any).schedule_tab_enabled || false}
-                onCheckedChange={checked => onUpdate({ schedule_tab_enabled: checked } as any)}
+                checked={settings.schedule_tab_enabled || false}
+                onCheckedChange={checked => onUpdate({ schedule_tab_enabled: checked })}
               />
             </div>
 
-            {/* Grouping Mode */}
+            {/* Don't Forget Tab */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+              <Label className="cursor-pointer text-sm font-semibold">Pestaña ¡No olvidar!</Label>
+              <Switch
+                checked={(settings as any).dont_forget_enabled || false}
+                onCheckedChange={checked => onUpdate({ dont_forget_enabled: checked } as any)}
+              />
+            </div>
+
+            {/* Notes Tab */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+              <Label className="cursor-pointer text-sm font-semibold">Pestaña de Notas</Label>
+              <Switch
+                checked={(settings as any).notes_enabled || false}
+                onCheckedChange={checked => onUpdate({ notes_enabled: checked } as any)}
+              />
+            </div>
+
             <div className="space-y-3">
               <Label className="font-bold">Agrupación por asignatura</Label>
               <RadioGroup
@@ -345,14 +363,14 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                       checked={settings.sport_types.includes(sport)}
                       onCheckedChange={() => toggleSportType(sport)}
                     />
-                    <span>{SPORT_EMOJIS[sport] || CUSTOM_SPORT_EMOJI} {sport}</span>
+                    <span>{SPORT_EMOJIS[sport] || getSportEmoji(sport)} {sport}</span>
                   </label>
                 ))}
 
                 {/* Custom sports added by user */}
                 {settings.sport_types.filter(s => !ALL_SPORT_TYPES.includes(s)).map(sport => (
                   <div key={sport} className="flex items-center justify-between p-2 rounded-lg bg-primary/10 text-sm">
-                    <span>{CUSTOM_SPORT_EMOJI} {sport}</span>
+                    <span>{getSportEmoji(sport)} {sport}</span>
                     <button onClick={() => {
                       const newTypes = settings.sport_types.filter(s => s !== sport);
                       onUpdate({ sport_types: newTypes.length > 0 ? newTypes : ['Fútbol'] });

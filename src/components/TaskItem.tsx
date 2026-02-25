@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import type { DbTask } from '@/types/app';
 import { Check, Trash2, Clock, CalendarDays, MapPin, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { getSubjectColor } from '@/lib/subject-colors';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TaskItemProps {
   task: DbTask;
@@ -12,9 +15,25 @@ interface TaskItemProps {
   onToggleStudy?: (id: string) => void;
 }
 
+const IMPORTANCE_BADGES: Record<string, { label: string; className: string }> = {
+  importante: { label: '❗ Importante', className: 'bg-warning/20 text-warning-foreground border-warning/30' },
+  urgente: { label: '🔴 Urgente', className: 'bg-destructive/20 text-destructive border-destructive/30' },
+  voluntario: { label: '💚 Voluntario', className: 'bg-success/20 text-success border-success/30' },
+};
+
 const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemProps) => {
-  const isPast = new Date(task.due_date) < new Date(new Date().toDateString());
+  const isPast = task.due_date ? new Date(task.due_date) < new Date(new Date().toDateString()) : false;
   const isExam = task.type === 'exam';
+  const [gradeInput, setGradeInput] = useState((task as any).grade || '');
+  const [showGradeInput, setShowGradeInput] = useState(false);
+
+  const saveGrade = async (grade: string) => {
+    await supabase.from('tasks').update({ grade } as any).eq('id', task.id);
+    setShowGradeInput(false);
+  };
+
+  const importance = (task as any).importance as string | null;
+  const importanceBadge = importance && importance !== 'normal' ? IMPORTANCE_BADGES[importance] || { label: importance, className: 'bg-muted/50 text-muted-foreground' } : null;
 
   return (
     <div className={cn(
@@ -30,11 +49,16 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
 
         <div className="flex-1 min-w-0">
           <p className={cn('font-semibold text-sm', task.completed && 'line-through')}>{task.name}</p>
+          {(task as any).description && (
+            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{(task as any).description}</p>
+          )}
           <div className="flex flex-wrap items-center gap-2 mt-1">
-            <span className={cn('text-xs flex items-center gap-1', isPast && !task.completed ? 'text-destructive font-semibold' : 'text-muted-foreground')}>
-              <CalendarDays className="w-3 h-3" />
-              {new Date(task.due_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
-            </span>
+            {task.due_date && (
+              <span className={cn('text-xs flex items-center gap-1', isPast && !task.completed ? 'text-destructive font-semibold' : 'text-muted-foreground')}>
+                <CalendarDays className="w-3 h-3" />
+                {new Date(task.due_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+              </span>
+            )}
             {task.due_time && (
               <span className="text-xs text-muted-foreground flex items-center gap-1">
                 <Clock className="w-3 h-3" />{task.due_time}
@@ -46,6 +70,9 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
                 <Badge variant="secondary" className={cn("text-[10px] px-1.5 py-0 border-0", color.bg, color.text)}>{task.subject}</Badge>
               );
             })()}
+            {importanceBadge && (
+              <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", importanceBadge.className)}>{importanceBadge.label}</Badge>
+            )}
             {task.rival && <span className="text-xs text-muted-foreground">vs {task.rival}</span>}
             {task.sport_type && task.type === 'match' && (
               <Badge variant="outline" className="text-[10px] px-1.5 py-0">{task.sport_type}</Badge>
@@ -73,20 +100,47 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
         </div>
       </div>
 
-      {/* Study row for exams - at same height as completion */}
+      {/* Study row for exams - smaller checkbox */}
       {isExam && !task.completed && onToggleStudy && (
         <div className="flex items-center gap-3 mt-2">
           <button
             onClick={(e) => { e.stopPropagation(); onToggleStudy(task.id); }}
             title="Estudiar / Practicar"
-            className={cn('w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors',
+            className={cn('w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors',
               task.study_completed ? 'bg-success border-success' : 'border-muted-foreground/30 hover:border-primary')}
           >
-            {task.study_completed && <Check className="w-3.5 h-3.5 text-success-foreground" />}
+            {task.study_completed && <Check className="w-2.5 h-2.5 text-success-foreground" />}
           </button>
           <p className="text-xs text-muted-foreground">
             {task.study_completed ? '✅' : '📖'} Estudiar / Practicar
           </p>
+        </div>
+      )}
+
+      {/* Grade for completed exams */}
+      {isExam && task.completed && (
+        <div className="flex items-center gap-2 mt-2">
+          {(task as any).grade ? (
+            <button onClick={() => setShowGradeInput(true)} className="text-xs text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded-full">
+              📊 Nota: {(task as any).grade}
+            </button>
+          ) : showGradeInput ? (
+            <div className="flex items-center gap-1">
+              <Input
+                value={gradeInput}
+                onChange={e => setGradeInput(e.target.value)}
+                placeholder="Ej: 8.5"
+                className="h-6 text-xs w-20"
+                onKeyDown={e => e.key === 'Enter' && gradeInput && saveGrade(gradeInput)}
+              />
+              <button onClick={() => gradeInput && saveGrade(gradeInput)} className="text-xs text-primary font-bold">✓</button>
+              <button onClick={() => setShowGradeInput(false)} className="text-xs text-muted-foreground">✕</button>
+            </div>
+          ) : (
+            <button onClick={() => setShowGradeInput(true)} className="text-xs text-muted-foreground hover:text-primary transition-colors">
+              📊 Añadir nota (opcional)
+            </button>
+          )}
         </div>
       )}
     </div>
