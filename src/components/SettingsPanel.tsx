@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ALL_SUBJECTS, ALL_SPORT_TYPES, SPORT_EMOJIS } from '@/types/app';
+import { ALL_SUBJECTS, ALL_SPORT_TYPES, SPORT_EMOJIS, CUSTOM_SPORT_EMOJI } from '@/types/app';
 import type { DbSettings } from '@/types/app';
 import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
@@ -41,6 +41,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
   const [editingSchool, setEditingSchool] = useState(false);
   const [tempSchool, setTempSchool] = useState(settings.school_name);
   const [newSubject, setNewSubject] = useState('');
+  const [newSport, setNewSport] = useState('');
   const [fontOpen, setFontOpen] = useState(false);
 
   const saveName = () => {
@@ -344,9 +345,40 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                       checked={settings.sport_types.includes(sport)}
                       onCheckedChange={() => toggleSportType(sport)}
                     />
-                    <span>{SPORT_EMOJIS[sport] || '🏅'} {sport}</span>
+                    <span>{SPORT_EMOJIS[sport] || CUSTOM_SPORT_EMOJI} {sport}</span>
                   </label>
                 ))}
+
+                {/* Custom sports added by user */}
+                {settings.sport_types.filter(s => !ALL_SPORT_TYPES.includes(s)).map(sport => (
+                  <div key={sport} className="flex items-center justify-between p-2 rounded-lg bg-primary/10 text-sm">
+                    <span>{CUSTOM_SPORT_EMOJI} {sport}</span>
+                    <button onClick={() => {
+                      const newTypes = settings.sport_types.filter(s => s !== sport);
+                      onUpdate({ sport_types: newTypes.length > 0 ? newTypes : ['Fútbol'] });
+                    }} className="text-destructive text-xs font-bold">✕</button>
+                  </div>
+                ))}
+
+                <div className="flex gap-2">
+                  <Input
+                    value={newSport}
+                    onChange={e => setNewSport(e.target.value)}
+                    placeholder="Ej: Rugby"
+                    className="text-sm"
+                    onKeyDown={e => e.key === 'Enter' && newSport.trim() && (() => {
+                      onUpdate({ sport_types: [...settings.sport_types, newSport.trim()] });
+                      setNewSport('');
+                    })()}
+                  />
+                  <Button size="icon" variant="outline" onClick={() => {
+                    if (!newSport.trim()) return;
+                    onUpdate({ sport_types: [...settings.sport_types, newSport.trim()] });
+                    setNewSport('');
+                  }} disabled={!newSport.trim()}>
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             )}
 

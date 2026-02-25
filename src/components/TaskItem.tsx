@@ -64,17 +64,6 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
-          {/* Study checkbox at same height for exams */}
-          {isExam && !task.completed && onToggleStudy && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onToggleStudy(task.id); }}
-              title="Estudiar / Practicar"
-              className={cn('w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors mr-1',
-                task.study_completed ? 'bg-success border-success' : 'border-muted-foreground/30 hover:border-primary')}
-            >
-              {task.study_completed && <Check className="w-3 h-3 text-success-foreground" />}
-            </button>
-          )}
           <button onClick={(e) => { e.stopPropagation(); onEdit(task); }} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
             <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
@@ -84,11 +73,21 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
         </div>
       </div>
 
-      {/* Study label below for exams */}
-      {isExam && !task.completed && (
-        <p className="ml-9 mt-1 text-[10px] text-muted-foreground">
-          {task.study_completed ? '✅' : '📖'} Estudiar / Practicar
-        </p>
+      {/* Study row for exams - at same height as completion */}
+      {isExam && !task.completed && onToggleStudy && (
+        <div className="flex items-center gap-3 mt-2">
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleStudy(task.id); }}
+            title="Estudiar / Practicar"
+            className={cn('w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors',
+              task.study_completed ? 'bg-success border-success' : 'border-muted-foreground/30 hover:border-primary')}
+          >
+            {task.study_completed && <Check className="w-3.5 h-3.5 text-success-foreground" />}
+          </button>
+          <p className="text-xs text-muted-foreground">
+            {task.study_completed ? '✅' : '📖'} Estudiar / Practicar
+          </p>
+        </div>
       )}
     </div>
   );
