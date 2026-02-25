@@ -44,6 +44,27 @@ export type Database = {
         }
         Relationships: []
       }
+      dont_forget: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -147,10 +168,13 @@ export type Database = {
         Row: {
           completed: boolean
           created_at: string
-          due_date: string
+          description: string | null
+          due_date: string | null
           due_time: string | null
+          grade: string | null
           home_away: string | null
           id: string
+          importance: string | null
           location: string | null
           name: string
           reminder_date: string | null
@@ -167,10 +191,13 @@ export type Database = {
         Insert: {
           completed?: boolean
           created_at?: string
-          due_date: string
+          description?: string | null
+          due_date?: string | null
           due_time?: string | null
+          grade?: string | null
           home_away?: string | null
           id?: string
+          importance?: string | null
           location?: string | null
           name: string
           reminder_date?: string | null
@@ -187,10 +214,13 @@ export type Database = {
         Update: {
           completed?: boolean
           created_at?: string
-          due_date?: string
+          description?: string | null
+          due_date?: string | null
           due_time?: string | null
+          grade?: string | null
           home_away?: string | null
           id?: string
+          importance?: string | null
           location?: string | null
           name?: string
           reminder_date?: string | null
@@ -231,11 +261,13 @@ export type Database = {
           custom_subjects: string[]
           dark_mode: boolean
           design_style: string
+          dont_forget_enabled: boolean
           enabled_subjects: string[]
           font_family: string
           grouping_mode: string
           id: string
           nav_position: string
+          notes_enabled: boolean
           notification_sound: boolean
           partidos_mode: string
           schedule_tab_enabled: boolean
@@ -252,11 +284,13 @@ export type Database = {
           custom_subjects?: string[]
           dark_mode?: boolean
           design_style?: string
+          dont_forget_enabled?: boolean
           enabled_subjects?: string[]
           font_family?: string
           grouping_mode?: string
           id?: string
           nav_position?: string
+          notes_enabled?: boolean
           notification_sound?: boolean
           partidos_mode?: string
           schedule_tab_enabled?: boolean
@@ -273,11 +307,13 @@ export type Database = {
           custom_subjects?: string[]
           dark_mode?: boolean
           design_style?: string
+          dont_forget_enabled?: boolean
           enabled_subjects?: string[]
           font_family?: string
           grouping_mode?: string
           id?: string
           nav_position?: string
+          notes_enabled?: boolean
           notification_sound?: boolean
           partidos_mode?: string
           schedule_tab_enabled?: boolean
@@ -286,6 +322,75 @@ export type Database = {
           sport_types?: string[]
           tareas_enabled?: boolean
           theme?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      voice_notes: {
+        Row: {
+          audio_url: string
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          reminder_date: string | null
+          reminder_frequency: number | null
+          reminder_time: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          audio_url: string
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          reminder_date?: string | null
+          reminder_frequency?: number | null
+          reminder_time?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          audio_url?: string
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          reminder_date?: string | null
+          reminder_frequency?: number | null
+          reminder_time?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      written_notes: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          reminder_date: string | null
+          reminder_frequency: number | null
+          reminder_time: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          reminder_date?: string | null
+          reminder_frequency?: number | null
+          reminder_time?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          reminder_date?: string | null
+          reminder_frequency?: number | null
+          reminder_time?: string | null
+          title?: string
           user_id?: string
         }
         Relationships: []

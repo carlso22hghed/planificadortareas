@@ -3,10 +3,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { DbTask } from '@/types/app';
 import { SPORT_EMOJIS } from '@/types/app';
+import { getSportEmoji } from '@/lib/sport-emojis';
 
 interface EditTaskDialogProps {
   task: DbTask | null;
@@ -28,6 +30,9 @@ const timeLabels: Record<string, string> = {
 
 const EditTaskDialog = ({ task, open, onOpenChange, onSave, subjects = [], sportTypes = [] }: EditTaskDialogProps) => {
   const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [importance, setImportance] = useState('normal');
+  const [customImportance, setCustomImportance] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [dueTime, setDueTime] = useState('');
   const [subject, setSubject] = useState('');
@@ -39,7 +44,17 @@ const EditTaskDialog = ({ task, open, onOpenChange, onSave, subjects = [], sport
   useEffect(() => {
     if (task) {
       setName(task.name);
-      setDueDate(task.due_date);
+      setDescription((task as any).description || '');
+      const imp = (task as any).importance || 'normal';
+      const knownValues = ['normal', 'importante', 'urgente', 'voluntario'];
+      if (knownValues.includes(imp)) {
+        setImportance(imp);
+        setCustomImportance('');
+      } else {
+        setImportance('otro');
+        setCustomImportance(imp);
+      }
+      setDueDate(task.due_date || '');
       setDueTime(task.due_time || '');
       setSubject(task.subject || '');
       setRival(task.rival || '');
@@ -54,18 +69,22 @@ const EditTaskDialog = ({ task, open, onOpenChange, onSave, subjects = [], sport
   const showSubjects = (task.type === 'homework' || task.type === 'exam') && subjects.length > 0;
   const showMatchFields = task.type === 'match';
   const showLocation = task.type === 'event';
+  const showImportance = task.type !== 'match' && task.type !== 'event';
 
   const handleSave = () => {
-    if (!name || !dueDate) return;
+    if (!name) return;
+    const finalImportance = importance === 'otro' ? (customImportance || 'normal') : importance;
     const updated = {
       ...task,
       name,
-      due_date: dueDate,
+      due_date: dueDate || null,
       due_time: dueTime || null,
       subject: showSubjects && subject ? subject : null,
       rival: showMatchFields && rival ? rival : null,
       home_away: showMatchFields ? homeAway : null,
       sport_type: showMatchFields ? sportType : task.sport_type,
+      description: description || null,
+      importance: showImportance ? finalImportance : 'normal',
     } as any;
     if (showLocation) updated.location = location || null;
     onSave(updated);
@@ -84,6 +103,11 @@ const EditTaskDialog = ({ task, open, onOpenChange, onSave, subjects = [], sport
             <Input value={name} onChange={e => setName(e.target.value)} />
           </div>
 
+          <div>
+            <Label>Descripción (opcional)</Label>
+            <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Describe la tarea..." className="resize-none" rows={2} />
+          </div>
+
           {showSubjects && (
             <div>
               <Label>Asignatura</Label>
@@ -93,6 +117,25 @@ const EditTaskDialog = ({ task, open, onOpenChange, onSave, subjects = [], sport
                   {subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
+            </div>
+          )}
+
+          {showImportance && (
+            <div>
+              <Label>Importancia</Label>
+              <Select value={importance} onValueChange={setImportance}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="importante">❗ Importante</SelectItem>
+                  <SelectItem value="urgente">🔴 Urgente</SelectItem>
+                  <SelectItem value="voluntario">💚 Voluntario</SelectItem>
+                  <SelectItem value="otro">✏️ Otro</SelectItem>
+                </SelectContent>
+              </Select>
+              {importance === 'otro' && (
+                <Input value={customImportance} onChange={e => setCustomImportance(e.target.value)} placeholder="Escribe la importancia" className="mt-2" />
+              )}
             </div>
           )}
 
@@ -115,7 +158,7 @@ const EditTaskDialog = ({ task, open, onOpenChange, onSave, subjects = [], sport
                   <Select value={sportType} onValueChange={setSportType}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {sportTypes.map(s => <SelectItem key={s} value={s}>{SPORT_EMOJIS[s] || '🏅'} {s}</SelectItem>)}
+                      {sportTypes.map(s => <SelectItem key={s} value={s}>{SPORT_EMOJIS[s] || getSportEmoji(s)} {s}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -137,7 +180,7 @@ const EditTaskDialog = ({ task, open, onOpenChange, onSave, subjects = [], sport
           )}
 
           <div>
-            <Label>{dateLabels[task.type] || 'Fecha'}</Label>
+            <Label>{dateLabels[task.type] || 'Fecha'} (opcional)</Label>
             <Input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
           </div>
           <div>
@@ -145,7 +188,7 @@ const EditTaskDialog = ({ task, open, onOpenChange, onSave, subjects = [], sport
             <Input type="time" value={dueTime} onChange={e => setDueTime(e.target.value)} />
           </div>
 
-          <Button onClick={handleSave} className="w-full" disabled={!name || !dueDate}>
+          <Button onClick={handleSave} className="w-full" disabled={!name}>
             Guardar cambios
           </Button>
         </div>
