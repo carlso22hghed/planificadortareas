@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash2, Plus, Mic, Square, FileText, Volume2 } from 'lucide-react';
+import { Trash2, Plus, Mic, Square, FileText, Volume2, Download, Share2, Pencil, X, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 
@@ -16,7 +16,6 @@ type NotesTab = 'written' | 'voice';
 
 const NotesPage = () => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   const [tab, setTab] = useState<NotesTab>('written');
 
   return (
@@ -48,6 +47,9 @@ const WrittenNotes = ({ userId }: { userId?: string }) => {
   const [reminderDate, setReminderDate] = useState('');
   const [reminderTime, setReminderTime] = useState('');
   const [reminderFrequency, setReminderFrequency] = useState(0);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
 
   const { data: notes = [] } = useQuery({
     queryKey: ['written-notes', userId],
@@ -76,6 +78,19 @@ const WrittenNotes = ({ userId }: { userId?: string }) => {
   const deleteNote = async (id: string) => {
     await supabase.from('written_notes').delete().eq('id', id);
     queryClient.invalidateQueries({ queryKey: ['written-notes'] });
+  };
+
+  const startEdit = (note: any) => {
+    setEditingId(note.id);
+    setEditTitle(note.title);
+    setEditContent(note.content || '');
+  };
+
+  const saveEdit = async () => {
+    if (!editingId || !editTitle.trim()) return;
+    await supabase.from('written_notes').update({ title: editTitle.trim(), content: editContent.trim() }).eq('id', editingId);
+    queryClient.invalidateQueries({ queryKey: ['written-notes'] });
+    setEditingId(null);
   };
 
   return (
@@ -128,18 +143,34 @@ const WrittenNotes = ({ userId }: { userId?: string }) => {
       ) : (
         notes.map((note: any) => (
           <div key={note.id} className="glass-card rounded-2xl p-4">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm">{note.title}</p>
-                {note.content && <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">{note.content}</p>}
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  {new Date(note.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                </p>
+            {editingId === note.id ? (
+              <div className="space-y-2">
+                <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} placeholder="Título" />
+                <Textarea value={editContent} onChange={e => setEditContent(e.target.value)} rows={3} className="resize-none" />
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={saveEdit} disabled={!editTitle.trim()} className="gap-1"><Check className="w-3 h-3" /> Guardar</Button>
+                  <Button size="sm" variant="outline" onClick={() => setEditingId(null)} className="gap-1"><X className="w-3 h-3" /> Cancelar</Button>
+                </div>
               </div>
-              <button onClick={() => deleteNote(note.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors shrink-0">
-                <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
-              </button>
-            </div>
+            ) : (
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm">{note.title}</p>
+                  {note.content && <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">{note.content}</p>}
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {new Date(note.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+                <div className="flex items-center gap-0.5 shrink-0">
+                  <button onClick={() => startEdit(note)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                    <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
+                  <button onClick={() => deleteNote(note.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors">
+                    <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ))
       )}
@@ -181,17 +212,12 @@ const VoiceNotes = ({ userId }: { userId?: string }) => {
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
       startTimeRef.current = Date.now();
-
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-
+      mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
         setAudioBlob(blob);
         stream.getTracks().forEach(t => t.stop());
       };
-
       mediaRecorder.start();
       setIsRecording(true);
     } catch {
@@ -213,12 +239,8 @@ const VoiceNotes = ({ userId }: { userId?: string }) => {
     if (error) { toast({ title: 'Error', description: 'No se pudo guardar el audio.', variant: 'destructive' }); return; }
     const { data: urlData } = supabase.storage.from('voice-notes').getPublicUrl(fileName);
     const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
-
     await supabase.from('voice_notes').insert({
-      title: title.trim(),
-      audio_url: urlData.publicUrl,
-      duration_seconds: duration,
-      user_id: userId,
+      title: title.trim(), audio_url: urlData.publicUrl, duration_seconds: duration, user_id: userId,
       reminder_date: reminderEnabled && reminderDate ? reminderDate : null,
       reminder_time: reminderEnabled && reminderTime ? reminderTime : null,
       reminder_frequency: reminderEnabled && reminderFrequency > 0 ? reminderFrequency : null,
@@ -233,6 +255,31 @@ const VoiceNotes = ({ userId }: { userId?: string }) => {
     queryClient.invalidateQueries({ queryKey: ['voice-notes'] });
   };
 
+  const downloadNote = async (url: string, title: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${title}.webm`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo descargar.', variant: 'destructive' });
+    }
+  };
+
+  const shareNote = async (url: string, title: string) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `Nota de voz: ${title}`, url });
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast({ title: '🔗 Enlace copiado', description: 'Se ha copiado el enlace de la nota de voz.' });
+    }
+  };
+
   return (
     <div className="space-y-3">
       <div className="flex justify-end">
@@ -244,7 +291,6 @@ const VoiceNotes = ({ userId }: { userId?: string }) => {
       {showForm && (
         <div className="glass-card rounded-2xl p-4 space-y-3 animate-slide-up">
           <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Nombre de la nota de voz" autoFocus />
-          
           <div className="flex items-center justify-center gap-4 py-4">
             {!isRecording && !audioBlob && (
               <Button onClick={startRecording} className="gap-2 rounded-full bg-destructive hover:bg-destructive/90" disabled={!title.trim()}>
@@ -264,7 +310,6 @@ const VoiceNotes = ({ userId }: { userId?: string }) => {
               </div>
             )}
           </div>
-
           <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
             <Label className="cursor-pointer text-sm">🔔 Aviso para escuchar</Label>
             <Switch checked={reminderEnabled} onCheckedChange={setReminderEnabled} />
@@ -286,7 +331,6 @@ const VoiceNotes = ({ userId }: { userId?: string }) => {
               </Select>
             </div>
           )}
-
           <div className="flex gap-2">
             <Button onClick={saveVoiceNote} className="flex-1" disabled={!audioBlob || !title.trim()}>Guardar</Button>
             <Button variant="outline" onClick={() => { setShowForm(false); setAudioBlob(null); setTitle(''); }}>Cancelar</Button>
@@ -311,9 +355,17 @@ const VoiceNotes = ({ userId }: { userId?: string }) => {
                   {new Date(note.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
-              <button onClick={() => deleteNote(note.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors shrink-0">
-                <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
-              </button>
+              <div className="flex items-center gap-0.5 shrink-0">
+                <button onClick={() => downloadNote(note.audio_url, note.title)} className="p-1.5 rounded-lg hover:bg-muted transition-colors" title="Descargar">
+                  <Download className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
+                <button onClick={() => shareNote(note.audio_url, note.title)} className="p-1.5 rounded-lg hover:bg-muted transition-colors" title="Compartir">
+                  <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
+                <button onClick={() => deleteNote(note.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors">
+                  <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                </button>
+              </div>
             </div>
           </div>
         ))
