@@ -50,6 +50,36 @@ const Index = () => {
     enabled: !!user,
   });
 
+  const { data: dontForgetItems = [] } = useQuery({
+    queryKey: ['dont-forget-header', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from('dont_forget').select('*').eq('user_id', user!.id).order('created_at', { ascending: false });
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem('dont-forget-dismissed');
+    if (dismissed) {
+      const dismissedAt = new Date(dismissed).getTime();
+      if (Date.now() - dismissedAt < 24 * 60 * 60 * 1000) {
+        setDontForgetDismissed(true);
+      } else {
+        localStorage.removeItem('dont-forget-dismissed');
+        setDontForgetDismissed(false);
+      }
+    }
+  }, []);
+
+  const dismissDontForget = () => {
+    setDontForgetDismissed(true);
+    localStorage.setItem('dont-forget-dismissed', new Date().toISOString());
+    setShowDontForgetPopup(false);
+  };
+
+  const showDontForgetButton = (settings as any)?.dont_forget_enabled && dontForgetItems.length > 0 && !dontForgetDismissed;
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { delay: 300, tolerance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 300, tolerance: 5 } }),
