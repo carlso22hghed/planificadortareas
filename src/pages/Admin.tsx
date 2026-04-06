@@ -110,6 +110,7 @@ const Admin = () => {
                   <SelectItem value="alpha">A-Z</SelectItem>
                   <SelectItem value="date_desc">Más reciente</SelectItem>
                   <SelectItem value="date_asc">Más antiguo</SelectItem>
+                  <SelectItem value="last_activity">Última actividad</SelectItem>
                 </SelectContent>
               </Select>
             </div>
