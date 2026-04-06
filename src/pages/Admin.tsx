@@ -128,6 +128,7 @@ const Admin = () => {
                     📅 {new Date(u.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })} — {new Date(u.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                   {u.last_location && <p className="text-[10px] text-muted-foreground">📍 {u.last_location}</p>}
+                  {lastActivity[u.user_id] && <p className="text-[10px] text-muted-foreground">🕐 Última actividad: {new Date(lastActivity[u.user_id]).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</p>}
                 </div>
                 <Badge variant="secondary" className="text-[10px] shrink-0">
                   {u.role === 'otro' ? u.custom_role || 'Otro' : u.role}
