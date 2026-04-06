@@ -366,8 +366,8 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
-    font-family: 'Nunito', sans-serif;
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
   }
 }
 
