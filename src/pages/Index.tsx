@@ -413,6 +413,25 @@ const Index = () => {
         )}
       </div>
 
+      {/* No Olvidar Popup */}
+      <Dialog open={showDontForgetPopup} onOpenChange={setShowDontForgetPopup}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">🚨 ¡No olvidar!</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {dontForgetItems.map((item: any) => (
+              <div key={item.id} className="p-3 rounded-xl bg-destructive/10 border border-destructive/20">
+                <p className="font-semibold text-sm text-destructive">🚨 {item.content}</p>
+              </div>
+            ))}
+          </div>
+          <button onClick={dismissDontForget} className="w-full mt-2 py-2 rounded-xl bg-muted text-muted-foreground text-sm font-semibold hover:bg-muted/80 transition-colors">
+            Ocultar por hoy
+          </button>
+        </DialogContent>
+      </Dialog>
+
       <SupportDialog />
     </div>
   );
