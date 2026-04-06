@@ -14,10 +14,11 @@ import SettingsPanel from '@/components/SettingsPanel';
 import SupportDialog from '@/components/SupportDialog';
 import DontForgetPage from '@/components/DontForgetPage';
 import NotesPage from '@/components/NotesPage';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText } from 'lucide-react';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const Index = () => {
   const { user, profile, settings, updateSettings, isAdmin } = useAuth();
@@ -28,6 +29,8 @@ const Index = () => {
   const [editCountdown, setEditCountdown] = useState<DbCountdown | null>(null);
   const notifiedRef = useRef(false);
   const [sidebarHover, setSidebarHover] = useState(false);
+  const [showDontForgetPopup, setShowDontForgetPopup] = useState(false);
+  const [dontForgetDismissed, setDontForgetDismissed] = useState(false);
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['tasks', user?.id],
