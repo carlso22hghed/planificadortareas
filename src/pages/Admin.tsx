@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import AdminUserView from '@/components/AdminUserView';
 import AdminSupportView from '@/components/AdminSupportView';
 
-type SortMode = 'alpha' | 'date_asc' | 'date_desc';
+type SortMode = 'alpha' | 'date_asc' | 'date_desc' | 'last_activity';
 
 const Admin = () => {
   const { isAdmin } = useAuth();
@@ -21,11 +21,30 @@ const Admin = () => {
   const [activeTab, setActiveTab] = useState<'users' | 'support'>('users');
   const [search, setSearch] = useState('');
   const [sortMode, setSortMode] = useState<SortMode>('alpha');
+  const [lastActivity, setLastActivity] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!isAdmin) { navigate('/'); return; }
     supabase.from('profiles').select('*').eq('is_active', true).order('display_name')
       .then(({ data }) => setUsers(data || []));
+    // Fetch last activity per user from tasks, countdowns, etc.
+    Promise.all([
+      supabase.from('tasks').select('user_id, created_at').order('created_at', { ascending: false }),
+      supabase.from('countdowns').select('user_id, created_at').order('created_at', { ascending: false }),
+      supabase.from('dont_forget').select('user_id, created_at').order('created_at', { ascending: false }),
+      supabase.from('written_notes').select('user_id, created_at').order('created_at', { ascending: false }),
+      supabase.from('voice_notes').select('user_id, created_at').order('created_at', { ascending: false }),
+    ]).then(results => {
+      const activityMap: Record<string, string> = {};
+      results.forEach(({ data }) => {
+        (data || []).forEach((row: any) => {
+          if (!activityMap[row.user_id] || row.created_at > activityMap[row.user_id]) {
+            activityMap[row.user_id] = row.created_at;
+          }
+        });
+      });
+      setLastActivity(activityMap);
+    });
   }, [isAdmin, navigate]);
 
   const filteredUsers = useMemo(() => {
@@ -37,9 +56,14 @@ const Admin = () => {
     return [...list].sort((a, b) => {
       if (sortMode === 'alpha') return (a.display_name || '').localeCompare(b.display_name || '');
       if (sortMode === 'date_asc') return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      if (sortMode === 'last_activity') {
+        const aAct = lastActivity[a.user_id] || '1970-01-01';
+        const bAct = lastActivity[b.user_id] || '1970-01-01';
+        return new Date(bAct).getTime() - new Date(aAct).getTime();
+      }
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
-  }, [users, search, sortMode]);
+  }, [users, search, sortMode, lastActivity]);
 
   if (!isAdmin) return null;
 
@@ -86,6 +110,7 @@ const Admin = () => {
                   <SelectItem value="alpha">A-Z</SelectItem>
                   <SelectItem value="date_desc">Más reciente</SelectItem>
                   <SelectItem value="date_asc">Más antiguo</SelectItem>
+                  <SelectItem value="last_activity">Última actividad</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -103,6 +128,7 @@ const Admin = () => {
                     📅 {new Date(u.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })} — {new Date(u.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                   {u.last_location && <p className="text-[10px] text-muted-foreground">📍 {u.last_location}</p>}
+                  {lastActivity[u.user_id] && <p className="text-[10px] text-muted-foreground">🕐 Última actividad: {new Date(lastActivity[u.user_id]).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</p>}
                 </div>
                 <Badge variant="secondary" className="text-[10px] shrink-0">
                   {u.role === 'otro' ? u.custom_role || 'Otro' : u.role}

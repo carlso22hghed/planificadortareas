@@ -14,10 +14,11 @@ import SettingsPanel from '@/components/SettingsPanel';
 import SupportDialog from '@/components/SupportDialog';
 import DontForgetPage from '@/components/DontForgetPage';
 import NotesPage from '@/components/NotesPage';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText } from 'lucide-react';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const Index = () => {
   const { user, profile, settings, updateSettings, isAdmin } = useAuth();
@@ -28,6 +29,8 @@ const Index = () => {
   const [editCountdown, setEditCountdown] = useState<DbCountdown | null>(null);
   const notifiedRef = useRef(false);
   const [sidebarHover, setSidebarHover] = useState(false);
+  const [showDontForgetPopup, setShowDontForgetPopup] = useState(false);
+  const [dontForgetDismissed, setDontForgetDismissed] = useState(false);
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['tasks', user?.id],
@@ -46,6 +49,36 @@ const Index = () => {
     },
     enabled: !!user,
   });
+
+  const { data: dontForgetItems = [] } = useQuery({
+    queryKey: ['dont-forget-header', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from('dont_forget').select('*').eq('user_id', user!.id).order('created_at', { ascending: false });
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem('dont-forget-dismissed');
+    if (dismissed) {
+      const dismissedAt = new Date(dismissed).getTime();
+      if (Date.now() - dismissedAt < 24 * 60 * 60 * 1000) {
+        setDontForgetDismissed(true);
+      } else {
+        localStorage.removeItem('dont-forget-dismissed');
+        setDontForgetDismissed(false);
+      }
+    }
+  }, []);
+
+  const dismissDontForget = () => {
+    setDontForgetDismissed(true);
+    localStorage.setItem('dont-forget-dismissed', new Date().toISOString());
+    setShowDontForgetPopup(false);
+  };
+
+  const showDontForgetButton = (settings as any)?.dont_forget_enabled && dontForgetItems.length > 0 && !dontForgetDismissed;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { delay: 300, tolerance: 5 } }),
@@ -241,7 +274,7 @@ const Index = () => {
         isLeftNav ? 'ml-14' : '',
       )}>
         <div className={cn('max-w-4xl w-full', isLeftNav ? 'mx-auto' : 'mx-auto')}>
-          <header className="gradient-hero px-5 pt-8 pb-6 rounded-b-3xl flex items-start justify-between">
+          <header className="gradient-hero px-5 pt-8 pb-6 rounded-b-3xl flex items-start justify-between relative">
             <div className="flex items-center gap-3">
               {!isLeftNav && <img src="/logo.png" alt="Logo" className="w-10 h-10 rounded-xl" />}
               <div>
@@ -251,6 +284,14 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center gap-1">
+              {showDontForgetButton && (
+                <button
+                  onClick={() => setShowDontForgetPopup(true)}
+                  className="px-2 py-1 rounded-lg bg-destructive text-destructive-foreground text-[10px] font-extrabold uppercase tracking-wide animate-pulse hover:bg-destructive/90 transition-colors"
+                >
+                  NO OLVIDAR
+                </button>
+              )}
               {showScheduleInHeader && (
                 <button onClick={() => navigate('/schedule')} className="p-2 rounded-full hover:bg-primary-foreground/20 transition-colors text-primary-foreground">
                   <CalendarClock className="w-5 h-5" />
@@ -371,6 +412,25 @@ const Index = () => {
           </nav>
         )}
       </div>
+
+      {/* No Olvidar Popup */}
+      <Dialog open={showDontForgetPopup} onOpenChange={setShowDontForgetPopup}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">🚨 ¡No olvidar!</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {dontForgetItems.map((item: any) => (
+              <div key={item.id} className="p-3 rounded-xl bg-destructive/10 border border-destructive/20">
+                <p className="font-semibold text-sm text-destructive">🚨 {item.content}</p>
+              </div>
+            ))}
+          </div>
+          <button onClick={dismissDontForget} className="w-full mt-2 py-2 rounded-xl bg-muted text-muted-foreground text-sm font-semibold hover:bg-muted/80 transition-colors">
+            Ocultar por hoy
+          </button>
+        </DialogContent>
+      </Dialog>
 
       <SupportDialog />
     </div>

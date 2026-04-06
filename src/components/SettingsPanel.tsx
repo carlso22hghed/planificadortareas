@@ -34,6 +34,36 @@ interface SettingsPanelProps {
   onUpdate: (updates: Partial<DbSettings>) => Promise<void>;
 }
 
+const NAMED_COLORS = [
+  'Rojo', 'Azul', 'Verde', 'Amarillo', 'Naranja', 'Rosa', 'Morado', 'Violeta', 'Turquesa', 'Cian',
+  'Coral', 'Salmón', 'Melocotón', 'Lavanda', 'Lila', 'Magenta', 'Fucsia', 'Índigo', 'Celeste', 'Aqua',
+  'Menta', 'Esmeralda', 'Oliva', 'Lima', 'Chartreuse', 'Dorado', 'Ámbar', 'Marrón', 'Chocolate', 'Beige',
+  'Crema', 'Marfil', 'Blanco', 'Gris', 'Plata', 'Negro', 'Burdeos', 'Granate', 'Carmesí', 'Bermellón',
+  'Terracota', 'Óxido', 'Cobre', 'Bronce', 'Ocre', 'Mostaza', 'Arena', 'Trigo', 'Perla', 'Hueso',
+  'Azul marino', 'Azul cielo', 'Azul eléctrico', 'Azul bebé', 'Azul acero', 'Azul real',
+  'Verde bosque', 'Verde manzana', 'Verde lima', 'Verde agua', 'Verde militar', 'Verde jade',
+  'Rojo cereza', 'Rojo sangre', 'Rojo tomate', 'Rosa pastel', 'Rosa chicle', 'Rosa viejo',
+];
+
+const COLOR_MAP: Record<string, string> = {
+  'Rojo': '#ef4444', 'Azul': '#3b82f6', 'Verde': '#22c55e', 'Amarillo': '#eab308', 'Naranja': '#f97316',
+  'Rosa': '#ec4899', 'Morado': '#a855f7', 'Violeta': '#8b5cf6', 'Turquesa': '#14b8a6', 'Cian': '#06b6d4',
+  'Coral': '#ff7f50', 'Salmón': '#fa8072', 'Melocotón': '#ffdab9', 'Lavanda': '#e6e6fa', 'Lila': '#c8a2c8',
+  'Magenta': '#ff00ff', 'Fucsia': '#ff00ff', 'Índigo': '#4b0082', 'Celeste': '#87ceeb', 'Aqua': '#00ffff',
+  'Menta': '#98ff98', 'Esmeralda': '#50c878', 'Oliva': '#808000', 'Lima': '#00ff00', 'Chartreuse': '#7fff00',
+  'Dorado': '#ffd700', 'Ámbar': '#ffbf00', 'Marrón': '#8b4513', 'Chocolate': '#d2691e', 'Beige': '#f5f5dc',
+  'Crema': '#fffdd0', 'Marfil': '#fffff0', 'Blanco': '#ffffff', 'Gris': '#9ca3af', 'Plata': '#c0c0c0',
+  'Negro': '#000000', 'Burdeos': '#800020', 'Granate': '#800000', 'Carmesí': '#dc143c', 'Bermellón': '#e34234',
+  'Terracota': '#e2725b', 'Óxido': '#b7410e', 'Cobre': '#b87333', 'Bronce': '#cd7f32', 'Ocre': '#cc7722',
+  'Mostaza': '#ffdb58', 'Arena': '#c2b280', 'Trigo': '#f5deb3', 'Perla': '#eae0c8', 'Hueso': '#e3dac9',
+  'Azul marino': '#000080', 'Azul cielo': '#87ceeb', 'Azul eléctrico': '#7df9ff', 'Azul bebé': '#89cff0',
+  'Azul acero': '#4682b4', 'Azul real': '#4169e1',
+  'Verde bosque': '#228b22', 'Verde manzana': '#8db600', 'Verde lima': '#32cd32', 'Verde agua': '#66cdaa',
+  'Verde militar': '#4b5320', 'Verde jade': '#00a86b',
+  'Rojo cereza': '#de3163', 'Rojo sangre': '#8b0000', 'Rojo tomate': '#ff6347',
+  'Rosa pastel': '#ffd1dc', 'Rosa chicle': '#ff69b4', 'Rosa viejo': '#c08081',
+};
+
 const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
@@ -44,6 +74,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
   const [newSubject, setNewSubject] = useState('');
   const [newSport, setNewSport] = useState('');
   const [fontOpen, setFontOpen] = useState(false);
+  const [colorSearch, setColorSearch] = useState('');
 
   const saveName = () => {
     onUpdate({ app_name: tempName || 'Cosas que Hacer' });
@@ -155,6 +186,44 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                       {bg.label}
                     </button>
                   ))}
+                </div>
+
+                {/* Color picker */}
+                <div className="mt-3 space-y-2">
+                  <Label className="text-xs font-semibold text-muted-foreground">🎨 O elige un color personalizado:</Label>
+                  <Input
+                    value={colorSearch}
+                    onChange={e => setColorSearch(e.target.value)}
+                    placeholder="Buscar color... (ej: azul, coral)"
+                    className="text-sm h-8 rounded-xl"
+                  />
+                  {colorSearch.trim() && (
+                    <div className="grid grid-cols-3 gap-1 max-h-32 overflow-y-auto">
+                      {NAMED_COLORS.filter(c => c.toLowerCase().includes(colorSearch.toLowerCase())).map(colorName => (
+                        <button
+                          key={colorName}
+                          onClick={() => {
+                            onUpdate({ school_background: `color:${COLOR_MAP[colorName]}` } as any);
+                            setColorSearch('');
+                          }}
+                          className={`p-2 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1 ${
+                            (settings as any).school_background === `color:${COLOR_MAP[colorName]}`
+                              ? 'ring-2 ring-primary'
+                              : 'hover:ring-1 ring-border'
+                          }`}
+                        >
+                          <span className="w-4 h-4 rounded-full shrink-0 border border-border" style={{ backgroundColor: COLOR_MAP[colorName] }} />
+                          <span className="truncate">{colorName}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {(settings as any).school_background?.startsWith('color:') && (
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/10 text-xs font-semibold">
+                      <span className="w-5 h-5 rounded-full border border-border" style={{ backgroundColor: (settings as any).school_background.replace('color:', '') }} />
+                      Color personalizado activo
+                    </div>
+                  )}
                 </div>
               </div>
             )}
