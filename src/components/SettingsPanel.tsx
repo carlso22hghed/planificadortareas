@@ -187,6 +187,44 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                     </button>
                   ))}
                 </div>
+
+                {/* Color picker */}
+                <div className="mt-3 space-y-2">
+                  <Label className="text-xs font-semibold text-muted-foreground">🎨 O elige un color personalizado:</Label>
+                  <Input
+                    value={colorSearch}
+                    onChange={e => setColorSearch(e.target.value)}
+                    placeholder="Buscar color... (ej: azul, coral)"
+                    className="text-sm h-8 rounded-xl"
+                  />
+                  {colorSearch.trim() && (
+                    <div className="grid grid-cols-3 gap-1 max-h-32 overflow-y-auto">
+                      {NAMED_COLORS.filter(c => c.toLowerCase().includes(colorSearch.toLowerCase())).map(colorName => (
+                        <button
+                          key={colorName}
+                          onClick={() => {
+                            onUpdate({ school_background: `color:${COLOR_MAP[colorName]}` } as any);
+                            setColorSearch('');
+                          }}
+                          className={`p-2 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1 ${
+                            (settings as any).school_background === `color:${COLOR_MAP[colorName]}`
+                              ? 'ring-2 ring-primary'
+                              : 'hover:ring-1 ring-border'
+                          }`}
+                        >
+                          <span className="w-4 h-4 rounded-full shrink-0 border border-border" style={{ backgroundColor: COLOR_MAP[colorName] }} />
+                          <span className="truncate">{colorName}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {(settings as any).school_background?.startsWith('color:') && (
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/10 text-xs font-semibold">
+                      <span className="w-5 h-5 rounded-full border border-border" style={{ backgroundColor: (settings as any).school_background.replace('color:', '') }} />
+                      Color personalizado activo
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
