@@ -274,7 +274,7 @@ const Index = () => {
         isLeftNav ? 'ml-14' : '',
       )}>
         <div className={cn('max-w-4xl w-full', isLeftNav ? 'mx-auto' : 'mx-auto')}>
-          <header className="gradient-hero px-5 pt-8 pb-6 rounded-b-3xl flex items-start justify-between">
+          <header className="gradient-hero px-5 pt-8 pb-6 rounded-b-3xl flex items-start justify-between relative">
             <div className="flex items-center gap-3">
               {!isLeftNav && <img src="/logo.png" alt="Logo" className="w-10 h-10 rounded-xl" />}
               <div>
@@ -284,6 +284,14 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center gap-1">
+              {showDontForgetButton && (
+                <button
+                  onClick={() => setShowDontForgetPopup(true)}
+                  className="px-2 py-1 rounded-lg bg-destructive text-destructive-foreground text-[10px] font-extrabold uppercase tracking-wide animate-pulse hover:bg-destructive/90 transition-colors"
+                >
+                  NO OLVIDAR
+                </button>
+              )}
               {showScheduleInHeader && (
                 <button onClick={() => navigate('/schedule')} className="p-2 rounded-full hover:bg-primary-foreground/20 transition-colors text-primary-foreground">
                   <CalendarClock className="w-5 h-5" />
