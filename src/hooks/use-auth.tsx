@@ -64,7 +64,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       document.documentElement.classList.toggle('dark', settingsRes.data.dark_mode);
       document.documentElement.setAttribute('data-theme', (settingsRes.data as any).theme || 'default');
       document.documentElement.setAttribute('data-design', (settingsRes.data as any).design_style || 'minimalist');
-      document.documentElement.setAttribute('data-school-bg', (settingsRes.data as any).school_background || 'gradient');
+      const bg = (settingsRes.data as any).school_background || 'gradient';
+      document.documentElement.setAttribute('data-school-bg', bg.startsWith('color:') ? 'custom-color' : bg);
+      if (bg.startsWith('color:')) document.documentElement.style.setProperty('--custom-bg-color', bg.replace('color:', ''));
+      else document.documentElement.style.removeProperty('--custom-bg-color');
       document.documentElement.style.setProperty('--font-sans', `'${(settingsRes.data as any).font_family || 'Nunito'}', sans-serif`);
       document.body.style.fontFamily = `'${(settingsRes.data as any).font_family || 'Nunito'}', sans-serif`;
       // Check if name or school is missing (for users who completed onboarding but have empty values)
@@ -136,7 +139,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       document.documentElement.setAttribute('data-design', (updates as any).design_style || 'minimalist');
     }
     if ('school_background' in updates) {
-      document.documentElement.setAttribute('data-school-bg', (updates as any).school_background || 'gradient');
+      const bg = (updates as any).school_background || 'gradient';
+      document.documentElement.setAttribute('data-school-bg', bg.startsWith('color:') ? 'custom-color' : bg);
+      if (bg.startsWith('color:')) document.documentElement.style.setProperty('--custom-bg-color', bg.replace('color:', ''));
+      else document.documentElement.style.removeProperty('--custom-bg-color');
     }
     if ('font_family' in updates) {
       document.documentElement.style.setProperty('--font-sans', `'${(updates as any).font_family || 'Nunito'}', sans-serif`);
@@ -163,7 +169,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       document.documentElement.classList.toggle('dark', data.dark_mode);
       document.documentElement.setAttribute('data-theme', (data as any).theme || 'default');
       document.documentElement.setAttribute('data-design', (data as any).design_style || 'minimalist');
-      document.documentElement.setAttribute('data-school-bg', (data as any).school_background || 'gradient');
+      const bg = (data as any).school_background || 'gradient';
+      document.documentElement.setAttribute('data-school-bg', bg.startsWith('color:') ? 'custom-color' : bg);
+      if (bg.startsWith('color:')) document.documentElement.style.setProperty('--custom-bg-color', bg.replace('color:', ''));
+      else document.documentElement.style.removeProperty('--custom-bg-color');
       document.documentElement.style.setProperty('--font-sans', `'${(data as any).font_family || 'Nunito'}', sans-serif`);
       document.body.style.fontFamily = `'${(data as any).font_family || 'Nunito'}', sans-serif`;
     }
