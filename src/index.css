@@ -360,6 +360,10 @@
   color: hsl(0 0% 92%);
 }
 
+[data-school-bg="custom-color"] .school-bg-container {
+  background: var(--custom-bg-color, hsl(250 70% 95%)) !important;
+}
+
 @layer base {
   * {
     @apply border-border;
