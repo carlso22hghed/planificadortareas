@@ -449,6 +449,7 @@ const Index = () => {
         </DialogContent>
       </Dialog>
 
+      <ClassroomPromoDialog onSync={classroom.startSync} />
       <SupportDialog />
     </div>
   );
