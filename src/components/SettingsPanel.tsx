@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Settings, Pencil, Check, LogOut, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { Settings, Pencil, Check, LogOut, Plus, ChevronDown, ChevronUp, GraduationCap, CheckCircle, Unlink } from 'lucide-react';
+import { useClassroom } from '@/hooks/use-classroom';
+import { useAuth } from '@/hooks/use-auth';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -12,7 +14,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ALL_SUBJECTS, ALL_SPORT_TYPES, SPORT_EMOJIS } from '@/types/app';
 import { getSportEmoji } from '@/lib/sport-emojis';
 import type { DbSettings } from '@/types/app';
-import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
@@ -65,7 +66,8 @@ const COLOR_MAP: Record<string, string> = {
 };
 
 const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
+  const { isSynced, startSync, disconnect, syncing } = useClassroom(user?.id);
   const navigate = useNavigate();
   const [editingName, setEditingName] = useState(false);
   const [tempName, setTempName] = useState(settings.app_name);
@@ -136,6 +138,31 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-80px)] pr-4">
           <div className="space-y-6 mt-4 pb-8">
+            {/* Google Classroom Sync */}
+            <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-3">
+              <div className="flex items-center gap-2">
+                <GraduationCap className="w-5 h-5 text-primary" />
+                <Label className="font-bold text-sm">Google Classroom</Label>
+              </div>
+              {isSynced ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-green-600 dark:text-green-400">
+                    <CheckCircle className="w-4 h-4" />
+                    Sincronizado con Classroom
+                  </div>
+                  <Button variant="outline" size="sm" className="gap-2 text-xs" onClick={disconnect}>
+                    <Unlink className="w-3 h-3" />
+                    Desconectar
+                  </Button>
+                </div>
+              ) : (
+                <Button onClick={startSync} disabled={syncing} className="w-full gap-2 rounded-xl" size="sm">
+                  <GraduationCap className="w-4 h-4" />
+                  {syncing ? 'Conectando...' : 'Sincronizar con Classroom'}
+                </Button>
+              )}
+            </div>
+
             {/* Design Style */}
             <div className="space-y-3">
               <Label className="font-bold">🎨 Estilo de diseño</Label>
