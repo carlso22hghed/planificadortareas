@@ -14,7 +14,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ALL_SUBJECTS, ALL_SPORT_TYPES, SPORT_EMOJIS } from '@/types/app';
 import { getSportEmoji } from '@/lib/sport-emojis';
 import type { DbSettings } from '@/types/app';
-import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
