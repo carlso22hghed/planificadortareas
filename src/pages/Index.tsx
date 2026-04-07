@@ -91,7 +91,7 @@ const Index = () => {
     const isSynced = localStorage.getItem('classroomSynced') === 'true';
     if (isPending || isSynced) {
       classroomSyncedRef.current = true;
-      classroom.autoSync(true).then(() => {
+      classroom.autoSync().then(() => {
         queryClient.invalidateQueries({ queryKey: ['tasks'] });
       });
     }
