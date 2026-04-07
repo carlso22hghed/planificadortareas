@@ -84,6 +84,19 @@ const Index = () => {
 
   const showDontForgetButton = (settings as any)?.dont_forget_enabled && dontForgetItems.length > 0 && !dontForgetDismissed;
 
+  // Auto-sync Classroom on load
+  useEffect(() => {
+    if (classroomSyncedRef.current || !user) return;
+    const isPending = localStorage.getItem('classroomSyncPending') === 'true';
+    const isSynced = localStorage.getItem('classroomSynced') === 'true';
+    if (isPending || isSynced) {
+      classroomSyncedRef.current = true;
+      classroom.autoSync(true).then(() => {
+        queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      });
+    }
+  }, [user, classroom, queryClient]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { delay: 300, tolerance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 300, tolerance: 5 } }),
