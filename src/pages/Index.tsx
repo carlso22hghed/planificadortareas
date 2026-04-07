@@ -4,6 +4,7 @@ import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSe
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import { useClassroom } from '@/hooks/use-classroom';
 import type { DbTask, DbCountdown, TabType } from '@/types/app';
 import SortableCountdownItem from '@/components/SortableCountdownItem';
 import AddCountdownDialog from '@/components/AddCountdownDialog';
@@ -14,6 +15,7 @@ import SettingsPanel from '@/components/SettingsPanel';
 import SupportDialog from '@/components/SupportDialog';
 import DontForgetPage from '@/components/DontForgetPage';
 import NotesPage from '@/components/NotesPage';
+import ClassroomPromoDialog from '@/components/ClassroomPromoDialog';
 import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -25,6 +27,8 @@ const Index = () => {
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const classroom = useClassroom(user?.id);
+  const classroomSyncedRef = useRef(false);
   const [activeTab, setActiveTab] = useState<TabType>('inicio');
   const [editCountdown, setEditCountdown] = useState<DbCountdown | null>(null);
   const notifiedRef = useRef(false);
