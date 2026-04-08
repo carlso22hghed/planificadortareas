@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Settings, Pencil, Check, LogOut, Plus, ChevronDown, ChevronUp, GraduationCap, CheckCircle, Unlink, Sparkles, Trash2 } from 'lucide-react';
 import { useClassroom } from '@/hooks/use-classroom';
 import { useAuth } from '@/hooks/use-auth';
+import { supabase } from '@/integrations/supabase/client';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ScrollArea } from '@/components/ui/scroll-area';
