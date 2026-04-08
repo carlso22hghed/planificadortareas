@@ -65,6 +65,33 @@ export type Database = {
         }
         Relationships: []
       }
+      nox_memory: {
+        Row: {
+          created_at: string
+          id: string
+          last_recommendation: Json | null
+          memory_data: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_recommendation?: Json | null
+          memory_data?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_recommendation?: Json | null
+          memory_data?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
