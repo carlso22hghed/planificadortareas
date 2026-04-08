@@ -265,11 +265,25 @@ const Index = () => {
   const sidebarExpanded = sidebarHover;
   const sidebarWidth = isLeftNav ? (sidebarExpanded ? 'w-48' : 'w-14') : '';
 
+  const designStyle = (settings as any).design_style || 'minimalist';
+  const isGaming = designStyle === 'gaming';
+
+  // Greeting
+  const getGreeting = () => {
+    const h = new Date().getHours();
+    if (h >= 6 && h < 14) return 'Buenos días';
+    if (h >= 14 && h < 21) return 'Buenas tardes';
+    return 'Buenas noches';
+  };
+  const getTodayDate = () => {
+    return new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  };
+
   return (
     <div className={cn(
       'min-h-screen flex',
       isLeftNav ? 'flex-row' : 'flex-col',
-      (settings as any).design_style === 'school' ? 'school-bg-container' : 'bg-background'
+      isGaming ? 'gaming-bg-container' : designStyle === 'school' ? 'school-bg-container' : 'bg-background'
     )}>
 
       {/* Left sidebar nav - collapses to icons, expands on hover */}
@@ -343,6 +357,17 @@ const Index = () => {
           <main className={cn('flex-1 px-4 py-4 overflow-y-auto', !isLeftNav && 'pb-24')}>
             {activeTab === 'inicio' && (
               <div className="space-y-5 animate-slide-up">
+                {/* Greeting */}
+                <div className="text-center py-2">
+                  <h2 className="text-3xl font-extrabold text-foreground capitalize">{getGreeting()}</h2>
+                  <p className="text-sm text-muted-foreground mt-1 capitalize">{getTodayDate()}</p>
+                </div>
+
+                {/* Nox AI */}
+                {noxAI.enabled && (
+                  <NoxAISection loading={noxAI.loading} recommendation={noxAI.recommendation} />
+                )}
+
                 <div className="grid grid-cols-2 gap-3">
                   <button onClick={() => setActiveTab('deberes')} className="glass-card rounded-2xl p-4 text-center hover:ring-2 ring-primary/30 transition-all">
                     <p className="text-3xl font-extrabold text-primary">{pendingHomework}</p>
