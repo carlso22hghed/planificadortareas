@@ -31,7 +31,6 @@ const Index = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const classroom = useClassroom(user?.id);
-  const noxAI = useNoxAI(tasks);
   const classroomSyncedRef = useRef(false);
   const [activeTab, setActiveTab] = useState<TabType>('inicio');
   const [editCountdown, setEditCountdown] = useState<DbCountdown | null>(null);
