@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -163,6 +164,31 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
               )}
             </div>
 
+            {/* Nox AI */}
+            <div className="p-4 rounded-xl border border-purple-500/20 bg-purple-500/5 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">✨</span>
+                <Label className="font-bold text-sm">Nox AI</Label>
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm">Recomendaciones inteligentes</Label>
+                <Switch
+                  checked={localStorage.getItem('noxEnabled') !== 'false'}
+                  onCheckedChange={checked => {
+                    localStorage.setItem('noxEnabled', String(checked));
+                    window.location.reload();
+                  }}
+                />
+              </div>
+              <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => {
+                localStorage.removeItem('noxMemory');
+                localStorage.removeItem('noxLastRecommendation');
+                toast('Memoria de Nox AI borrada');
+              }}>
+                🗑️ Borrar memoria de Nox AI
+              </Button>
+            </div>
+
             {/* Design Style */}
             <div className="space-y-3">
               <Label className="font-bold">🎨 Estilo de diseño</Label>
@@ -178,6 +204,10 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                 <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
                   <RadioGroupItem value="school" id="ds-school" />
                   <Label htmlFor="ds-school" className="cursor-pointer text-sm">Escolar</Label>
+                </div>
+                <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
+                  <RadioGroupItem value="gaming" id="ds-gaming" />
+                  <Label htmlFor="ds-gaming" className="cursor-pointer text-sm">🎮 Gaming / Robótico</Label>
                 </div>
               </RadioGroup>
             </div>
