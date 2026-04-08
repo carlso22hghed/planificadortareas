@@ -19,7 +19,7 @@ import NotesPage from '@/components/NotesPage';
 import ClassroomPromoDialog from '@/components/ClassroomPromoDialog';
 import NoxAISection from '@/components/NoxAISection';
 import ProductivityPage from '@/components/ProductivityPage';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3 } from 'lucide-react';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -328,7 +328,7 @@ const Index = () => {
               <div>
                 <h1 className="text-2xl font-extrabold text-primary-foreground">{settings.app_name}</h1>
                 <p className="text-primary-foreground/70 text-sm font-medium mt-0.5">{settings.school_name}</p>
-                {profile && <p className="text-primary-foreground/60 text-xs mt-0.5">Hola, {profile.display_name} 👋</p>}
+                {profile && <p className="text-primary-foreground/60 text-xs mt-0.5 flex items-center gap-1">Hola, {profile.display_name} <Hand className="w-3 h-3" /></p>}
               </div>
             </div>
             <div className="flex items-center gap-1">
@@ -346,8 +346,8 @@ const Index = () => {
                 </button>
               )}
               {isAdmin && (
-                <button onClick={() => navigate('/admin')} className="p-2 rounded-full hover:bg-primary-foreground/20 transition-colors text-primary-foreground text-xs font-bold">
-                  👥
+                <button onClick={() => navigate('/admin')} className="p-2 rounded-full hover:bg-primary-foreground/20 transition-colors text-primary-foreground">
+                  <Users className="w-5 h-5" />
                 </button>
               )}
               <SettingsPanel settings={settings} onUpdate={updateSettings} />

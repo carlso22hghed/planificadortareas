@@ -105,7 +105,7 @@ const ScheduleInline = ({ userId, readOnly = false }: ScheduleInlineProps) => {
   return (
     <div className="animate-slide-up space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-foreground">🗓️ Horarios</h2>
+        <h2 className="font-bold text-foreground flex items-center gap-1.5"><CalendarDays className="w-4 h-4" /> Horarios</h2>
         {!readOnly && (
           showAddForm ? (
             <div className="flex gap-2">
