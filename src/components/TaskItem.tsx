@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { getSubjectColor } from '@/lib/subject-colors';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
+import TaskDetailDialog from './TaskDetailDialog';
 
 interface TaskItemProps {
   task: DbTask;
@@ -28,6 +29,7 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
   const isExam = task.type === 'exam';
   const [gradeInput, setGradeInput] = useState(task.grade || '');
   const [showGradeInput, setShowGradeInput] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
 
   const saveGrade = async (grade: string) => {
     await supabase.from('tasks').update({ grade }).eq('id', task.id);
@@ -39,8 +41,9 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
   const importanceBadge = importance && importance !== 'normal' ? IMPORTANCE_BADGES[importance] || { label: importance, className: 'bg-muted/50 text-muted-foreground' } : null;
 
   return (
-    <div className={cn(
-      'glass-card rounded-2xl p-4 animate-slide-up transition-all',
+    <>
+    <div onClick={() => setShowDetail(true)} className={cn(
+      'glass-card rounded-2xl p-4 animate-slide-up transition-all cursor-pointer hover:ring-1 ring-primary/20',
       task.completed && 'opacity-50'
     )}>
       <div className="flex items-center gap-3">
@@ -135,6 +138,8 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
         </div>
       )}
     </div>
+    <TaskDetailDialog task={task} open={showDetail} onOpenChange={setShowDetail} />
+    </>
   );
 };
 
