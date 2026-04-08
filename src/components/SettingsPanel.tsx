@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Settings, Pencil, Check, LogOut, Plus, ChevronDown, ChevronUp, GraduationCap, CheckCircle, Unlink } from 'lucide-react';
+import { Settings, Pencil, Check, LogOut, Plus, ChevronDown, ChevronUp, GraduationCap, CheckCircle, Unlink, Sparkles, Trash2 } from 'lucide-react';
 import { useClassroom } from '@/hooks/use-classroom';
 import { useAuth } from '@/hooks/use-auth';
 import { Checkbox } from '@/components/ui/checkbox';
