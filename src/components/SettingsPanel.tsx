@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Settings, Pencil, Check, LogOut, Plus, ChevronDown, ChevronUp, GraduationCap, CheckCircle, Unlink } from 'lucide-react';
+import { Settings, Pencil, Check, LogOut, Plus, ChevronDown, ChevronUp, GraduationCap, CheckCircle, Unlink, Sparkles, Trash2 } from 'lucide-react';
 import { useClassroom } from '@/hooks/use-classroom';
 import { useAuth } from '@/hooks/use-auth';
+import { supabase } from '@/integrations/supabase/client';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -167,7 +168,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
             {/* Nox AI */}
             <div className="p-4 rounded-xl border border-purple-500/20 bg-purple-500/5 space-y-3">
               <div className="flex items-center gap-2">
-                <span className="text-lg">✨</span>
+                <Sparkles className="w-4 h-4 text-purple-400" />
                 <Label className="font-bold text-sm">Nox AI</Label>
               </div>
               <div className="flex items-center justify-between">
@@ -180,18 +181,23 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                   }}
                 />
               </div>
-              <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => {
+              <Button variant="outline" size="sm" className="w-full text-xs gap-1" onClick={async () => {
+                const { data } = await supabase.auth.getUser();
+                if (data?.user) {
+                  await supabase.from('nox_memory').delete().eq('user_id', data.user.id);
+                }
                 localStorage.removeItem('noxMemory');
                 localStorage.removeItem('noxLastRecommendation');
                 toast('Memoria de Nox AI borrada');
+                window.location.reload();
               }}>
-                🗑️ Borrar memoria de Nox AI
+                <Trash2 className="w-3 h-3" /> Borrar memoria de Nox AI
               </Button>
             </div>
 
             {/* Design Style */}
             <div className="space-y-3">
-              <Label className="font-bold">🎨 Estilo de diseño</Label>
+              <Label className="font-bold">Estilo de diseño</Label>
               <RadioGroup
                 value={(settings as any).design_style || 'minimalist'}
                 onValueChange={value => onUpdate({ design_style: value } as any)}
@@ -247,7 +253,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
 
                 {/* Color picker */}
                 <div className="mt-3 space-y-2">
-                  <Label className="text-xs font-semibold text-muted-foreground">🎨 O elige un color personalizado:</Label>
+                  <Label className="text-xs font-semibold text-muted-foreground">O elige un color personalizado:</Label>
                   <Input
                     value={colorSearch}
                     onChange={e => setColorSearch(e.target.value)}
@@ -312,7 +318,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                 </div>
                 {/* Color picker for gaming */}
                 <div className="mt-3 space-y-2">
-                  <Label className="text-xs font-semibold text-muted-foreground">🎨 Color personalizado:</Label>
+                  <Label className="text-xs font-semibold text-muted-foreground">Color personalizado:</Label>
                   <Input
                     value={colorSearch}
                     onChange={e => setColorSearch(e.target.value)}
@@ -346,7 +352,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
 
             {/* Theme */}
             <div className="space-y-3">
-              <Label className="font-bold">🎨 Tema de color</Label>
+              <Label className="font-bold">Tema de color</Label>
               <RadioGroup
                 value={(settings as any).theme || 'default'}
                 onValueChange={value => onUpdate({ theme: value } as any)}
@@ -390,7 +396,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
 
             {/* Dark Mode */}
             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-              <Label className="cursor-pointer text-sm font-semibold">🌙 Modo oscuro</Label>
+              <Label className="cursor-pointer text-sm font-semibold">Modo oscuro</Label>
               <Switch
                 checked={settings.dark_mode}
                 onCheckedChange={checked => onUpdate({ dark_mode: checked })}
@@ -399,7 +405,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
 
             {/* Notification Sound */}
             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-              <Label className="cursor-pointer text-sm font-semibold">🔊 Sonido de notificación</Label>
+              <Label className="cursor-pointer text-sm font-semibold">Sonido de notificación</Label>
               <Switch
                 checked={(settings as any).notification_sound !== false}
                 onCheckedChange={checked => onUpdate({ notification_sound: checked } as any)}
@@ -408,7 +414,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
 
             {/* Nav Position */}
             <div className="space-y-3">
-              <Label className="font-bold">📱 Posición de pestañas</Label>
+              <Label className="font-bold">Posición de pestañas</Label>
               <RadioGroup
                 value={(settings as any).nav_position || 'bottom'}
                 onValueChange={value => onUpdate({ nav_position: value } as any)}

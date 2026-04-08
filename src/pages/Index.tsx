@@ -19,7 +19,7 @@ import NotesPage from '@/components/NotesPage';
 import ClassroomPromoDialog from '@/components/ClassroomPromoDialog';
 import NoxAISection from '@/components/NoxAISection';
 import ProductivityPage from '@/components/ProductivityPage';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3 } from 'lucide-react';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -155,7 +155,7 @@ const Index = () => {
           const lastNotifiedTime = lastNotified ? parseInt(lastNotified) : 0;
           const freqMs = frequency && frequency > 0 ? frequency * 60 * 1000 : Infinity;
           if (!lastNotified || (frequency && frequency > 0 && (now.getTime() - lastNotifiedTime) >= freqMs)) {
-            new Notification(`📚 Recordatorio: ${t.name}`, {
+            new Notification(`Recordatorio: ${t.name}`, {
               body: `Tienes un ${typeNames[t.type] || 'evento'}${t.due_date ? ` para ${new Date(t.due_date).toLocaleDateString('es-ES')}` : ''}`,
               icon: '/logo.png',
             });
@@ -170,7 +170,7 @@ const Index = () => {
         if (t.due_date === tomorrowStr) {
           const sessionKey = `notified-${tomorrowStr}`;
           if (!sessionStorage.getItem(sessionKey)) {
-            new Notification(`📚 Mañana: ${t.name}`, { body: `Tienes un ${typeNames[t.type] || 'evento'} mañana`, icon: '/logo.png' });
+            new Notification(`Mañana: ${t.name}`, { body: `Tienes un ${typeNames[t.type] || 'evento'} mañana`, icon: '/logo.png' });
             sessionStorage.setItem(sessionKey, 'true');
             didNotify = true;
           }
@@ -328,7 +328,7 @@ const Index = () => {
               <div>
                 <h1 className="text-2xl font-extrabold text-primary-foreground">{settings.app_name}</h1>
                 <p className="text-primary-foreground/70 text-sm font-medium mt-0.5">{settings.school_name}</p>
-                {profile && <p className="text-primary-foreground/60 text-xs mt-0.5">Hola, {profile.display_name} 👋</p>}
+                {profile && <p className="text-primary-foreground/60 text-xs mt-0.5 flex items-center gap-1">Hola, {profile.display_name} <Hand className="w-3 h-3" /></p>}
               </div>
             </div>
             <div className="flex items-center gap-1">
@@ -346,8 +346,8 @@ const Index = () => {
                 </button>
               )}
               {isAdmin && (
-                <button onClick={() => navigate('/admin')} className="p-2 rounded-full hover:bg-primary-foreground/20 transition-colors text-primary-foreground text-xs font-bold">
-                  👥
+                <button onClick={() => navigate('/admin')} className="p-2 rounded-full hover:bg-primary-foreground/20 transition-colors text-primary-foreground">
+                  <Users className="w-5 h-5" />
                 </button>
               )}
               <SettingsPanel settings={settings} onUpdate={updateSettings} />
@@ -405,32 +405,32 @@ const Index = () => {
 
             {activeTab === 'deberes' && (
               <TaskList tasks={tasks} type="homework" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
-                triggerLabel="Añadir deber" emptyMessage="¡No tienes deberes pendientes!" emptyEmoji="🎉"
+                triggerLabel="Añadir deber" emptyMessage="¡No tienes deberes pendientes!" emptyIcon={PartyPopper}
                 subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} />
             )}
 
             {activeTab === 'examenes' && (
               <TaskList tasks={tasks} type="exam" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
                 onToggleStudy={toggleStudy}
-                triggerLabel="Añadir examen" emptyMessage="No hay exámenes próximos" emptyEmoji="📝"
+                triggerLabel="Añadir examen" emptyMessage="No hay exámenes próximos" emptyIcon={FileText}
                 subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} />
             )}
 
             {activeTab === 'tareas' && (
               <TaskList tasks={tasks} type="task" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
-                triggerLabel="Añadir tarea" emptyMessage="No hay tareas pendientes" emptyEmoji="✅"
+                triggerLabel="Añadir tarea" emptyMessage="No hay tareas pendientes" emptyIcon={CheckCircle}
                 subjects={allSubjects} sportTypes={settings.sport_types} />
             )}
 
             {activeTab === 'eventos' && (
               <TaskList tasks={tasks} type="event" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
-                triggerLabel="Añadir evento" emptyMessage="No hay eventos próximos" emptyEmoji="🎪"
+                triggerLabel="Añadir evento" emptyMessage="No hay eventos próximos" emptyIcon={Tent}
                 sportTypes={settings.sport_types} />
             )}
 
             {activeTab === 'partidos' && (
               <TaskList tasks={tasks} type="match" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
-                triggerLabel="Añadir partido" emptyMessage="No hay partidos programados" emptyEmoji="⚽"
+                triggerLabel="Añadir partido" emptyMessage="No hay partidos programados" emptyIcon={Trophy}
                 sportTypes={settings.sport_types} />
             )}
 

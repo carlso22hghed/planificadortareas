@@ -1,6 +1,10 @@
-import { Flame, Trophy, TrendingUp, Clock, Target, Zap } from 'lucide-react';
+import { Flame, Trophy, TrendingUp, Clock, Target, Zap, Bed, BookOpen, Dumbbell, GraduationCap, Rocket } from 'lucide-react';
 import type { DbTask } from '@/types/app';
 import { useProductivity } from '@/hooks/use-productivity';
+
+const LEVEL_ICONS: Record<string, typeof Bed> = {
+  'bed': Bed, 'book-open': BookOpen, 'dumbbell': Dumbbell, 'graduation-cap': GraduationCap, 'rocket': Rocket,
+};
 
 interface ProductivityPageProps {
   tasks: DbTask[];
@@ -8,12 +12,13 @@ interface ProductivityPageProps {
 
 const ProductivityPage = ({ tasks }: ProductivityPageProps) => {
   const { streak, productivity, level, levelConfig } = useProductivity(tasks);
+  const LevelIcon = LEVEL_ICONS[level.emoji] || Bed;
 
   return (
     <div className="space-y-4 animate-slide-up">
       {/* Level Card */}
       <div className="glass-card rounded-2xl p-5 text-center space-y-3">
-        <div className="text-5xl">{level.emoji}</div>
+        <LevelIcon className={`w-12 h-12 mx-auto ${level.color}`} />
         <div>
           <h2 className={`text-2xl font-extrabold ${level.color}`}>{level.name}</h2>
           <p className="text-xs text-muted-foreground mt-1">Nivel de productividad</p>
@@ -29,7 +34,7 @@ const ProductivityPage = ({ tasks }: ProductivityPageProps) => {
                     : 'bg-muted/30'
                 }`}
               />
-              <span className="text-[9px] text-muted-foreground">{l.emoji}</span>
+              {(() => { const I = LEVEL_ICONS[l.emoji] || Bed; return <I className="w-3 h-3 text-muted-foreground" />; })()}
             </div>
           ))}
         </div>

@@ -107,7 +107,7 @@ const WrittenNotes = ({ userId }: { userId?: string }) => {
           <Textarea value={content} onChange={e => setContent(e.target.value)} placeholder="Escribe tu nota..." rows={4} className="resize-none" />
           
           <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-            <Label className="cursor-pointer text-sm">🔔 Aviso para leer la nota</Label>
+            <Label className="cursor-pointer text-sm">Aviso para leer la nota</Label>
             <Switch checked={reminderEnabled} onCheckedChange={setReminderEnabled} />
           </div>
           {reminderEnabled && (
@@ -311,7 +311,7 @@ const VoiceNotes = ({ userId }: { userId?: string }) => {
             )}
           </div>
           <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-            <Label className="cursor-pointer text-sm">🔔 Aviso para escuchar</Label>
+            <Label className="cursor-pointer text-sm">Aviso para escuchar</Label>
             <Switch checked={reminderEnabled} onCheckedChange={setReminderEnabled} />
           </div>
           {reminderEnabled && (

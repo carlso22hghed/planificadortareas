@@ -1,4 +1,4 @@
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Pin, ClipboardList, Lightbulb, ChevronRight } from 'lucide-react';
 
 interface NoxRecommendation {
   todayTasks: { name: string; subject: string; dueDate: string | null; daysUntilDue: number; priority: number }[];
@@ -50,16 +50,19 @@ const NoxAISection = ({ loading, recommendation }: NoxAISectionProps) => {
           {/* Today's recommendations */}
           {recommendation.todayTasks.length > 0 && (
             <div className="space-y-2">
-              <h4 className="text-xs font-bold uppercase tracking-wide text-purple-400">📌 Hoy</h4>
+              <div className="flex items-center gap-1.5">
+                <Pin className="w-3.5 h-3.5 text-purple-400" />
+                <h4 className="text-xs font-bold uppercase tracking-wide text-purple-400">Hoy</h4>
+              </div>
               {Object.entries(groupBySubject(recommendation.todayTasks)).map(([subject, tasks]) => (
                 <div key={subject} className="space-y-1">
                   <p className="text-xs font-semibold text-muted-foreground">{subject}</p>
                   {tasks.map((t, i) => (
                     <div key={i} className="flex items-start gap-2 text-sm pl-2">
-                      <span className="text-purple-400 mt-0.5">•</span>
+                      <ChevronRight className="w-3 h-3 text-purple-400 mt-1 shrink-0" />
                       <span className="text-foreground/90">
                         {t.name}
-                        {t.daysUntilDue <= 1 && <span className="text-destructive font-semibold ml-1">— ¡vence hoy!</span>}
+                        {t.daysUntilDue <= 1 && <span className="text-destructive font-semibold ml-1">— vence hoy</span>}
                         {t.daysUntilDue === 2 && <span className="text-warning font-semibold ml-1">— vence mañana</span>}
                       </span>
                     </div>
@@ -72,13 +75,16 @@ const NoxAISection = ({ loading, recommendation }: NoxAISectionProps) => {
           {/* Tomorrow's recommendations */}
           {recommendation.tomorrowTasks.length > 0 && (
             <div className="space-y-2">
-              <h4 className="text-xs font-bold uppercase tracking-wide text-purple-400/70">📋 Próximos días</h4>
+              <div className="flex items-center gap-1.5">
+                <ClipboardList className="w-3.5 h-3.5 text-purple-400/70" />
+                <h4 className="text-xs font-bold uppercase tracking-wide text-purple-400/70">Próximos días</h4>
+              </div>
               {Object.entries(groupBySubject(recommendation.tomorrowTasks)).map(([subject, tasks]) => (
                 <div key={subject} className="space-y-1">
                   <p className="text-xs font-semibold text-muted-foreground">{subject}</p>
                   {tasks.map((t, i) => (
                     <div key={i} className="flex items-start gap-2 text-sm pl-2">
-                      <span className="text-purple-400/60 mt-0.5">•</span>
+                      <ChevronRight className="w-3 h-3 text-purple-400/60 mt-1 shrink-0" />
                       <span className="text-foreground/70">
                         {t.name}
                         {t.daysUntilDue <= 3 && <span className="text-muted-foreground ml-1">— en {t.daysUntilDue} días</span>}
@@ -90,12 +96,18 @@ const NoxAISection = ({ loading, recommendation }: NoxAISectionProps) => {
             </div>
           )}
 
-          {/* Predictions */}
+          {/* Predictions - only shown when backed by real data */}
           {recommendation.predictions.length > 0 && (
             <div className="space-y-1 pt-1 border-t border-border/30">
-              <h4 className="text-xs font-bold uppercase tracking-wide text-purple-400/70">🔮 Predicciones</h4>
+              <div className="flex items-center gap-1.5">
+                <Lightbulb className="w-3.5 h-3.5 text-purple-400/70" />
+                <h4 className="text-xs font-bold uppercase tracking-wide text-purple-400/70">Patrones detectados</h4>
+              </div>
               {recommendation.predictions.map((p, i) => (
-                <p key={i} className="text-xs text-muted-foreground italic pl-2">💡 {p}</p>
+                <div key={i} className="flex items-start gap-2 pl-2">
+                  <Lightbulb className="w-3 h-3 text-muted-foreground mt-0.5 shrink-0" />
+                  <p className="text-xs text-muted-foreground italic">{p}</p>
+                </div>
               ))}
             </div>
           )}

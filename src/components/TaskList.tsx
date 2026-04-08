@@ -2,6 +2,8 @@ import { useState, useCallback } from 'react';
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import type { DbTask } from '@/types/app';
+import { PartyPopper, FileText, CheckCircle, Tent, Trophy } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import SortableTaskItem from './SortableTaskItem';
 import AddTaskDialog from './AddTaskDialog';
 import EditTaskDialog from './EditTaskDialog';
@@ -17,13 +19,13 @@ interface TaskListProps {
   onToggleStudy?: (id: string) => void;
   triggerLabel: string;
   emptyMessage: string;
-  emptyEmoji: string;
+  emptyIcon?: LucideIcon;
   subjects?: string[];
   sportTypes?: string[];
   groupingMode?: string;
 }
 
-const TaskList = ({ tasks, type, onAdd, onToggle, onDelete, onUpdate, onToggleStudy, triggerLabel, emptyMessage, emptyEmoji, subjects, sportTypes, groupingMode = 'none' }: TaskListProps) => {
+const TaskList = ({ tasks, type, onAdd, onToggle, onDelete, onUpdate, onToggleStudy, triggerLabel, emptyMessage, emptyIcon: EmptyIcon, subjects, sportTypes, groupingMode = 'none' }: TaskListProps) => {
   const [editTask, setEditTask] = useState<DbTask | null>(null);
 
   const filtered = tasks
@@ -71,7 +73,7 @@ const TaskList = ({ tasks, type, onAdd, onToggle, onDelete, onUpdate, onToggleSt
 
       {filtered.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-4xl mb-2">{emptyEmoji}</p>
+          {EmptyIcon && <EmptyIcon className="w-10 h-10 mx-auto mb-2 text-muted-foreground/50" />}
           <p className="text-muted-foreground text-sm">{emptyMessage}</p>
         </div>
       ) : shouldGroup && grouped ? (

@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, CheckCircle } from 'lucide-react';
 
 const DontForgetPage = () => {
   const { user } = useAuth();
@@ -65,7 +65,7 @@ const DontForgetPage = () => {
 
       {items.length === 0 ? (
         <div className="glass-card rounded-2xl p-6 text-center">
-          <p className="text-3xl mb-2">✅</p>
+          <p className="text-3xl mb-2"><CheckCircle className="w-8 h-8 mx-auto text-success" /></p>
           <p className="text-sm text-muted-foreground">No tienes nada pendiente por recordar</p>
         </div>
       ) : (

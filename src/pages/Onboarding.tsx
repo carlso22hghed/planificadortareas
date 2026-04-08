@@ -31,7 +31,7 @@ const Onboarding = () => {
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center space-y-2">
           <img src="/logo.png" alt="Logo" className="w-16 h-16 mx-auto rounded-2xl" />
-          <h1 className="text-3xl font-extrabold text-foreground">👋 ¡Bienvenido!</h1>
+          <h1 className="text-3xl font-extrabold text-foreground">¡Bienvenido!</h1>
           <p className="text-muted-foreground text-sm">Cuéntanos un poco sobre ti</p>
         </div>
 
@@ -51,15 +51,15 @@ const Onboarding = () => {
             <RadioGroup value={role} onValueChange={setRole} className="space-y-2">
               <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
                 <RadioGroupItem value="estudiante" id="r-estudiante" />
-                <Label htmlFor="r-estudiante" className="cursor-pointer text-sm">🎓 Estudiante</Label>
+                <Label htmlFor="r-estudiante" className="cursor-pointer text-sm">Estudiante</Label>
               </div>
               <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
                 <RadioGroupItem value="profesor" id="r-profesor" />
-                <Label htmlFor="r-profesor" className="cursor-pointer text-sm">👨‍🏫 Profesor</Label>
+                <Label htmlFor="r-profesor" className="cursor-pointer text-sm">Profesor</Label>
               </div>
               <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
                 <RadioGroupItem value="otro" id="r-otro" />
-                <Label htmlFor="r-otro" className="cursor-pointer text-sm">🙋 Otro</Label>
+                <Label htmlFor="r-otro" className="cursor-pointer text-sm">Otro</Label>
               </div>
             </RadioGroup>
 
@@ -87,7 +87,7 @@ const Onboarding = () => {
             disabled={!name.trim() || !schoolName.trim() || saving}
             className="w-full h-12 text-base rounded-xl"
           >
-            {saving ? 'Guardando...' : 'Empezar 🚀'}
+            {saving ? 'Guardando...' : 'Empezar'}
           </Button>
         </div>
       </div>

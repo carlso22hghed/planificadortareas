@@ -19,11 +19,11 @@ interface ProductivityData {
 export type ProductivityLevel = 'Vago' | 'Aprendiz' | 'Constante' | 'Estudioso' | 'Máquina';
 
 const LEVEL_CONFIG: { name: ProductivityLevel; emoji: string; minScore: number; color: string }[] = [
-  { name: 'Vago', emoji: '😴', minScore: 0, color: 'text-red-400' },
-  { name: 'Aprendiz', emoji: '📖', minScore: 20, color: 'text-orange-400' },
-  { name: 'Constante', emoji: '💪', minScore: 40, color: 'text-yellow-400' },
-  { name: 'Estudioso', emoji: '🎓', minScore: 65, color: 'text-green-400' },
-  { name: 'Máquina', emoji: '🚀', minScore: 85, color: 'text-purple-400' },
+  { name: 'Vago', emoji: 'bed', minScore: 0, color: 'text-red-400' },
+  { name: 'Aprendiz', emoji: 'book-open', minScore: 20, color: 'text-orange-400' },
+  { name: 'Constante', emoji: 'dumbbell', minScore: 40, color: 'text-yellow-400' },
+  { name: 'Estudioso', emoji: 'graduation-cap', minScore: 65, color: 'text-green-400' },
+  { name: 'Máquina', emoji: 'rocket', minScore: 85, color: 'text-purple-400' },
 ];
 
 const STORAGE_KEY = 'productivityStreak';

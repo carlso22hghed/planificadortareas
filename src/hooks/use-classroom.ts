@@ -252,7 +252,7 @@ function schedulePushNotifications(tasks: any[]) {
       setTimeout(() => {
         navigator.serviceWorker.ready.then(reg => {
           reg.showNotification('Planificador de Tareas', {
-            body: `📚 Mañana vence: ${t.name}`,
+            body: `Mañana vence: ${t.name}`,
             icon: '/logo.png',
           });
         });
