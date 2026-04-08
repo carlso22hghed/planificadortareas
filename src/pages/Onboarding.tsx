@@ -87,7 +87,7 @@ const Onboarding = () => {
             disabled={!name.trim() || !schoolName.trim() || saving}
             className="w-full h-12 text-base rounded-xl"
           >
-            {saving ? 'Guardando...' : 'Empezar 🚀'}
+            {saving ? 'Guardando...' : 'Empezar'}
           </Button>
         </div>
       </div>

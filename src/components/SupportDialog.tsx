@@ -58,7 +58,7 @@ const SupportDialog = () => {
     if (error) {
       toast({ title: 'Error', description: 'No se pudo enviar. Inténtalo de nuevo.', variant: 'destructive' });
     } else {
-      toast({ title: '✅ Enviado', description: 'Tu queja ha sido enviada correctamente.' });
+      toast({ title: 'Enviado', description: 'Tu queja ha sido enviada correctamente.' });
       setMessage('');
       queryClient.invalidateQueries({ queryKey: ['support_tickets'] });
     }

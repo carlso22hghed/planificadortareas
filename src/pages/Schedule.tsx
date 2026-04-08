@@ -110,7 +110,7 @@ const Schedule = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="text-primary-foreground hover:bg-primary-foreground/20">
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-xl font-extrabold text-primary-foreground">🗓️ Horarios</h1>
+          <h1 className="text-xl font-extrabold text-primary-foreground">Horarios</h1>
         </div>
         {showAddForm ? (
           <div className="flex gap-2">

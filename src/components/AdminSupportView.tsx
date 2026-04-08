@@ -60,7 +60,7 @@ const AdminSupportView = () => {
     if (error) {
       toast({ title: 'Error', description: 'No se pudo enviar la respuesta.', variant: 'destructive' });
     } else {
-      toast({ title: '✅ Respondido y cerrado' });
+      toast({ title: 'Respondido y cerrado' });
       setReplyText(prev => ({ ...prev, [ticketId]: '' }));
       queryClient.invalidateQueries({ queryKey: ['admin_support_tickets'] });
     }
@@ -76,7 +76,7 @@ const AdminSupportView = () => {
     if (error) {
       toast({ title: 'Error', description: 'No se pudo enviar la respuesta.', variant: 'destructive' });
     } else {
-      toast({ title: '✅ Respondido', description: 'El ticket sigue abierto.' });
+      toast({ title: 'Respondido', description: 'El ticket sigue abierto.' });
       setReplyText(prev => ({ ...prev, [ticketId]: '' }));
       queryClient.invalidateQueries({ queryKey: ['admin_support_tickets'] });
     }

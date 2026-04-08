@@ -65,7 +65,7 @@ const DontForgetPage = () => {
 
       {items.length === 0 ? (
         <div className="glass-card rounded-2xl p-6 text-center">
-          <p className="text-3xl mb-2">✅</p>
+          <p className="text-3xl mb-2"><CheckCircle className="w-8 h-8 mx-auto text-success" /></p>
           <p className="text-sm text-muted-foreground">No tienes nada pendiente por recordar</p>
         </div>
       ) : (

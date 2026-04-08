@@ -253,7 +253,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
 
                 {/* Color picker */}
                 <div className="mt-3 space-y-2">
-                  <Label className="text-xs font-semibold text-muted-foreground">🎨 O elige un color personalizado:</Label>
+                  <Label className="text-xs font-semibold text-muted-foreground">O elige un color personalizado:</Label>
                   <Input
                     value={colorSearch}
                     onChange={e => setColorSearch(e.target.value)}
@@ -318,7 +318,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                 </div>
                 {/* Color picker for gaming */}
                 <div className="mt-3 space-y-2">
-                  <Label className="text-xs font-semibold text-muted-foreground">🎨 Color personalizado:</Label>
+                  <Label className="text-xs font-semibold text-muted-foreground">Color personalizado:</Label>
                   <Input
                     value={colorSearch}
                     onChange={e => setColorSearch(e.target.value)}
@@ -352,7 +352,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
 
             {/* Theme */}
             <div className="space-y-3">
-              <Label className="font-bold">🎨 Tema de color</Label>
+              <Label className="font-bold">Tema de color</Label>
               <RadioGroup
                 value={(settings as any).theme || 'default'}
                 onValueChange={value => onUpdate({ theme: value } as any)}
