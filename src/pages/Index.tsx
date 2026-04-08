@@ -155,7 +155,7 @@ const Index = () => {
           const lastNotifiedTime = lastNotified ? parseInt(lastNotified) : 0;
           const freqMs = frequency && frequency > 0 ? frequency * 60 * 1000 : Infinity;
           if (!lastNotified || (frequency && frequency > 0 && (now.getTime() - lastNotifiedTime) >= freqMs)) {
-            new Notification(`📚 Recordatorio: ${t.name}`, {
+            new Notification(`Recordatorio: ${t.name}`, {
               body: `Tienes un ${typeNames[t.type] || 'evento'}${t.due_date ? ` para ${new Date(t.due_date).toLocaleDateString('es-ES')}` : ''}`,
               icon: '/logo.png',
             });
@@ -170,7 +170,7 @@ const Index = () => {
         if (t.due_date === tomorrowStr) {
           const sessionKey = `notified-${tomorrowStr}`;
           if (!sessionStorage.getItem(sessionKey)) {
-            new Notification(`📚 Mañana: ${t.name}`, { body: `Tienes un ${typeNames[t.type] || 'evento'} mañana`, icon: '/logo.png' });
+            new Notification(`Mañana: ${t.name}`, { body: `Tienes un ${typeNames[t.type] || 'evento'} mañana`, icon: '/logo.png' });
             sessionStorage.setItem(sessionKey, 'true');
             didNotify = true;
           }

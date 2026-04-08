@@ -28,7 +28,7 @@ const CountdownCard = ({ event, onRemove, onEdit }: CountdownCardProps) => {
         <h3 className="font-bold text-sm text-foreground truncate">{event.name}</h3>
       </div>
       {expired ? (
-        <p className="text-center text-sm font-semibold text-accent">¡Ya llegó! 🎉</p>
+        <p className="text-center text-sm font-semibold text-accent">¡Ya llegó!</p>
       ) : (
         <div className="grid grid-cols-4 gap-6 text-center">
           {[
