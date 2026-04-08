@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { getSubjectColor } from '@/lib/subject-colors';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
+import TaskDetailDialog from './TaskDetailDialog';
 
 interface TaskItemProps {
   task: DbTask;
@@ -28,6 +29,7 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
   const isExam = task.type === 'exam';
   const [gradeInput, setGradeInput] = useState(task.grade || '');
   const [showGradeInput, setShowGradeInput] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
 
   const saveGrade = async (grade: string) => {
     await supabase.from('tasks').update({ grade }).eq('id', task.id);
