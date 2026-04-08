@@ -224,17 +224,17 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                 <Label className="font-bold">Fondo escolar</Label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { value: 'gradient', label: 'Degradado', emoji: '🌈' },
-                    { value: 'notebook', label: 'Cuaderno', emoji: '📓' },
-                    { value: 'dots', label: 'Puntos', emoji: '⚫' },
-                    { value: 'grid', label: 'Cuadrícula', emoji: '📐' },
-                    { value: 'chalkboard', label: 'Pizarra', emoji: '🟢' },
-                    { value: 'pastel', label: 'Pastel', emoji: '🎀' },
-                    { value: 'sunset', label: 'Atardecer', emoji: '🌅' },
-                    { value: 'mountains', label: 'Montañas', emoji: '🏔️' },
-                    { value: 'ocean', label: 'Océano', emoji: '🌊' },
-                    { value: 'forest', label: 'Bosque', emoji: '🌲' },
-                    { value: 'sky', label: 'Cielo', emoji: '☁️' },
+                    { value: 'gradient', label: 'Degradado' },
+                    { value: 'notebook', label: 'Cuaderno' },
+                    { value: 'dots', label: 'Puntos' },
+                    { value: 'grid', label: 'Cuadrícula' },
+                    { value: 'chalkboard', label: 'Pizarra' },
+                    { value: 'pastel', label: 'Pastel' },
+                    { value: 'sunset', label: 'Atardecer' },
+                    { value: 'mountains', label: 'Montañas' },
+                    { value: 'ocean', label: 'Océano' },
+                    { value: 'forest', label: 'Bosque' },
+                    { value: 'sky', label: 'Cielo' },
                   ].map(bg => (
                     <button
                       key={bg.value}
@@ -245,7 +245,6 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                           : 'bg-muted/50 hover:bg-muted'
                       }`}
                     >
-                      <span className="text-lg block mb-1">{bg.emoji}</span>
                       {bg.label}
                     </button>
                   ))}
