@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, CheckCircle } from 'lucide-react';
 
 const DontForgetPage = () => {
   const { user } = useAuth();
