@@ -180,18 +180,23 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                   }}
                 />
               </div>
-              <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => {
+              <Button variant="outline" size="sm" className="w-full text-xs gap-1" onClick={async () => {
+                const { user } = await supabase.auth.getUser();
+                if (user?.user) {
+                  await supabase.from('nox_memory').delete().eq('user_id', user.user.id);
+                }
                 localStorage.removeItem('noxMemory');
                 localStorage.removeItem('noxLastRecommendation');
                 toast('Memoria de Nox AI borrada');
+                window.location.reload();
               }}>
-                Borrar memoria de Nox AI
+                <Trash2 className="w-3 h-3" /> Borrar memoria de Nox AI
               </Button>
             </div>
 
             {/* Design Style */}
             <div className="space-y-3">
-              <Label className="font-bold">🎨 Estilo de diseño</Label>
+              <Label className="font-bold">Estilo de diseño</Label>
               <RadioGroup
                 value={(settings as any).design_style || 'minimalist'}
                 onValueChange={value => onUpdate({ design_style: value } as any)}
