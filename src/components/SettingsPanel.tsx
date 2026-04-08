@@ -285,6 +285,65 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
               </div>
             )}
 
+            {/* Gaming Background (only when gaming design) */}
+            {(settings as any).design_style === 'gaming' && (
+              <div className="space-y-3">
+                <Label className="font-bold">🎮 Fondo gaming</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: 'neon-grid', label: 'Neón Grid', emoji: '🟩' },
+                    { value: 'cyber-purple', label: 'Cyber Purple', emoji: '🟪' },
+                    { value: 'dark-red', label: 'Dark Red', emoji: '🟥' },
+                    { value: 'matrix', label: 'Matrix', emoji: '💚' },
+                  ].map(bg => (
+                    <button
+                      key={bg.value}
+                      onClick={() => onUpdate({ school_background: `gaming:${bg.value}` } as any)}
+                      className={`p-3 rounded-lg text-center text-xs font-semibold transition-all ${
+                        (settings as any).school_background === `gaming:${bg.value}`
+                          ? 'bg-primary/15 ring-2 ring-primary text-primary'
+                          : 'bg-muted/50 hover:bg-muted'
+                      }`}
+                    >
+                      <span className="text-lg block mb-1">{bg.emoji}</span>
+                      {bg.label}
+                    </button>
+                  ))}
+                </div>
+                {/* Color picker for gaming */}
+                <div className="mt-3 space-y-2">
+                  <Label className="text-xs font-semibold text-muted-foreground">🎨 Color personalizado:</Label>
+                  <Input
+                    value={colorSearch}
+                    onChange={e => setColorSearch(e.target.value)}
+                    placeholder="Buscar color... (ej: azul, coral)"
+                    className="text-sm h-8 rounded-lg"
+                  />
+                  {colorSearch.trim() && (
+                    <div className="grid grid-cols-3 gap-1 max-h-32 overflow-y-auto">
+                      {NAMED_COLORS.filter(c => c.toLowerCase().includes(colorSearch.toLowerCase())).map(colorName => (
+                        <button
+                          key={colorName}
+                          onClick={() => {
+                            onUpdate({ school_background: `color:${COLOR_MAP[colorName]}` } as any);
+                            setColorSearch('');
+                          }}
+                          className={`p-2 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1 ${
+                            (settings as any).school_background === `color:${COLOR_MAP[colorName]}`
+                              ? 'ring-2 ring-primary'
+                              : 'hover:ring-1 ring-border'
+                          }`}
+                        >
+                          <span className="w-4 h-4 rounded-full shrink-0 border border-border" style={{ backgroundColor: COLOR_MAP[colorName] }} />
+                          <span className="truncate">{colorName}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Theme */}
             <div className="space-y-3">
               <Label className="font-bold">🎨 Tema de color</Label>
