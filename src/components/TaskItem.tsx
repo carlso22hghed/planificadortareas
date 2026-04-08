@@ -38,7 +38,7 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
   };
 
   const importance = task.importance;
-  const importanceBadge = importance && importance !== 'normal' ? IMPORTANCE_BADGES[importance] || { label: importance, className: 'bg-muted/50 text-muted-foreground' } : null;
+  const importanceBadge = importance && importance !== 'normal' ? IMPORTANCE_BADGES[importance] || { label: importance, icon: AlertCircle, className: 'bg-muted/50 text-muted-foreground' } : null;
 
   return (
     <>
@@ -75,7 +75,7 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
               return <Badge variant="secondary" className={cn("text-[10px] px-1.5 py-0 border-0", color.bg, color.text)}>{task.subject}</Badge>;
             })()}
             {importanceBadge && (
-              <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", importanceBadge.className)}>{importanceBadge.label}</Badge>
+              <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 flex items-center gap-0.5", importanceBadge.className)}><importanceBadge.icon className="w-2.5 h-2.5" /> {importanceBadge.label}</Badge>
             )}
             {task.rival && <span className="text-xs text-muted-foreground">vs {task.rival}</span>}
             {task.sport_type && task.type === 'match' && (
