@@ -168,11 +168,11 @@ const EditTaskDialog = ({ task, open, onOpenChange, onSave, subjects = [], sport
                 <RadioGroup value={homeAway} onValueChange={setHomeAway} className="flex gap-4 mt-1">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="home" id="edit-home" />
-                    <Label htmlFor="edit-home" className="cursor-pointer">🏠 Casa</Label>
+                    <Label htmlFor="edit-home" className="cursor-pointer">Casa</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="away" id="edit-away" />
-                    <Label htmlFor="edit-away" className="cursor-pointer">✈️ Fuera</Label>
+                    <Label htmlFor="edit-away" className="cursor-pointer">Fuera</Label>
                   </div>
                 </RadioGroup>
               </div>

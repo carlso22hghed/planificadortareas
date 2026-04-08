@@ -66,7 +66,7 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
         setNotificationsEnabled(true);
-        toast({ title: '🔔 Notificaciones activadas', description: 'Recibirás recordatorios.' });
+        toast({ title: 'Notificaciones activadas', description: 'Recibirás recordatorios.' });
       } else {
         toast({ title: 'Notificaciones bloqueadas', description: 'Actívalas en la configuración de tu navegador.', variant: 'destructive' });
         setNotificationsEnabled(false);
@@ -109,7 +109,7 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
       const delay = reminderDateObj.getTime() - Date.now();
 
       const sendNotification = () => {
-        new Notification(`📚 Recordatorio: ${name}`, {
+        new Notification(`Recordatorio: ${name}`, {
           body: dueDate ? `${typeLabels[type]} para ${new Date(dueDate).toLocaleDateString('es-ES')}` : `${typeLabels[type]}: ${name}`,
           icon: '/logo.png',
         });
@@ -220,11 +220,11 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
                 <RadioGroup value={homeAway} onValueChange={v => setHomeAway(v as 'home' | 'away')} className="flex gap-4 mt-1">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="home" id="home" />
-                    <Label htmlFor="home" className="cursor-pointer">🏠 Casa</Label>
+                    <Label htmlFor="home" className="cursor-pointer">Casa</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="away" id="away" />
-                    <Label htmlFor="away" className="cursor-pointer">✈️ Fuera</Label>
+                    <Label htmlFor="away" className="cursor-pointer">Fuera</Label>
                   </div>
                 </RadioGroup>
               </div>

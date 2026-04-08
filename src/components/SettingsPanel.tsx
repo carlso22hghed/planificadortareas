@@ -167,7 +167,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
             {/* Nox AI */}
             <div className="p-4 rounded-xl border border-purple-500/20 bg-purple-500/5 space-y-3">
               <div className="flex items-center gap-2">
-                <span className="text-lg">✨</span>
+                <Sparkles className="w-4 h-4 text-purple-400" />
                 <Label className="font-bold text-sm">Nox AI</Label>
               </div>
               <div className="flex items-center justify-between">
@@ -185,7 +185,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                 localStorage.removeItem('noxLastRecommendation');
                 toast('Memoria de Nox AI borrada');
               }}>
-                🗑️ Borrar memoria de Nox AI
+                Borrar memoria de Nox AI
               </Button>
             </div>
 
@@ -390,7 +390,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
 
             {/* Dark Mode */}
             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-              <Label className="cursor-pointer text-sm font-semibold">🌙 Modo oscuro</Label>
+              <Label className="cursor-pointer text-sm font-semibold">Modo oscuro</Label>
               <Switch
                 checked={settings.dark_mode}
                 onCheckedChange={checked => onUpdate({ dark_mode: checked })}
@@ -399,7 +399,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
 
             {/* Notification Sound */}
             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-              <Label className="cursor-pointer text-sm font-semibold">🔊 Sonido de notificación</Label>
+              <Label className="cursor-pointer text-sm font-semibold">Sonido de notificación</Label>
               <Switch
                 checked={(settings as any).notification_sound !== false}
                 onCheckedChange={checked => onUpdate({ notification_sound: checked } as any)}
@@ -408,7 +408,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
 
             {/* Nav Position */}
             <div className="space-y-3">
-              <Label className="font-bold">📱 Posición de pestañas</Label>
+              <Label className="font-bold">Posición de pestañas</Label>
               <RadioGroup
                 value={(settings as any).nav_position || 'bottom'}
                 onValueChange={value => onUpdate({ nav_position: value } as any)}
