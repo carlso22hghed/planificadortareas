@@ -182,9 +182,9 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                 />
               </div>
               <Button variant="outline" size="sm" className="w-full text-xs gap-1" onClick={async () => {
-                const { user } = await supabase.auth.getUser();
-                if (user?.user) {
-                  await supabase.from('nox_memory').delete().eq('user_id', user.user.id);
+                const { data } = await supabase.auth.getUser();
+                if (data?.user) {
+                  await supabase.from('nox_memory').delete().eq('user_id', data.user.id);
                 }
                 localStorage.removeItem('noxMemory');
                 localStorage.removeItem('noxLastRecommendation');
