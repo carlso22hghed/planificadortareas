@@ -15,13 +15,13 @@ interface NoxMemory {
 }
 
 interface NoxRecommendation {
-  todayTasks: { name: string; subject: string; dueDate: string | null; daysUntilDue: number; priority: number }[];
-  tomorrowTasks: { name: string; subject: string; dueDate: string | null; daysUntilDue: number; priority: number }[];
+  todayTasks: { name: string; subject: string; dueDate: string | null; dueTime: string | null; daysUntilDue: number; priority: number }[];
+  tomorrowTasks: { name: string; subject: string; dueDate: string | null; dueTime: string | null; daysUntilDue: number; priority: number }[];
   predictions: string[];
   encouragement: string;
 }
 
-const MIN_HISTORY_FOR_PREDICTION = 4; // Need at least 4 historical tasks to predict patterns
+const MIN_HISTORY_FOR_PREDICTION = 4;
 
 function calcPriority(task: DbTask): number {
   if (!task.due_date) return 20;
@@ -50,7 +50,6 @@ function detectPatterns(memory: NoxMemory, tasks: DbTask[]): string[] {
   const dayNames = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 
   for (const [, course] of Object.entries(memory.courses)) {
-    // Only predict if we have enough historical data
     if (course.taskHistory.length < MIN_HISTORY_FOR_PREDICTION) continue;
     if (course.assignmentDays.length === 0) continue;
 
@@ -68,8 +67,6 @@ function detectPatterns(memory: NoxMemory, tasks: DbTask[]): string[] {
       }
     }
   }
-
-  // No speculative "holiday week" predictions - only show what we know from data
 
   return predictions;
 }
@@ -101,7 +98,6 @@ function buildMemory(allTasks: DbTask[]): NoxMemory {
       dayCounts[day] = (dayCounts[day] || 0) + 1;
     }
     const total = dates.length;
-    // Only mark pattern days if there's enough data and the pattern is strong (>= 40%)
     if (total >= MIN_HISTORY_FOR_PREDICTION) {
       course.assignmentDays = Object.entries(dayCounts)
         .filter(([, count]) => count / total >= 0.4)
@@ -121,6 +117,15 @@ function buildMemory(allTasks: DbTask[]): NoxMemory {
   return memory;
 }
 
+function getEncouragement(pending: DbTask[], todayTasks: any[]): string {
+  if (pending.length === 0) return '¡Genial! No tienes nada pendiente. ¡Disfruta tu tiempo libre! 🎉';
+  if (pending.length === 1) return '¡Casi libre! Solo te queda una cosita por hacer 💪';
+  if (pending.length <= 3) return `¡Ánimo! Solo te quedan ${pending.length} tareas, ¡tú puedes! 🚀`;
+  if (todayTasks.length === 0) return 'Hoy no tienes nada urgente, ¡pero no te duermas! 😉';
+  if (todayTasks.length === 1) return '¡Empieza con la tarea de hoy y luego a descansar! 🏆';
+  return `Tienes ${todayTasks.length} tareas urgentes hoy. ¡Vamos a por ellas! 💪`;
+}
+
 export function useNoxAI(tasks: DbTask[]) {
   const { user } = useAuth();
   const [enabled, setEnabled] = useState(() => localStorage.getItem('noxEnabled') !== 'false');
@@ -128,7 +133,6 @@ export function useNoxAI(tasks: DbTask[]) {
   const [recommendation, setRecommendation] = useState<NoxRecommendation | null>(null);
   const [dbLoaded, setDbLoaded] = useState(false);
 
-  // Load last recommendation from database on mount
   useEffect(() => {
     if (!user || dbLoaded) return;
     (async () => {
@@ -167,6 +171,7 @@ export function useNoxAI(tasks: DbTask[]) {
         name: t.name,
         subject: t.subject || 'Sin asignatura',
         dueDate: t.due_date,
+        dueTime: t.due_time || null,
         daysUntilDue: daysUntil(t.due_date),
         priority: calcPriority(t),
       })).sort((a, b) => b.priority - a.priority);
@@ -175,17 +180,11 @@ export function useNoxAI(tasks: DbTask[]) {
       const tomorrowTasks = scored.filter(t => t.daysUntilDue > 1 && t.daysUntilDue <= 3).slice(0, 5);
 
       const predictions = detectPatterns(memory, allTasks);
-
-      let encouragement = '';
-      if (pending.length === 0) encouragement = 'No tienes tareas pendientes. Disfruta tu tiempo libre.';
-      else if (pending.length <= 2) encouragement = `Solo tienes ${pending.length} tarea${pending.length > 1 ? 's' : ''} pendiente${pending.length > 1 ? 's' : ''}`;
-      else if (todayTasks.length === 0) encouragement = 'No tienes nada urgente para hoy';
-      else encouragement = `Tienes ${todayTasks.length} tarea${todayTasks.length > 1 ? 's' : ''} urgente${todayTasks.length > 1 ? 's' : ''}`;
+      const encouragement = getEncouragement(pending, todayTasks);
 
       const rec: NoxRecommendation = { todayTasks, tomorrowTasks, predictions, encouragement };
       setRecommendation(rec);
 
-      // Save to database
       await supabase.from('nox_memory').upsert({
         user_id: user.id,
         memory_data: memory as any,

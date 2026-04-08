@@ -1,8 +1,8 @@
-import { Sparkles, Pin, ClipboardList, Lightbulb, ChevronRight } from 'lucide-react';
+import { Pin, ClipboardList, Lightbulb, ChevronRight, Bird } from 'lucide-react';
 
 interface NoxRecommendation {
-  todayTasks: { name: string; subject: string; dueDate: string | null; daysUntilDue: number; priority: number }[];
-  tomorrowTasks: { name: string; subject: string; dueDate: string | null; daysUntilDue: number; priority: number }[];
+  todayTasks: { name: string; subject: string; dueDate: string | null; dueTime: string | null; daysUntilDue: number; priority: number }[];
+  tomorrowTasks: { name: string; subject: string; dueDate: string | null; dueTime: string | null; daysUntilDue: number; priority: number }[];
   predictions: string[];
   encouragement: string;
 }
@@ -21,15 +21,51 @@ function groupBySubject(tasks: NoxRecommendation['todayTasks']) {
   return groups;
 }
 
+function formatDueLabel(dueDate: string | null, dueTime: string | null): string {
+  if (!dueDate) return '';
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const due = new Date(dueDate);
+  const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+  const diffDays = Math.round((dueDay.getTime() - today.getTime()) / 86400000);
+
+  const timeLabel = dueTime ? getTimeOfDay(dueTime) : '';
+
+  if (diffDays < 0) return '— ya venció';
+  if (diffDays === 0) return timeLabel ? `— hoy ${timeLabel}` : '— se entrega hoy';
+  if (diffDays === 1) return timeLabel ? `— mañana ${timeLabel}` : '— se entrega mañana';
+  if (diffDays === 2) return '— se entrega pasado mañana';
+
+  const dayNames = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  if (diffDays <= 6) return `— se entrega el ${dayNames[dueDay.getDay()]}`;
+  return `— en ${diffDays} días`;
+}
+
+function getTimeOfDay(time: string): string {
+  if (!time) return '';
+  const [h] = time.split(':').map(Number);
+  if (h < 7) return 'por la madrugada';
+  if (h < 13) return 'por la mañana';
+  if (h < 20) return 'por la tarde';
+  return 'por la noche';
+}
+
+function getDueSeverity(daysUntilDue: number): string {
+  if (daysUntilDue <= 0) return 'text-destructive font-semibold';
+  if (daysUntilDue <= 1) return 'text-destructive font-semibold';
+  if (daysUntilDue <= 2) return 'text-warning font-semibold';
+  return 'text-muted-foreground';
+}
+
 const NoxAISection = ({ loading, recommendation }: NoxAISectionProps) => {
   if (!recommendation && !loading) return null;
 
   return (
-    <div className="glass-card rounded-2xl p-4 space-y-3 border-purple-500/20">
+    <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center gap-2">
         <div className="relative">
-          <Sparkles className="w-5 h-5 text-purple-400" />
+          <Bird className="w-5 h-5 text-purple-400" />
           <div className="absolute inset-0 w-5 h-5 bg-purple-500/30 rounded-full blur-md animate-pulse" />
         </div>
         <span className="font-bold text-sm bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
@@ -44,7 +80,7 @@ const NoxAISection = ({ loading, recommendation }: NoxAISectionProps) => {
 
       {recommendation && (
         <div className="space-y-3">
-          {/* Encouragement */}
+          {/* Encouragement - friendly tone */}
           <p className="text-sm font-medium text-foreground/80">{recommendation.encouragement}</p>
 
           {/* Today's recommendations */}
@@ -62,8 +98,9 @@ const NoxAISection = ({ loading, recommendation }: NoxAISectionProps) => {
                       <ChevronRight className="w-3 h-3 text-purple-400 mt-1 shrink-0" />
                       <span className="text-foreground/90">
                         {t.name}
-                        {t.daysUntilDue <= 1 && <span className="text-destructive font-semibold ml-1">— vence hoy</span>}
-                        {t.daysUntilDue === 2 && <span className="text-warning font-semibold ml-1">— vence mañana</span>}
+                        <span className={`ml-1 ${getDueSeverity(t.daysUntilDue)}`}>
+                          {formatDueLabel(t.dueDate, t.dueTime)}
+                        </span>
                       </span>
                     </div>
                   ))}
@@ -87,7 +124,9 @@ const NoxAISection = ({ loading, recommendation }: NoxAISectionProps) => {
                       <ChevronRight className="w-3 h-3 text-purple-400/60 mt-1 shrink-0" />
                       <span className="text-foreground/70">
                         {t.name}
-                        {t.daysUntilDue <= 3 && <span className="text-muted-foreground ml-1">— en {t.daysUntilDue} días</span>}
+                        <span className={`ml-1 ${getDueSeverity(t.daysUntilDue)}`}>
+                          {formatDueLabel(t.dueDate, t.dueTime)}
+                        </span>
                       </span>
                     </div>
                   ))}
@@ -96,7 +135,7 @@ const NoxAISection = ({ loading, recommendation }: NoxAISectionProps) => {
             </div>
           )}
 
-          {/* Predictions - only shown when backed by real data */}
+          {/* Predictions */}
           {recommendation.predictions.length > 0 && (
             <div className="space-y-1 pt-1 border-t border-border/30">
               <div className="flex items-center gap-1.5">
