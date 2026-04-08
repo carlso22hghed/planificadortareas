@@ -146,7 +146,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     if ('school_background' in updates) {
       const bg = (updates as any).school_background || 'gradient';
-      document.documentElement.setAttribute('data-school-bg', bg.startsWith('color:') ? 'custom-color' : bg);
+      if (bg.startsWith('gaming:')) {
+        document.documentElement.setAttribute('data-gaming-bg', bg.replace('gaming:', ''));
+        document.documentElement.setAttribute('data-school-bg', '');
+      } else {
+        document.documentElement.setAttribute('data-school-bg', bg.startsWith('color:') ? 'custom-color' : bg);
+        document.documentElement.setAttribute('data-gaming-bg', '');
+      }
       if (bg.startsWith('color:')) document.documentElement.style.setProperty('--custom-bg-color', bg.replace('color:', ''));
       else document.documentElement.style.removeProperty('--custom-bg-color');
     }
@@ -176,7 +182,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       document.documentElement.setAttribute('data-theme', (data as any).theme || 'default');
       document.documentElement.setAttribute('data-design', (data as any).design_style || 'minimalist');
       const bg = (data as any).school_background || 'gradient';
-      document.documentElement.setAttribute('data-school-bg', bg.startsWith('color:') ? 'custom-color' : bg);
+      if (bg.startsWith('gaming:')) {
+        document.documentElement.setAttribute('data-gaming-bg', bg.replace('gaming:', ''));
+        document.documentElement.setAttribute('data-school-bg', '');
+      } else {
+        document.documentElement.setAttribute('data-school-bg', bg.startsWith('color:') ? 'custom-color' : bg);
+        document.documentElement.setAttribute('data-gaming-bg', '');
+      }
       if (bg.startsWith('color:')) document.documentElement.style.setProperty('--custom-bg-color', bg.replace('color:', ''));
       else document.documentElement.style.removeProperty('--custom-bg-color');
       document.documentElement.style.setProperty('--font-sans', `'${(data as any).font_family || 'Nunito'}', sans-serif`);
