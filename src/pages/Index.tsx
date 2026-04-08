@@ -493,7 +493,6 @@ const Index = () => {
       <ClassroomPromoDialog onSync={classroom.startSync} />
       {noxAI.enabled && <NoxAIFab loading={noxAI.loading} recommendation={noxAI.recommendation} />}
       <SupportDialog />
-      <PrivacyFooter />
     </div>
   );
 };
