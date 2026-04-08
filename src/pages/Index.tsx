@@ -48,6 +48,8 @@ const Index = () => {
     enabled: !!user,
   });
 
+  const noxAI = useNoxAI(tasks);
+
   const { data: countdowns = [] } = useQuery({
     queryKey: ['countdowns', user?.id],
     queryFn: async () => {
