@@ -17,8 +17,9 @@ import SupportDialog from '@/components/SupportDialog';
 import DontForgetPage from '@/components/DontForgetPage';
 import NotesPage from '@/components/NotesPage';
 import ClassroomPromoDialog from '@/components/ClassroomPromoDialog';
-import NoxAISection from '@/components/NoxAISection';
+import NoxAIFab from '@/components/NoxAIFab';
 import ProductivityPage from '@/components/ProductivityPage';
+import PrivacyFooter from '@/components/PrivacyFooter';
 import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -363,10 +364,6 @@ const Index = () => {
                   <p className="text-sm text-muted-foreground mt-1 capitalize">{getTodayDate()}</p>
                 </div>
 
-                {/* Nox AI */}
-                {noxAI.enabled && (
-                  <NoxAISection loading={noxAI.loading} recommendation={noxAI.recommendation} />
-                )}
 
                 <div className="grid grid-cols-2 gap-3">
                   <button onClick={() => setActiveTab('deberes')} className="glass-card rounded-2xl p-4 text-center hover:ring-2 ring-primary/30 transition-all">
@@ -493,7 +490,9 @@ const Index = () => {
       </Dialog>
 
       <ClassroomPromoDialog onSync={classroom.startSync} />
+      {noxAI.enabled && <NoxAIFab loading={noxAI.loading} recommendation={noxAI.recommendation} />}
       <SupportDialog />
+      <PrivacyFooter />
     </div>
   );
 };
