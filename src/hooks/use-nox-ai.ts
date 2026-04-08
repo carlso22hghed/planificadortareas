@@ -1,9 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
 import type { DbTask } from '@/types/app';
 
 interface CourseMemory {
   courseName: string;
-  assignmentDays: number[]; // 0=Sunday, 6=Saturday
+  assignmentDays: number[];
   avgFrequencyDays: number;
   taskHistory: { title: string; assignedDate: string; dueDate: string }[];
 }
@@ -19,33 +21,14 @@ interface NoxRecommendation {
   encouragement: string;
 }
 
-const STORAGE_MEMORY = 'noxMemory';
-const STORAGE_LAST = 'noxLastRecommendation';
-const STORAGE_ENABLED = 'noxEnabled';
-
-function getMemory(): NoxMemory {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_MEMORY) || '{"courses":{}}');
-  } catch { return { courses: {} }; }
-}
-
-function saveMemory(m: NoxMemory) {
-  localStorage.setItem(STORAGE_MEMORY, JSON.stringify(m));
-}
-
-function getLastRecommendation(): NoxRecommendation | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_LAST);
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
-}
+const MIN_HISTORY_FOR_PREDICTION = 4; // Need at least 4 historical tasks to predict patterns
 
 function calcPriority(task: DbTask): number {
   if (!task.due_date) return 20;
   const now = new Date();
   now.setHours(0, 0, 0, 0);
   const due = new Date(task.due_date);
-  const days = Math.ceil((due.getTime() - now.getTime()) / (86400000));
+  const days = Math.ceil((due.getTime() - now.getTime()) / 86400000);
   let score = days <= 1 ? 100 : days <= 3 ? 70 : days <= 7 ? 40 : 20;
   if (task.description) score += 10;
   if (task.importance === 'urgente') score += 30;
@@ -67,11 +50,11 @@ function detectPatterns(memory: NoxMemory, tasks: DbTask[]): string[] {
   const dayNames = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 
   for (const [, course] of Object.entries(memory.courses)) {
+    // Only predict if we have enough historical data
+    if (course.taskHistory.length < MIN_HISTORY_FOR_PREDICTION) continue;
     if (course.assignmentDays.length === 0) continue;
-    
-    // Check if today matches a pattern day
+
     if (course.assignmentDays.includes(todayDay)) {
-      // Check if a task was already assigned this week for this course
       const weekStart = new Date(today);
       weekStart.setDate(today.getDate() - todayDay);
       const hasThisWeek = tasks.some(t =>
@@ -86,99 +69,98 @@ function detectPatterns(memory: NoxMemory, tasks: DbTask[]): string[] {
     }
   }
 
-  // Holiday week detection
-  const pendingWithDates = tasks.filter(t => !t.completed && t.due_date);
-  if (pendingWithDates.length > 0) {
-    const futureDues = pendingWithDates
-      .map(t => new Date(t.due_date!).getTime())
-      .filter(d => d > today.getTime())
-      .sort();
-    
-    if (futureDues.length === 0 || (futureDues[0] - today.getTime()) > 7 * 86400000) {
-      predictions.push('Nox AI cree que esta semana habrá pocas tareas nuevas — parece la última semana antes de vacaciones');
-    }
-  }
+  // No speculative "holiday week" predictions - only show what we know from data
 
   return predictions;
 }
 
+function buildMemory(allTasks: DbTask[]): NoxMemory {
+  const memory: NoxMemory = { courses: {} };
+
+  for (const task of allTasks) {
+    const courseName = task.subject || 'Sin asignatura';
+    if (!memory.courses[courseName]) {
+      memory.courses[courseName] = { courseName, assignmentDays: [], avgFrequencyDays: 0, taskHistory: [] };
+    }
+    const course = memory.courses[courseName];
+    const exists = course.taskHistory.some(h => h.title === task.name && h.dueDate === (task.due_date || ''));
+    if (!exists) {
+      course.taskHistory.push({
+        title: task.name,
+        assignedDate: task.created_at.split('T')[0],
+        dueDate: task.due_date || '',
+      });
+    }
+  }
+
+  for (const course of Object.values(memory.courses)) {
+    const dates = course.taskHistory.map(h => h.assignedDate).filter(Boolean).sort();
+    const dayCounts: Record<number, number> = {};
+    for (const d of dates) {
+      const day = new Date(d).getDay();
+      dayCounts[day] = (dayCounts[day] || 0) + 1;
+    }
+    const total = dates.length;
+    // Only mark pattern days if there's enough data and the pattern is strong (>= 40%)
+    if (total >= MIN_HISTORY_FOR_PREDICTION) {
+      course.assignmentDays = Object.entries(dayCounts)
+        .filter(([, count]) => count / total >= 0.4)
+        .map(([day]) => parseInt(day));
+    }
+
+    if (dates.length > 1) {
+      const timestamps = dates.map(d => new Date(d).getTime()).sort();
+      let totalGap = 0;
+      for (let i = 1; i < timestamps.length; i++) {
+        totalGap += timestamps[i] - timestamps[i - 1];
+      }
+      course.avgFrequencyDays = Math.round(totalGap / (timestamps.length - 1) / 86400000);
+    }
+  }
+
+  return memory;
+}
+
 export function useNoxAI(tasks: DbTask[]) {
-  const [enabled, setEnabled] = useState(() => localStorage.getItem(STORAGE_ENABLED) !== 'false');
+  const { user } = useAuth();
+  const [enabled, setEnabled] = useState(() => localStorage.getItem('noxEnabled') !== 'false');
   const [loading, setLoading] = useState(false);
-  const [recommendation, setRecommendation] = useState<NoxRecommendation | null>(() => getLastRecommendation());
+  const [recommendation, setRecommendation] = useState<NoxRecommendation | null>(null);
+  const [dbLoaded, setDbLoaded] = useState(false);
+
+  // Load last recommendation from database on mount
+  useEffect(() => {
+    if (!user || dbLoaded) return;
+    (async () => {
+      const { data } = await supabase
+        .from('nox_memory')
+        .select('last_recommendation')
+        .eq('user_id', user.id)
+        .single();
+      if (data?.last_recommendation) {
+        setRecommendation(data.last_recommendation as unknown as NoxRecommendation);
+      }
+      setDbLoaded(true);
+    })();
+  }, [user, dbLoaded]);
 
   const toggleEnabled = useCallback((val: boolean) => {
     setEnabled(val);
-    localStorage.setItem(STORAGE_ENABLED, String(val));
+    localStorage.setItem('noxEnabled', String(val));
   }, []);
 
-  const clearMemory = useCallback(() => {
-    localStorage.removeItem(STORAGE_MEMORY);
-    localStorage.removeItem(STORAGE_LAST);
+  const clearMemory = useCallback(async () => {
+    if (!user) return;
+    await supabase.from('nox_memory').delete().eq('user_id', user.id);
     setRecommendation(null);
-  }, []);
-
-  // Update memory when tasks change
-  const updateMemory = useCallback((allTasks: DbTask[]) => {
-    const memory = getMemory();
-
-    for (const task of allTasks) {
-      const courseName = task.subject || 'Sin asignatura';
-      if (!memory.courses[courseName]) {
-        memory.courses[courseName] = { courseName, assignmentDays: [], avgFrequencyDays: 0, taskHistory: [] };
-      }
-      const course = memory.courses[courseName];
-      const exists = course.taskHistory.some(h => h.title === task.name && h.dueDate === (task.due_date || ''));
-      if (!exists) {
-        course.taskHistory.push({
-          title: task.name,
-          assignedDate: task.created_at.split('T')[0],
-          dueDate: task.due_date || '',
-        });
-      }
-    }
-
-    // Recalculate patterns
-    for (const course of Object.values(memory.courses)) {
-      const dates = course.taskHistory
-        .map(h => h.assignedDate)
-        .filter(Boolean)
-        .sort();
-      
-      // Calculate assignment day frequencies
-      const dayCounts: Record<number, number> = {};
-      for (const d of dates) {
-        const day = new Date(d).getDay();
-        dayCounts[day] = (dayCounts[day] || 0) + 1;
-      }
-      // Days that appear more than 30% of the time
-      const total = dates.length;
-      course.assignmentDays = Object.entries(dayCounts)
-        .filter(([, count]) => count / total >= 0.3)
-        .map(([day]) => parseInt(day));
-
-      // Average frequency
-      if (dates.length > 1) {
-        const timestamps = dates.map(d => new Date(d).getTime()).sort();
-        let totalGap = 0;
-        for (let i = 1; i < timestamps.length; i++) {
-          totalGap += timestamps[i] - timestamps[i - 1];
-        }
-        course.avgFrequencyDays = Math.round(totalGap / (timestamps.length - 1) / 86400000);
-      }
-    }
-
-    saveMemory(memory);
-    return memory;
-  }, []);
+  }, [user]);
 
   const generate = useCallback((allTasks: DbTask[]) => {
-    if (!enabled) return;
+    if (!enabled || !user) return;
     setLoading(true);
 
-    // Simulate brief thinking delay
-    setTimeout(() => {
-      const memory = updateMemory(allTasks);
+    setTimeout(async () => {
+      const memory = buildMemory(allTasks);
       const pending = allTasks.filter(t => !t.completed);
 
       const scored = pending.map(t => ({
@@ -194,26 +176,31 @@ export function useNoxAI(tasks: DbTask[]) {
 
       const predictions = detectPatterns(memory, allTasks);
 
-      // Encouragement
       let encouragement = '';
-      if (pending.length === 0) encouragement = '¡Increíble! No tienes tareas pendientes. ¡Disfruta tu tiempo libre! 🎉';
-      else if (pending.length <= 2) encouragement = `¡Vas bien! Solo tienes ${pending.length} tarea${pending.length > 1 ? 's' : ''} pendiente${pending.length > 1 ? 's' : ''}`;
-      else if (todayTasks.length === 0) encouragement = 'Esta semana parece tranquila, aprovecha para repasar 📚';
-      else encouragement = `Tienes ${todayTasks.length} tarea${todayTasks.length > 1 ? 's' : ''} urgente${todayTasks.length > 1 ? 's' : ''} — ¡tú puedes! 💪`;
+      if (pending.length === 0) encouragement = 'No tienes tareas pendientes. Disfruta tu tiempo libre.';
+      else if (pending.length <= 2) encouragement = `Solo tienes ${pending.length} tarea${pending.length > 1 ? 's' : ''} pendiente${pending.length > 1 ? 's' : ''}`;
+      else if (todayTasks.length === 0) encouragement = 'No tienes nada urgente para hoy';
+      else encouragement = `Tienes ${todayTasks.length} tarea${todayTasks.length > 1 ? 's' : ''} urgente${todayTasks.length > 1 ? 's' : ''}`;
 
       const rec: NoxRecommendation = { todayTasks, tomorrowTasks, predictions, encouragement };
       setRecommendation(rec);
-      localStorage.setItem(STORAGE_LAST, JSON.stringify(rec));
-      setLoading(false);
-    }, 800);
-  }, [enabled, updateMemory]);
 
-  // Auto-generate on tasks change
+      // Save to database
+      await supabase.from('nox_memory').upsert({
+        user_id: user.id,
+        memory_data: memory as any,
+        last_recommendation: rec as any,
+      }, { onConflict: 'user_id' });
+
+      setLoading(false);
+    }, 600);
+  }, [enabled, user]);
+
   useEffect(() => {
-    if (tasks.length > 0 && enabled) {
+    if (tasks.length > 0 && enabled && dbLoaded) {
       generate(tasks);
     }
-  }, [tasks, enabled]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tasks, enabled, dbLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { enabled, toggleEnabled, loading, recommendation, generate, clearMemory };
 }
