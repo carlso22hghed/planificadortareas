@@ -20,7 +20,7 @@ import ClassroomPromoDialog from '@/components/ClassroomPromoDialog';
 import NoxAIFab from '@/components/NoxAIFab';
 import ProductivityPage from '@/components/ProductivityPage';
 import PrivacyFooter from '@/components/PrivacyFooter';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent } from 'lucide-react';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -377,12 +377,12 @@ const Index = () => {
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h2 className="font-bold text-foreground">⏳ Contadores</h2>
+                    <h2 className="font-bold text-foreground flex items-center gap-2"><Timer className="w-5 h-5 text-primary" /> Contadores</h2>
                     <AddCountdownDialog onAdd={addCountdown} />
                   </div>
                   {countdowns.length === 0 ? (
                     <div className="glass-card rounded-2xl p-6 text-center">
-                      <p className="text-3xl mb-2">🏖️</p>
+                      <Palmtree className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
                       <p className="text-sm text-muted-foreground">Añade un contador para ver cuánto falta</p>
                     </div>
                   ) : (
