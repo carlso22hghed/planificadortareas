@@ -475,12 +475,12 @@ const Index = () => {
       <Dialog open={showDontForgetPopup} onOpenChange={setShowDontForgetPopup}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-destructive flex items-center gap-2">🚨 ¡No olvidar!</DialogTitle>
+            <DialogTitle className="text-destructive flex items-center gap-2"><AlertTriangle className="w-5 h-5" /> ¡No olvidar!</DialogTitle>
           </DialogHeader>
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {dontForgetItems.map((item: any) => (
               <div key={item.id} className="p-3 rounded-xl bg-destructive/10 border border-destructive/20">
-                <p className="font-semibold text-sm text-destructive">🚨 {item.content}</p>
+                <p className="font-semibold text-sm text-destructive flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5 shrink-0" /> {item.content}</p>
               </div>
             ))}
           </div>
