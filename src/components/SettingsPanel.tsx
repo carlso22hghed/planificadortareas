@@ -295,12 +295,17 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
             {(settings as any).design_style === 'gaming' && (
               <div className="space-y-3">
                 <Label className="font-bold">🎮 Fondo gaming</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { value: 'neon-grid', label: 'Neón Grid', emoji: '🟩' },
-                    { value: 'cyber-purple', label: 'Cyber Purple', emoji: '🟪' },
-                    { value: 'dark-red', label: 'Dark Red', emoji: '🟥' },
-                    { value: 'matrix', label: 'Matrix', emoji: '💚' },
+                <div className="grid grid-cols-3 gap-2">
+                {[
+                    { value: 'neon-grid', label: 'Neón Grid' },
+                    { value: 'cyber-purple', label: 'Cyber Purple' },
+                    { value: 'dark-red', label: 'Dark Red' },
+                    { value: 'matrix', label: 'Matrix' },
+                    { value: 'aurora', label: 'Aurora Boreal' },
+                    { value: 'fire', label: 'Fuego' },
+                    { value: 'ocean-deep', label: 'Océano Profundo' },
+                    { value: 'synthwave', label: 'Synthwave' },
+                    { value: 'particles', label: 'Partículas' },
                   ].map(bg => (
                     <button
                       key={bg.value}
@@ -311,7 +316,6 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                           : 'bg-muted/50 hover:bg-muted'
                       }`}
                     >
-                      <span className="text-lg block mb-1">{bg.emoji}</span>
                       {bg.label}
                     </button>
                   ))}
