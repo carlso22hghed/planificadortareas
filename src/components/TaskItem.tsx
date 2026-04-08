@@ -138,6 +138,8 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
         </div>
       )}
     </div>
+    <TaskDetailDialog task={task} open={showDetail} onOpenChange={setShowDetail} />
+    </>
   );
 };
 
