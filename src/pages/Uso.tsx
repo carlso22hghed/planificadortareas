@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const htmlContent = `<nav>
   <span class="nav-brand">Planificador de Tareas</span>
@@ -160,9 +161,11 @@ const styles = `
 
 const Uso = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!containerRef.current) return;
+    if (containerRef.current.shadowRoot) return;
     const shadow = containerRef.current.attachShadow({ mode: 'open' });
     const style = document.createElement('style');
     style.textContent = styles;
@@ -184,7 +187,23 @@ const Uso = () => {
     });
   }, []);
 
-  return <div ref={containerRef} style={{ minHeight: '100vh', background: '#F7F5F0' }} />;
+  return (
+    <div style={{ minHeight: '100vh', background: '#F7F5F0' }}>
+      <button
+        onClick={() => navigate(-1)}
+        style={{
+          position: 'fixed', top: '16px', left: '16px', zIndex: 200,
+          background: '#1A1A1A', color: '#F7F5F0', border: 'none',
+          borderRadius: '999px', padding: '8px 20px', fontSize: '14px',
+          fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+          boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+        }}
+      >
+        ← Volver
+      </button>
+      <div ref={containerRef} />
+    </div>
+  );
 };
 
 export default Uso;
