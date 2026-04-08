@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { DbTask } from '@/types/app';
-import { Check, Trash2, Clock, CalendarDays, MapPin, Pencil } from 'lucide-react';
+import { Check, Trash2, Clock, CalendarDays, MapPin, Pencil, CheckCircle, BookOpen, BarChart3, AlertCircle, CircleAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -17,10 +17,10 @@ interface TaskItemProps {
   onToggleStudy?: (id: string) => void;
 }
 
-const IMPORTANCE_BADGES: Record<string, { label: string; className: string }> = {
-  importante: { label: '❗ Importante', className: 'bg-warning/20 text-warning-foreground border-warning/30' },
-  urgente: { label: '🔴 Urgente', className: 'bg-destructive/20 text-destructive border-destructive/30' },
-  voluntario: { label: '💚 Voluntario', className: 'bg-success/20 text-success border-success/30' },
+const IMPORTANCE_BADGES: Record<string, { label: string; icon: typeof AlertCircle; className: string }> = {
+  importante: { label: 'Importante', icon: AlertCircle, className: 'bg-warning/20 text-warning-foreground border-warning/30' },
+  urgente: { label: 'Urgente', icon: CircleAlert, className: 'bg-destructive/20 text-destructive border-destructive/30' },
+  voluntario: { label: 'Voluntario', icon: CheckCircle, className: 'bg-success/20 text-success border-success/30' },
 };
 
 const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemProps) => {
@@ -111,8 +111,8 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
               task.study_completed ? 'bg-success border-success' : 'border-muted-foreground/30 hover:border-primary')}>
             {task.study_completed && <Check className="w-2.5 h-2.5 text-success-foreground" />}
           </button>
-          <p className="text-xs text-muted-foreground">
-            {task.study_completed ? '✅' : '📖'} Estudiar / Practicar
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            {task.study_completed ? <CheckCircle className="w-3 h-3 text-success" /> : <BookOpen className="w-3 h-3" />} Estudiar / Practicar
           </p>
         </div>
       )}
@@ -120,8 +120,8 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
       {isExam && task.completed && (
         <div className="flex items-center gap-2 mt-2">
           {task.grade ? (
-            <button onClick={() => { setGradeInput(task.grade || ''); setShowGradeInput(true); }} className="text-xs text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded-full">
-              📊 Nota: {task.grade}
+            <button onClick={() => { setGradeInput(task.grade || ''); setShowGradeInput(true); }} className="text-xs text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <BarChart3 className="w-3 h-3" /> Nota: {task.grade}
             </button>
           ) : showGradeInput ? (
             <div className="flex items-center gap-1">
@@ -131,8 +131,8 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
               <button onClick={() => setShowGradeInput(false)} className="text-xs text-muted-foreground">✕</button>
             </div>
           ) : (
-            <button onClick={() => setShowGradeInput(true)} className="text-xs text-muted-foreground hover:text-primary transition-colors">
-              📊 Añadir nota (opcional)
+            <button onClick={() => setShowGradeInput(true)} className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+              <BarChart3 className="w-3 h-3" /> Añadir nota (opcional)
             </button>
           )}
         </div>
