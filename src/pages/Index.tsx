@@ -84,6 +84,13 @@ const Index = () => {
 
   const showDontForgetButton = (settings as any)?.dont_forget_enabled && dontForgetItems.length > 0 && !dontForgetDismissed;
 
+  // Register service worker for push notifications
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+  }, []);
+
   // Auto-sync Classroom on load
   useEffect(() => {
     if (classroomSyncedRef.current || !user) return;
