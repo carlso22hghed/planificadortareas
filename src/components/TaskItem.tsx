@@ -41,8 +41,9 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
   const importanceBadge = importance && importance !== 'normal' ? IMPORTANCE_BADGES[importance] || { label: importance, className: 'bg-muted/50 text-muted-foreground' } : null;
 
   return (
-    <div className={cn(
-      'glass-card rounded-2xl p-4 animate-slide-up transition-all',
+    <>
+    <div onClick={() => setShowDetail(true)} className={cn(
+      'glass-card rounded-2xl p-4 animate-slide-up transition-all cursor-pointer hover:ring-1 ring-primary/20',
       task.completed && 'opacity-50'
     )}>
       <div className="flex items-center gap-3">
