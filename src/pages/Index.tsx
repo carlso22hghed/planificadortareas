@@ -437,6 +437,7 @@ const Index = () => {
             {activeTab === 'horario' && <ScheduleInline userId={user!.id} />}
             {activeTab === 'no-olvidar' && <DontForgetPage />}
             {activeTab === 'notas' && <NotesPage />}
+            {activeTab === 'productividad' && <ProductivityPage tasks={tasks} />}
           </main>
         </div>
 
