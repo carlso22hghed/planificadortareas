@@ -435,6 +435,7 @@ const Index = () => {
             {activeTab === 'no-olvidar' && <DontForgetPage />}
             {activeTab === 'notas' && <NotesPage />}
             {activeTab === 'productividad' && <ProductivityPage tasks={tasks} />}
+            <PrivacyFooter />
           </main>
         </div>
 
