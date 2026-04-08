@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { lovable } from '@/integrations/lovable';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
+  const [accepted, setAccepted] = useState(false);
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
