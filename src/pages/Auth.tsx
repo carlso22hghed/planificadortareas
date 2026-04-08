@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { lovable } from '@/integrations/lovable';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
+  const [accepted, setAccepted] = useState(false);
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
@@ -36,9 +39,24 @@ const Auth = () => {
             <p className="text-sm text-muted-foreground mt-1">Inicia sesión con tu cuenta de Google</p>
           </div>
 
+          <div className="flex items-start space-x-2">
+            <Checkbox
+              id="terms"
+              checked={accepted}
+              onCheckedChange={(v) => setAccepted(v === true)}
+              className="mt-0.5"
+            />
+            <label htmlFor="terms" className="text-sm text-muted-foreground leading-tight cursor-pointer">
+              Acepto los{' '}
+              <Link to="/uso" className="text-primary underline hover:text-primary/80">
+                términos y condiciones
+              </Link>
+            </label>
+          </div>
+
           <Button
             onClick={handleGoogleSignIn}
-            disabled={loading}
+            disabled={loading || !accepted}
             className="w-full gap-3 h-12 text-base rounded-xl"
             variant="outline"
           >
