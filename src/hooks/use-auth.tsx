@@ -65,7 +65,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       document.documentElement.setAttribute('data-theme', (settingsRes.data as any).theme || 'default');
       document.documentElement.setAttribute('data-design', (settingsRes.data as any).design_style || 'minimalist');
       const bg = (settingsRes.data as any).school_background || 'gradient';
-      document.documentElement.setAttribute('data-school-bg', bg.startsWith('color:') ? 'custom-color' : bg);
+      if (bg.startsWith('gaming:')) {
+        document.documentElement.setAttribute('data-gaming-bg', bg.replace('gaming:', ''));
+        document.documentElement.setAttribute('data-school-bg', '');
+      } else {
+        document.documentElement.setAttribute('data-school-bg', bg.startsWith('color:') ? 'custom-color' : bg);
+        document.documentElement.setAttribute('data-gaming-bg', '');
+      }
       if (bg.startsWith('color:')) document.documentElement.style.setProperty('--custom-bg-color', bg.replace('color:', ''));
       else document.documentElement.style.removeProperty('--custom-bg-color');
       document.documentElement.style.setProperty('--font-sans', `'${(settingsRes.data as any).font_family || 'Nunito'}', sans-serif`);
