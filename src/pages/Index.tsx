@@ -98,6 +98,10 @@ const Index = () => {
     const isSynced = localStorage.getItem('classroomSynced') === 'true';
     if (isPending || isSynced) {
       classroomSyncedRef.current = true;
+      // Request notification permission on first classroom sync
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
       classroom.autoSync().then(() => {
         queryClient.invalidateQueries({ queryKey: ['tasks'] });
       });
