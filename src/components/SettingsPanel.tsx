@@ -136,7 +136,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
       </SheetTrigger>
       <SheetContent className="w-full sm:max-w-md">
         <SheetHeader>
-          <SheetTitle>⚙️ Configuración</SheetTitle>
+          <SheetTitle>Configuración</SheetTitle>
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-80px)] pr-4">
           <div className="space-y-6 mt-4 pb-8">
@@ -213,7 +213,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                 </div>
                 <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
                   <RadioGroupItem value="gaming" id="ds-gaming" />
-                  <Label htmlFor="ds-gaming" className="cursor-pointer text-sm">🎮 Gaming / Robótico</Label>
+                  <Label htmlFor="ds-gaming" className="cursor-pointer text-sm">Gaming / Robótico</Label>
                 </div>
               </RadioGroup>
             </div>
@@ -221,20 +221,20 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
             {/* School Background (only when school design) */}
             {(settings as any).design_style === 'school' && (
               <div className="space-y-3">
-                <Label className="font-bold">🖼️ Fondo escolar</Label>
+                <Label className="font-bold">Fondo escolar</Label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { value: 'gradient', label: 'Degradado', emoji: '🌈' },
-                    { value: 'notebook', label: 'Cuaderno', emoji: '📓' },
-                    { value: 'dots', label: 'Puntos', emoji: '⚫' },
-                    { value: 'grid', label: 'Cuadrícula', emoji: '📐' },
-                    { value: 'chalkboard', label: 'Pizarra', emoji: '🟢' },
-                    { value: 'pastel', label: 'Pastel', emoji: '🎀' },
-                    { value: 'sunset', label: 'Atardecer', emoji: '🌅' },
-                    { value: 'mountains', label: 'Montañas', emoji: '🏔️' },
-                    { value: 'ocean', label: 'Océano', emoji: '🌊' },
-                    { value: 'forest', label: 'Bosque', emoji: '🌲' },
-                    { value: 'sky', label: 'Cielo', emoji: '☁️' },
+                    { value: 'gradient', label: 'Degradado' },
+                    { value: 'notebook', label: 'Cuaderno' },
+                    { value: 'dots', label: 'Puntos' },
+                    { value: 'grid', label: 'Cuadrícula' },
+                    { value: 'chalkboard', label: 'Pizarra' },
+                    { value: 'pastel', label: 'Pastel' },
+                    { value: 'sunset', label: 'Atardecer' },
+                    { value: 'mountains', label: 'Montañas' },
+                    { value: 'ocean', label: 'Océano' },
+                    { value: 'forest', label: 'Bosque' },
+                    { value: 'sky', label: 'Cielo' },
                   ].map(bg => (
                     <button
                       key={bg.value}
@@ -245,7 +245,6 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                           : 'bg-muted/50 hover:bg-muted'
                       }`}
                     >
-                      <span className="text-lg block mb-1">{bg.emoji}</span>
                       {bg.label}
                     </button>
                   ))}
@@ -294,13 +293,18 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
             {/* Gaming Background (only when gaming design) */}
             {(settings as any).design_style === 'gaming' && (
               <div className="space-y-3">
-                <Label className="font-bold">🎮 Fondo gaming</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { value: 'neon-grid', label: 'Neón Grid', emoji: '🟩' },
-                    { value: 'cyber-purple', label: 'Cyber Purple', emoji: '🟪' },
-                    { value: 'dark-red', label: 'Dark Red', emoji: '🟥' },
-                    { value: 'matrix', label: 'Matrix', emoji: '💚' },
+                <Label className="font-bold">Fondo gaming</Label>
+                <div className="grid grid-cols-3 gap-2">
+                {[
+                    { value: 'neon-grid', label: 'Neón Grid' },
+                    { value: 'cyber-purple', label: 'Cyber Purple' },
+                    { value: 'dark-red', label: 'Dark Red' },
+                    { value: 'matrix', label: 'Matrix' },
+                    { value: 'aurora', label: 'Aurora Boreal' },
+                    { value: 'fire', label: 'Fuego' },
+                    { value: 'ocean-deep', label: 'Océano Profundo' },
+                    { value: 'synthwave', label: 'Synthwave' },
+                    { value: 'particles', label: 'Partículas' },
                   ].map(bg => (
                     <button
                       key={bg.value}
@@ -311,7 +315,6 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                           : 'bg-muted/50 hover:bg-muted'
                       }`}
                     >
-                      <span className="text-lg block mb-1">{bg.emoji}</span>
                       {bg.label}
                     </button>
                   ))}
@@ -375,7 +378,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
             {/* Font Family */}
             <Collapsible open={fontOpen} onOpenChange={setFontOpen}>
               <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-muted/50">
-                <Label className="font-bold cursor-pointer">🔤 Tipografía</Label>
+                <Label className="font-bold cursor-pointer">Tipografía</Label>
                 {fontOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2 space-y-1">

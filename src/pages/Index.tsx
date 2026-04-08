@@ -17,9 +17,10 @@ import SupportDialog from '@/components/SupportDialog';
 import DontForgetPage from '@/components/DontForgetPage';
 import NotesPage from '@/components/NotesPage';
 import ClassroomPromoDialog from '@/components/ClassroomPromoDialog';
-import NoxAISection from '@/components/NoxAISection';
+import NoxAIFab from '@/components/NoxAIFab';
 import ProductivityPage from '@/components/ProductivityPage';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent } from 'lucide-react';
+import PrivacyFooter from '@/components/PrivacyFooter';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -363,10 +364,6 @@ const Index = () => {
                   <p className="text-sm text-muted-foreground mt-1 capitalize">{getTodayDate()}</p>
                 </div>
 
-                {/* Nox AI */}
-                {noxAI.enabled && (
-                  <NoxAISection loading={noxAI.loading} recommendation={noxAI.recommendation} />
-                )}
 
                 <div className="grid grid-cols-2 gap-3">
                   <button onClick={() => setActiveTab('deberes')} className="glass-card rounded-2xl p-4 text-center hover:ring-2 ring-primary/30 transition-all">
@@ -380,12 +377,12 @@ const Index = () => {
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h2 className="font-bold text-foreground">⏳ Contadores</h2>
+                    <h2 className="font-bold text-foreground flex items-center gap-2"><Timer className="w-5 h-5 text-primary" /> Contadores</h2>
                     <AddCountdownDialog onAdd={addCountdown} />
                   </div>
                   {countdowns.length === 0 ? (
                     <div className="glass-card rounded-2xl p-6 text-center">
-                      <p className="text-3xl mb-2">🏖️</p>
+                      <Palmtree className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
                       <p className="text-sm text-muted-foreground">Añade un contador para ver cuánto falta</p>
                     </div>
                   ) : (
@@ -438,6 +435,7 @@ const Index = () => {
             {activeTab === 'no-olvidar' && <DontForgetPage />}
             {activeTab === 'notas' && <NotesPage />}
             {activeTab === 'productividad' && <ProductivityPage tasks={tasks} />}
+            <PrivacyFooter />
           </main>
         </div>
 
@@ -477,12 +475,12 @@ const Index = () => {
       <Dialog open={showDontForgetPopup} onOpenChange={setShowDontForgetPopup}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-destructive flex items-center gap-2">🚨 ¡No olvidar!</DialogTitle>
+            <DialogTitle className="text-destructive flex items-center gap-2"><AlertTriangle className="w-5 h-5" /> ¡No olvidar!</DialogTitle>
           </DialogHeader>
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {dontForgetItems.map((item: any) => (
               <div key={item.id} className="p-3 rounded-xl bg-destructive/10 border border-destructive/20">
-                <p className="font-semibold text-sm text-destructive">🚨 {item.content}</p>
+                <p className="font-semibold text-sm text-destructive flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5 shrink-0" /> {item.content}</p>
               </div>
             ))}
           </div>
@@ -493,6 +491,7 @@ const Index = () => {
       </Dialog>
 
       <ClassroomPromoDialog onSync={classroom.startSync} />
+      {noxAI.enabled && <NoxAIFab loading={noxAI.loading} recommendation={noxAI.recommendation} />}
       <SupportDialog />
     </div>
   );
