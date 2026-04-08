@@ -136,7 +136,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
       </SheetTrigger>
       <SheetContent className="w-full sm:max-w-md">
         <SheetHeader>
-          <SheetTitle>⚙️ Configuración</SheetTitle>
+          <SheetTitle>Configuración</SheetTitle>
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-80px)] pr-4">
           <div className="space-y-6 mt-4 pb-8">
@@ -213,7 +213,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
                 </div>
                 <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
                   <RadioGroupItem value="gaming" id="ds-gaming" />
-                  <Label htmlFor="ds-gaming" className="cursor-pointer text-sm">🎮 Gaming / Robótico</Label>
+                  <Label htmlFor="ds-gaming" className="cursor-pointer text-sm">Gaming / Robótico</Label>
                 </div>
               </RadioGroup>
             </div>
@@ -221,7 +221,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
             {/* School Background (only when school design) */}
             {(settings as any).design_style === 'school' && (
               <div className="space-y-3">
-                <Label className="font-bold">🖼️ Fondo escolar</Label>
+                <Label className="font-bold">Fondo escolar</Label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { value: 'gradient', label: 'Degradado', emoji: '🌈' },
@@ -294,7 +294,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
             {/* Gaming Background (only when gaming design) */}
             {(settings as any).design_style === 'gaming' && (
               <div className="space-y-3">
-                <Label className="font-bold">🎮 Fondo gaming</Label>
+                <Label className="font-bold">Fondo gaming</Label>
                 <div className="grid grid-cols-3 gap-2">
                 {[
                     { value: 'neon-grid', label: 'Neón Grid' },
