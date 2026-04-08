@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { useClassroom } from '@/hooks/use-classroom';
+import { useNoxAI } from '@/hooks/use-nox-ai';
 import type { DbTask, DbCountdown, TabType } from '@/types/app';
 import SortableCountdownItem from '@/components/SortableCountdownItem';
 import AddCountdownDialog from '@/components/AddCountdownDialog';
@@ -16,7 +17,9 @@ import SupportDialog from '@/components/SupportDialog';
 import DontForgetPage from '@/components/DontForgetPage';
 import NotesPage from '@/components/NotesPage';
 import ClassroomPromoDialog from '@/components/ClassroomPromoDialog';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X } from 'lucide-react';
+import NoxAISection from '@/components/NoxAISection';
+import ProductivityPage from '@/components/ProductivityPage';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -44,6 +47,8 @@ const Index = () => {
     },
     enabled: !!user,
   });
+
+  const noxAI = useNoxAI(tasks);
 
   const { data: countdowns = [] } = useQuery({
     queryKey: ['countdowns', user?.id],
@@ -243,6 +248,7 @@ const Index = () => {
     if (scheduleTabEnabled) result.push({ id: 'horario', label: 'Horario', shortLabel: 'Hor.', icon: CalendarClock });
     if ((settings as any).dont_forget_enabled) result.push({ id: 'no-olvidar', label: '¡No olvidar!', shortLabel: '¡No!', icon: AlertTriangle });
     if ((settings as any).notes_enabled) result.push({ id: 'notas', label: 'Notas', shortLabel: 'Not.', icon: FileText });
+    result.push({ id: 'productividad', label: 'Progreso', shortLabel: 'Prog.', icon: BarChart3 });
     return result;
   };
 
@@ -259,11 +265,25 @@ const Index = () => {
   const sidebarExpanded = sidebarHover;
   const sidebarWidth = isLeftNav ? (sidebarExpanded ? 'w-48' : 'w-14') : '';
 
+  const designStyle = (settings as any).design_style || 'minimalist';
+  const isGaming = designStyle === 'gaming';
+
+  // Greeting
+  const getGreeting = () => {
+    const h = new Date().getHours();
+    if (h >= 6 && h < 14) return 'Buenos días';
+    if (h >= 14 && h < 21) return 'Buenas tardes';
+    return 'Buenas noches';
+  };
+  const getTodayDate = () => {
+    return new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  };
+
   return (
     <div className={cn(
       'min-h-screen flex',
       isLeftNav ? 'flex-row' : 'flex-col',
-      (settings as any).design_style === 'school' ? 'school-bg-container' : 'bg-background'
+      isGaming ? 'gaming-bg-container' : designStyle === 'school' ? 'school-bg-container' : 'bg-background'
     )}>
 
       {/* Left sidebar nav - collapses to icons, expands on hover */}
@@ -337,6 +357,17 @@ const Index = () => {
           <main className={cn('flex-1 px-4 py-4 overflow-y-auto', !isLeftNav && 'pb-24')}>
             {activeTab === 'inicio' && (
               <div className="space-y-5 animate-slide-up">
+                {/* Greeting */}
+                <div className="text-center py-2">
+                  <h2 className="text-3xl font-extrabold text-foreground capitalize">{getGreeting()}</h2>
+                  <p className="text-sm text-muted-foreground mt-1 capitalize">{getTodayDate()}</p>
+                </div>
+
+                {/* Nox AI */}
+                {noxAI.enabled && (
+                  <NoxAISection loading={noxAI.loading} recommendation={noxAI.recommendation} />
+                )}
+
                 <div className="grid grid-cols-2 gap-3">
                   <button onClick={() => setActiveTab('deberes')} className="glass-card rounded-2xl p-4 text-center hover:ring-2 ring-primary/30 transition-all">
                     <p className="text-3xl font-extrabold text-primary">{pendingHomework}</p>
@@ -406,6 +437,7 @@ const Index = () => {
             {activeTab === 'horario' && <ScheduleInline userId={user!.id} />}
             {activeTab === 'no-olvidar' && <DontForgetPage />}
             {activeTab === 'notas' && <NotesPage />}
+            {activeTab === 'productividad' && <ProductivityPage tasks={tasks} />}
           </main>
         </div>
 
