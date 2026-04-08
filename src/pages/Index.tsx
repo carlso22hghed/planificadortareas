@@ -19,7 +19,7 @@ import NotesPage from '@/components/NotesPage';
 import ClassroomPromoDialog from '@/components/ClassroomPromoDialog';
 import NoxAISection from '@/components/NoxAISection';
 import ProductivityPage from '@/components/ProductivityPage';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand } from 'lucide-react';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -405,32 +405,32 @@ const Index = () => {
 
             {activeTab === 'deberes' && (
               <TaskList tasks={tasks} type="homework" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
-                triggerLabel="Añadir deber" emptyMessage="¡No tienes deberes pendientes!" emptyEmoji="🎉"
+                triggerLabel="Añadir deber" emptyMessage="¡No tienes deberes pendientes!" emptyIcon={PartyPopper}
                 subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} />
             )}
 
             {activeTab === 'examenes' && (
               <TaskList tasks={tasks} type="exam" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
                 onToggleStudy={toggleStudy}
-                triggerLabel="Añadir examen" emptyMessage="No hay exámenes próximos" emptyEmoji="📝"
+                triggerLabel="Añadir examen" emptyMessage="No hay exámenes próximos" emptyIcon={FileText}
                 subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} />
             )}
 
             {activeTab === 'tareas' && (
               <TaskList tasks={tasks} type="task" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
-                triggerLabel="Añadir tarea" emptyMessage="No hay tareas pendientes" emptyEmoji="✅"
+                triggerLabel="Añadir tarea" emptyMessage="No hay tareas pendientes" emptyIcon={CheckCircle}
                 subjects={allSubjects} sportTypes={settings.sport_types} />
             )}
 
             {activeTab === 'eventos' && (
               <TaskList tasks={tasks} type="event" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
-                triggerLabel="Añadir evento" emptyMessage="No hay eventos próximos" emptyEmoji="🎪"
+                triggerLabel="Añadir evento" emptyMessage="No hay eventos próximos" emptyIcon={Tent}
                 sportTypes={settings.sport_types} />
             )}
 
             {activeTab === 'partidos' && (
               <TaskList tasks={tasks} type="match" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
-                triggerLabel="Añadir partido" emptyMessage="No hay partidos programados" emptyEmoji="⚽"
+                triggerLabel="Añadir partido" emptyMessage="No hay partidos programados" emptyIcon={Trophy}
                 sportTypes={settings.sport_types} />
             )}
 
