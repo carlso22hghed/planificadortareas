@@ -248,6 +248,7 @@ const Index = () => {
     if (scheduleTabEnabled) result.push({ id: 'horario', label: 'Horario', shortLabel: 'Hor.', icon: CalendarClock });
     if ((settings as any).dont_forget_enabled) result.push({ id: 'no-olvidar', label: '¡No olvidar!', shortLabel: '¡No!', icon: AlertTriangle });
     if ((settings as any).notes_enabled) result.push({ id: 'notas', label: 'Notas', shortLabel: 'Not.', icon: FileText });
+    result.push({ id: 'productividad', label: 'Progreso', shortLabel: 'Prog.', icon: BarChart3 });
     return result;
   };
 
