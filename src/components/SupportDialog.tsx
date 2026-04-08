@@ -157,7 +157,7 @@ const SupportDialog = () => {
 
             {tickets.length === 0 && (
               <div className="text-center py-6">
-                <p className="text-3xl mb-2">📬</p>
+                <MessageCircle className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">Aún no has enviado ningún mensaje</p>
               </div>
             )}

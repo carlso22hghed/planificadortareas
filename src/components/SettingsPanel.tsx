@@ -378,7 +378,7 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
             {/* Font Family */}
             <Collapsible open={fontOpen} onOpenChange={setFontOpen}>
               <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-muted/50">
-                <Label className="font-bold cursor-pointer">🔤 Tipografía</Label>
+                <Label className="font-bold cursor-pointer">Tipografía</Label>
                 {fontOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2 space-y-1">
