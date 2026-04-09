@@ -372,7 +372,7 @@ const Index = () => {
                 <div className="text-center py-2">
                   <h2 className="text-3xl font-extrabold text-foreground">{getGreeting()}</h2>
                   <p className="text-sm text-muted-foreground mt-1">{getTodayDate()}</p>
-                  <p className="text-lg font-mono font-semibold text-foreground/70 mt-1">{getTimeString()}</p>
+                  <p className="text-lg font-semibold text-foreground/70 mt-1" style={{ fontFamily: "'Comic Sans MS', 'Comic Sans', cursive" }}>{getTimeString()}</p>
                 </div>
 
 
@@ -502,7 +502,7 @@ const Index = () => {
       </Dialog>
 
       <ClassroomPromoDialog onSync={classroom.startSync} />
-      {noxAI.enabled && <NoxAIFab loading={noxAI.loading} recommendation={noxAI.recommendation} />}
+      {noxAI.enabled && <NoxAIFab loading={noxAI.loading} recommendation={noxAI.recommendation} tasks={tasks} />}
       <SupportDialog />
     </div>
   );
