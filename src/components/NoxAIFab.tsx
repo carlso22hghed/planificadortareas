@@ -1,39 +1,224 @@
-import { useState } from 'react';
-import { X, Bird } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { X, Send } from 'lucide-react';
 import NoxAISection from './NoxAISection';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
 interface NoxAIFabProps {
   loading: boolean;
   recommendation: any;
 }
 
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+const DAILY_LIMIT = 10;
+const NOX_CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nox-chat`;
+
 const NoxAIFab = ({ loading, recommendation }: NoxAIFabProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [chatMode, setChatMode] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState('');
+  const [streaming, setStreaming] = useState(false);
+  const [dailyCount, setDailyCount] = useState(0);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Load daily count
+  useEffect(() => {
+    if (!user || !open) return;
+    const today = new Date().toISOString().split('T')[0];
+    supabase
+      .from('nox_chat_messages' as any)
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('role', 'user')
+      .eq('message_date', today)
+      .then(({ count }) => setDailyCount(count || 0));
+  }, [user, open]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const sendMessage = async () => {
+    const trimmed = input.trim();
+    if (!trimmed || streaming || !user) return;
+
+    if (dailyCount >= DAILY_LIMIT) {
+      toast({ title: 'Límite diario alcanzado', description: `Solo puedes enviar ${DAILY_LIMIT} mensajes al día a Nox.`, variant: 'destructive' });
+      return;
+    }
+
+    const userMsg: ChatMessage = { role: 'user', content: trimmed };
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
+    setInput('');
+    setStreaming(true);
+    setDailyCount(prev => prev + 1);
+
+    // Save user message
+    const today = new Date().toISOString().split('T')[0];
+    await supabase.from('nox_chat_messages' as any).insert({
+      user_id: user.id, role: 'user', content: trimmed, message_date: today,
+    });
+
+    let assistantContent = '';
+    try {
+      const resp = await fetch(NOX_CHAT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ messages: newMessages.slice(-10) }),
+      });
+
+      if (!resp.ok || !resp.body) {
+        throw new Error('Stream failed');
+      }
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let newlineIdx: number;
+        while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
+          let line = buffer.slice(0, newlineIdx);
+          buffer = buffer.slice(newlineIdx + 1);
+          if (line.endsWith('\r')) line = line.slice(0, -1);
+          if (!line.startsWith('data: ')) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === '[DONE]') break;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              assistantContent += content;
+              setMessages(prev => {
+                const last = prev[prev.length - 1];
+                if (last?.role === 'assistant') {
+                  return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantContent } : m);
+                }
+                return [...prev, { role: 'assistant', content: assistantContent }];
+              });
+            }
+          } catch { /* partial JSON */ }
+        }
+      }
+
+      // Save assistant message
+      if (assistantContent) {
+        await supabase.from('nox_chat_messages' as any).insert({
+          user_id: user.id, role: 'assistant', content: assistantContent, message_date: today,
+        });
+      }
+    } catch {
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Lo siento, no puedo responder ahora. Inténtalo de nuevo.' }]);
+    }
+
+    setStreaming(false);
+  };
 
   return (
     <>
-      {/* FAB button with owl icon */}
+      {/* FAB - same size and position as support (w-12 h-12, bottom-20 but shifted up) */}
       <button
         onClick={() => setOpen(prev => !prev)}
-        className="fixed bottom-36 right-4 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform"
+        className="fixed bottom-32 right-4 z-50 w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform overflow-hidden"
         style={{
           background: 'linear-gradient(135deg, hsl(270 80% 55%), hsl(280 90% 40%))',
         }}
       >
         {open ? (
-          <X className="w-6 h-6 text-white" />
+          <X className="w-5 h-5 text-white" />
         ) : (
-          <Bird className="w-7 h-7 text-white" />
+          <img src="/nox-owl.png" alt="Nox" className="w-8 h-8 rounded-full object-cover" />
         )}
-        <div className="absolute inset-0 rounded-full bg-purple-500/20 blur-md animate-pulse" />
       </button>
 
-      {/* Nox AI panel */}
+      {/* Panel */}
       {open && (
-        <div className="fixed bottom-52 right-4 z-50 w-[calc(100vw-2rem)] max-w-sm bg-card border border-border rounded-2xl shadow-2xl flex flex-col max-h-[60vh] animate-slide-up overflow-y-auto">
-          <div className="p-4">
-            <NoxAISection loading={loading} recommendation={recommendation} />
+        <div className="fixed bottom-48 right-4 z-50 w-[calc(100vw-2rem)] max-w-sm bg-card border border-border rounded-2xl shadow-2xl flex flex-col max-h-[60vh] animate-slide-up">
+          {/* Tabs: Resumen / Chat */}
+          <div className="flex border-b border-border">
+            <button
+              onClick={() => setChatMode(false)}
+              className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors ${!chatMode ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}
+            >
+              Resumen
+            </button>
+            <button
+              onClick={() => setChatMode(true)}
+              className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors ${chatMode ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}
+            >
+              Chat ({DAILY_LIMIT - dailyCount} restantes)
+            </button>
           </div>
+
+          {!chatMode ? (
+            <div className="p-4 overflow-y-auto">
+              <NoxAISection loading={loading} recommendation={recommendation} />
+            </div>
+          ) : (
+            <div className="flex flex-col flex-1 min-h-0">
+              <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-[200px] max-h-[40vh]">
+                {messages.length === 0 && (
+                  <div className="text-center py-6">
+                    <img src="/nox-owl.png" alt="Nox" className="w-12 h-12 mx-auto mb-2 rounded-full" />
+                    <p className="text-sm text-muted-foreground">¡Hola! Soy Nox, pregúntame lo que quieras 🦉</p>
+                  </div>
+                )}
+                {messages.map((msg, i) => (
+                  <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${
+                      msg.role === 'user'
+                        ? 'bg-primary text-primary-foreground rounded-br-md'
+                        : 'bg-muted text-foreground rounded-bl-md'
+                    }`}>
+                      {msg.content}
+                    </div>
+                  </div>
+                ))}
+                {streaming && messages[messages.length - 1]?.role !== 'assistant' && (
+                  <div className="flex justify-start">
+                    <div className="bg-muted rounded-2xl rounded-bl-md px-3 py-2 text-sm text-muted-foreground animate-pulse">
+                      Nox está pensando...
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              <div className="border-t border-border p-2 flex gap-2">
+                <input
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                  placeholder={dailyCount >= DAILY_LIMIT ? 'Límite diario alcanzado' : 'Escribe a Nox...'}
+                  disabled={dailyCount >= DAILY_LIMIT || streaming}
+                  className="flex-1 bg-muted/50 rounded-xl px-3 py-2 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
+                />
+                <button
+                  onClick={sendMessage}
+                  disabled={!input.trim() || streaming || dailyCount >= DAILY_LIMIT}
+                  className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 shrink-0"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </>

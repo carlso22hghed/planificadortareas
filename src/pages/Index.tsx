@@ -270,14 +270,26 @@ const Index = () => {
   const isGaming = designStyle === 'gaming';
 
   // Greeting
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const getGreeting = () => {
-    const h = new Date().getHours();
+    const h = currentTime.getHours();
     if (h >= 6 && h < 14) return 'Buenos días';
     if (h >= 14 && h < 21) return 'Buenas tardes';
     return 'Buenas noches';
   };
   const getTodayDate = () => {
-    return new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const raw = currentTime.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    // Capitalize weekday, lowercase "de" and month
+    return raw.charAt(0).toUpperCase() + raw.slice(1);
+  };
+  const getTimeString = () => {
+    return currentTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   };
 
   return (
