@@ -39,6 +39,12 @@ const Index = () => {
   const [sidebarHover, setSidebarHover] = useState(false);
   const [showDontForgetPopup, setShowDontForgetPopup] = useState(false);
   const [dontForgetDismissed, setDontForgetDismissed] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['tasks', user?.id],
@@ -271,13 +277,17 @@ const Index = () => {
 
   // Greeting
   const getGreeting = () => {
-    const h = new Date().getHours();
+    const h = currentTime.getHours();
     if (h >= 6 && h < 14) return 'Buenos días';
     if (h >= 14 && h < 21) return 'Buenas tardes';
     return 'Buenas noches';
   };
   const getTodayDate = () => {
-    return new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const raw = currentTime.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    return raw.charAt(0).toUpperCase() + raw.slice(1);
+  };
+  const getTimeString = () => {
+    return currentTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   };
 
   return (
@@ -360,8 +370,9 @@ const Index = () => {
               <div className="space-y-5 animate-slide-up">
                 {/* Greeting */}
                 <div className="text-center py-2">
-                  <h2 className="text-3xl font-extrabold text-foreground capitalize">{getGreeting()}</h2>
-                  <p className="text-sm text-muted-foreground mt-1 capitalize">{getTodayDate()}</p>
+                  <h2 className="text-3xl font-extrabold text-foreground">{getGreeting()}</h2>
+                  <p className="text-sm text-muted-foreground mt-1">{getTodayDate()}</p>
+                  <p className="text-lg font-mono font-semibold text-foreground/70 mt-1">{getTimeString()}</p>
                 </div>
 
 
