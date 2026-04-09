@@ -39,6 +39,12 @@ const Index = () => {
   const [sidebarHover, setSidebarHover] = useState(false);
   const [showDontForgetPopup, setShowDontForgetPopup] = useState(false);
   const [dontForgetDismissed, setDontForgetDismissed] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['tasks', user?.id],
