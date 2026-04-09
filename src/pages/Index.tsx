@@ -276,13 +276,6 @@ const Index = () => {
   const isGaming = designStyle === 'gaming';
 
   // Greeting
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
   const getGreeting = () => {
     const h = currentTime.getHours();
     if (h >= 6 && h < 14) return 'Buenos días';
@@ -291,7 +284,6 @@ const Index = () => {
   };
   const getTodayDate = () => {
     const raw = currentTime.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    // Capitalize weekday, lowercase "de" and month
     return raw.charAt(0).toUpperCase() + raw.slice(1);
   };
   const getTimeString = () => {
