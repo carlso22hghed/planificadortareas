@@ -65,6 +65,33 @@ export type Database = {
         }
         Relationships: []
       }
+      nox_chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          message_date: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          message_date?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          message_date?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       nox_memory: {
         Row: {
           created_at: string
