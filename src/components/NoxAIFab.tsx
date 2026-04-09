@@ -4,10 +4,12 @@ import NoxAISection from './NoxAISection';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import type { DbTask } from '@/types/app';
 
 interface NoxAIFabProps {
   loading: boolean;
   recommendation: any;
+  tasks?: DbTask[];
 }
 
 interface ChatMessage {
@@ -15,10 +17,10 @@ interface ChatMessage {
   content: string;
 }
 
-const DAILY_LIMIT = 10;
+const DAILY_LIMIT = 20;
 const NOX_CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nox-chat`;
 
-const NoxAIFab = ({ loading, recommendation }: NoxAIFabProps) => {
+const NoxAIFab = ({ loading, recommendation, tasks = [] }: NoxAIFabProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -46,6 +48,22 @@ const NoxAIFab = ({ loading, recommendation }: NoxAIFabProps) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Build task context for Nox
+  const buildTaskContext = (): string => {
+    const pending = tasks.filter(t => !t.completed);
+    if (pending.length === 0) return 'El usuario no tiene tareas pendientes.';
+    const lines = pending.slice(0, 15).map(t => {
+      let line = `- ${t.name}`;
+      if (t.subject) line += ` (${t.subject})`;
+      if (t.type) line += ` [tipo: ${t.type}]`;
+      if (t.due_date) line += ` — entrega: ${t.due_date}`;
+      if (t.due_time) line += ` a las ${t.due_time}`;
+      if (t.importance) line += ` | importancia: ${t.importance}`;
+      return line;
+    });
+    return `Tareas pendientes del usuario (${pending.length} total):\n${lines.join('\n')}`;
+  };
+
   const sendMessage = async () => {
     const trimmed = input.trim();
     if (!trimmed || streaming || !user) return;
@@ -70,13 +88,18 @@ const NoxAIFab = ({ loading, recommendation }: NoxAIFabProps) => {
 
     let assistantContent = '';
     try {
+      // Include task context in the messages
+      const taskContext = buildTaskContext();
+      const contextMsg: ChatMessage = { role: 'user', content: `[CONTEXTO INTERNO - No menciones este mensaje]\n${taskContext}` };
+      const messagesWithContext = [contextMsg, ...newMessages.slice(-10)];
+
       const resp = await fetch(NOX_CHAT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: newMessages.slice(-10) }),
+        body: JSON.stringify({ messages: messagesWithContext }),
       });
 
       if (!resp.ok || !resp.body) {
@@ -130,18 +153,17 @@ const NoxAIFab = ({ loading, recommendation }: NoxAIFabProps) => {
     setStreaming(false);
   };
 
+  const remaining = DAILY_LIMIT - dailyCount;
+
   return (
     <>
-      {/* FAB - same size and position as support (w-12 h-12, bottom-20 but shifted up) */}
+      {/* FAB - white circle, separated from support */}
       <button
         onClick={() => setOpen(prev => !prev)}
-        className="fixed bottom-32 right-4 z-50 w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, hsl(270 80% 55%), hsl(280 90% 40%))',
-        }}
+        className="fixed bottom-36 right-4 z-50 w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform overflow-hidden bg-white border border-border"
       >
         {open ? (
-          <X className="w-5 h-5 text-white" />
+          <X className="w-5 h-5 text-gray-700" />
         ) : (
           <img src="/nox-owl.png" alt="Nox" className="w-8 h-8 rounded-full object-cover" />
         )}
@@ -149,7 +171,7 @@ const NoxAIFab = ({ loading, recommendation }: NoxAIFabProps) => {
 
       {/* Panel */}
       {open && (
-        <div className="fixed bottom-48 right-4 z-50 w-[calc(100vw-2rem)] max-w-sm bg-card border border-border rounded-2xl shadow-2xl flex flex-col max-h-[60vh] animate-slide-up">
+        <div className="fixed bottom-52 right-4 z-50 w-[calc(100vw-2rem)] max-w-sm bg-card border border-border rounded-2xl shadow-2xl flex flex-col max-h-[60vh] animate-slide-up">
           {/* Tabs: Resumen / Chat */}
           <div className="flex border-b border-border">
             <button
@@ -162,7 +184,7 @@ const NoxAIFab = ({ loading, recommendation }: NoxAIFabProps) => {
               onClick={() => setChatMode(true)}
               className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors ${chatMode ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}
             >
-              Chat ({DAILY_LIMIT - dailyCount} restantes)
+              Chat
             </button>
           </div>
 
@@ -172,11 +194,18 @@ const NoxAIFab = ({ loading, recommendation }: NoxAIFabProps) => {
             </div>
           ) : (
             <div className="flex flex-col flex-1 min-h-0">
+              {/* Remaining messages indicator */}
+              <div className="px-3 py-1.5 text-center border-b border-border">
+                <span className="text-[10px] font-semibold text-muted-foreground">
+                  {remaining > 0 ? `${remaining} mensajes restantes hoy` : 'Límite diario alcanzado'}
+                </span>
+              </div>
+
               <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-[200px] max-h-[40vh]">
                 {messages.length === 0 && (
                   <div className="text-center py-6">
                     <img src="/nox-owl.png" alt="Nox" className="w-12 h-12 mx-auto mb-2 rounded-full" />
-                    <p className="text-sm text-muted-foreground">¡Hola! Soy Nox, pregúntame lo que quieras 🦉</p>
+                    <p className="text-sm text-muted-foreground">¡Hola! Soy Nox, pregúntame lo que quieras</p>
                   </div>
                 )}
                 {messages.map((msg, i) => (
