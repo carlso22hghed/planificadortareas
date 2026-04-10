@@ -19,11 +19,24 @@
     <meta name="twitter:description" content="Una aplicación para organizarte las tareas muy facilmente.">
   </head>
   <body>
-    <div style="position:fixed;bottom:0;left:0;width:100%;background:#111;padding:10px;text-align:center;z-index:99999;font-family:sans-serif;font-size:13px;">
+    <div id="fixed-footer" style="position:fixed;bottom:0;left:0;width:100%;background:#111;padding:10px;text-align:center;z-index:99999;font-family:sans-serif;font-size:13px;transition:opacity 0.3s;">
       <a href="https://planificadortareas.lovable.app/uso.html" rel="privacy-policy" style="color:#aaa;text-decoration:underline;margin-right:16px;">Política de Privacidad</a>
       <span style="color:#555">·</span>
       <a href="https://planificadortareas.lovable.app/uso.html" rel="privacy-policy" style="color:#aaa;text-decoration:underline;margin-left:16px;">Términos de Servicio</a>
     </div>
+    <script>
+      (function(){
+        var footer = document.getElementById('fixed-footer');
+        function checkScroll(){
+          var el = document.scrollingElement || document.documentElement;
+          var atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+          footer.style.opacity = atBottom && el.scrollHeight > el.clientHeight + 100 ? '0' : '1';
+          footer.style.pointerEvents = atBottom && el.scrollHeight > el.clientHeight + 100 ? 'none' : 'auto';
+        }
+        window.addEventListener('scroll', checkScroll, true);
+        setInterval(checkScroll, 1000);
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
