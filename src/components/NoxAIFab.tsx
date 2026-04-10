@@ -214,9 +214,14 @@ const NoxAIFab = ({ loading, recommendation, tasks = [] }: NoxAIFabProps) => {
                       msg.role === 'user'
                         ? 'bg-primary text-primary-foreground rounded-br-md'
                         : 'bg-muted text-foreground rounded-bl-md'
-                    }`}>
-                      {msg.content}
-                    </div>
+                    }`}
+                      dangerouslySetInnerHTML={{
+                        __html: msg.content.replace(
+                          /(https?:\/\/[^\s<]+)/g,
+                          '<a href="$1" target="_blank" rel="noopener noreferrer" class="underline font-semibold" style="color:inherit">$1</a>'
+                        )
+                      }}
+                    />
                   </div>
                 ))}
                 {streaming && messages[messages.length - 1]?.role !== 'assistant' && (
