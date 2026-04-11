@@ -53,7 +53,9 @@ function detectPatterns(memory: NoxMemory, tasks: DbTask[]): string[] {
     if (course.taskHistory.length < MIN_HISTORY_FOR_PREDICTION) continue;
     if (course.assignmentDays.length === 0) continue;
 
-    if (course.assignmentDays.includes(todayDay)) {
+    // Filter out weekends (0=domingo, 6=sábado)
+    const weekdayAssignmentDays = course.assignmentDays.filter(d => d !== 0 && d !== 6);
+    if (weekdayAssignmentDays.includes(todayDay)) {
       const weekStart = new Date(today);
       weekStart.setDate(today.getDate() - todayDay);
       const hasThisWeek = tasks.some(t =>
@@ -63,7 +65,7 @@ function detectPatterns(memory: NoxMemory, tasks: DbTask[]): string[] {
       );
       if (!hasThisWeek) {
         const patternDayName = dayNames[todayDay];
-        predictions.push(`${course.courseName} suele poner tarea los ${patternDayName}s, estate atento`);
+        predictions.push(`El profesor de ${course.courseName} suele mandar tarea los ${patternDayName}s, estate atento`);
       }
     }
   }
@@ -101,7 +103,8 @@ function buildMemory(allTasks: DbTask[]): NoxMemory {
     if (total >= MIN_HISTORY_FOR_PREDICTION) {
       course.assignmentDays = Object.entries(dayCounts)
         .filter(([, count]) => count / total >= 0.4)
-        .map(([day]) => parseInt(day));
+        .map(([day]) => parseInt(day))
+        .filter(d => d !== 0 && d !== 6); // Exclude weekends
     }
 
     if (dates.length > 1) {

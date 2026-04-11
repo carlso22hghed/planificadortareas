@@ -25,7 +25,13 @@ const NoxAIFab = ({ loading, recommendation, tasks = [] }: NoxAIFabProps) => {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [chatMode, setChatMode] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    try {
+      const saved = sessionStorage.getItem('nox-chat-messages');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [dailyCount, setDailyCount] = useState(0);
@@ -43,6 +49,11 @@ const NoxAIFab = ({ loading, recommendation, tasks = [] }: NoxAIFabProps) => {
       .eq('message_date', today)
       .then(({ count }) => setDailyCount(count || 0));
   }, [user, open]);
+
+  // Persist messages to sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem('nox-chat-messages', JSON.stringify(messages));
+  }, [messages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

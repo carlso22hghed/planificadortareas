@@ -20,16 +20,12 @@ import { useNavigate } from 'react-router-dom';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const FONT_OPTIONS = [
-  { value: 'Nunito', label: 'Nunito' },
-  { value: 'Lato', label: 'Lato' },
+  { value: 'system-ui', label: 'Predeterminada' },
+  { value: 'Arial', label: 'Arial' },
+  { value: 'Comfortaa', label: 'Comfortaa' },
   { value: 'Montserrat', label: 'Montserrat' },
-  { value: 'Space Grotesk', label: 'Space Grotesk' },
-  { value: 'Lora', label: 'Lora' },
-  { value: 'EB Garamond', label: 'EB Garamond' },
-  { value: 'Cormorant Garamond', label: 'Cormorant Garamond' },
-  { value: 'Space Mono', label: 'Space Mono' },
-  { value: 'IBM Plex Mono', label: 'IBM Plex Mono' },
-  { value: 'Fira Code', label: 'Fira Code' },
+  { value: "'Comic Sans MS', 'Comic Sans', cursive", label: 'Comic Sans' },
+  { value: "'Balsamiq Sans', cursive", label: 'Balsamiq Sans' },
 ];
 
 interface SettingsPanelProps {
