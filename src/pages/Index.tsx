@@ -405,6 +405,13 @@ const Index = () => {
                 </div>
 
 
+                {/* Motivational Quote */}
+                <div className="glass-card rounded-2xl p-4 text-center">
+                  <Quote className="w-5 h-5 text-primary mx-auto mb-1" />
+                  <p className="text-sm italic text-foreground/80">"{getDailyQuote().text}"</p>
+                  <p className="text-xs text-muted-foreground mt-1">— {getDailyQuote().author}</p>
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <button onClick={() => setActiveTab('deberes')} className="glass-card rounded-2xl p-4 text-center hover:ring-2 ring-primary/30 transition-all">
                     <p className="text-3xl font-extrabold text-primary">{pendingHomework}</p>
@@ -415,6 +422,10 @@ const Index = () => {
                     <p className="text-xs text-muted-foreground font-semibold mt-1">Exámenes próximos</p>
                   </button>
                 </div>
+
+                {/* Pomodoro Timer */}
+                <PomodoroTimer />
+
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <h2 className="font-bold text-foreground flex items-center gap-2"><Timer className="w-5 h-5 text-primary" /> Contadores</h2>
