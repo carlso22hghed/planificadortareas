@@ -20,11 +20,14 @@ import ClassroomPromoDialog from '@/components/ClassroomPromoDialog';
 import NoxAIFab from '@/components/NoxAIFab';
 import ProductivityPage from '@/components/ProductivityPage';
 import PrivacyFooter from '@/components/PrivacyFooter';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree } from 'lucide-react';
+import PomodoroTimer from '@/components/PomodoroTimer';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree, Quote } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { triggerConfetti } from '@/lib/confetti';
+import { getDailyQuote } from '@/lib/quotes';
 
 const Index = () => {
   const { user, profile, settings, updateSettings, isAdmin } = useAuth();
