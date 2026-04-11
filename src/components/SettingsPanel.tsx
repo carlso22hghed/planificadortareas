@@ -24,8 +24,10 @@ const FONT_OPTIONS = [
   { value: 'Arial', label: 'Arial' },
   { value: 'Comfortaa', label: 'Comfortaa' },
   { value: 'Montserrat', label: 'Montserrat' },
-  { value: "'Comic Sans MS', 'Comic Sans', cursive", label: 'Comic Sans' },
-  { value: "'Balsamiq Sans', cursive", label: 'Balsamiq Sans' },
+  { value: 'Acme', label: 'Acme' },
+  { value: "'Times New Roman', Times, serif", label: 'Times New Roman' },
+  { value: 'Lexend', label: 'Lexend' },
+  { value: 'Verdana', label: 'Verdana' },
 ];
 
 interface SettingsPanelProps {
