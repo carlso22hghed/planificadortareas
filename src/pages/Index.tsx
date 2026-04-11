@@ -199,8 +199,10 @@ const Index = () => {
   const toggleTask = async (id: string) => {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
-    await supabase.from('tasks').update({ completed: !task.completed }).eq('id', id);
+    const newCompleted = !task.completed;
+    await supabase.from('tasks').update({ completed: newCompleted }).eq('id', id);
     queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    if (newCompleted) triggerConfetti();
   };
 
   const toggleStudy = async (id: string) => {
