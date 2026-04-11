@@ -50,6 +50,11 @@ const NoxAIFab = ({ loading, recommendation, tasks = [] }: NoxAIFabProps) => {
       .then(({ count }) => setDailyCount(count || 0));
   }, [user, open]);
 
+  // Persist messages to sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem('nox-chat-messages', JSON.stringify(messages));
+  }, [messages]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
