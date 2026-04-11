@@ -20,11 +20,14 @@ import ClassroomPromoDialog from '@/components/ClassroomPromoDialog';
 import NoxAIFab from '@/components/NoxAIFab';
 import ProductivityPage from '@/components/ProductivityPage';
 import PrivacyFooter from '@/components/PrivacyFooter';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree } from 'lucide-react';
+import PomodoroTimer from '@/components/PomodoroTimer';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree, Quote } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { triggerConfetti } from '@/lib/confetti';
+import { getDailyQuote } from '@/lib/quotes';
 
 const Index = () => {
   const { user, profile, settings, updateSettings, isAdmin } = useAuth();
@@ -101,6 +104,30 @@ const Index = () => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {});
     }
+  }, []);
+
+  // Realtime sync for tasks
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel('tasks-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: `user_id=eq.${user.id}` }, () => {
+        queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, queryClient]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === 'Escape') {
+        // Close modals handled by Radix
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
   }, []);
 
   // Auto-sync Classroom on load
@@ -196,8 +223,10 @@ const Index = () => {
   const toggleTask = async (id: string) => {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
-    await supabase.from('tasks').update({ completed: !task.completed }).eq('id', id);
+    const newCompleted = !task.completed;
+    await supabase.from('tasks').update({ completed: newCompleted }).eq('id', id);
     queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    if (newCompleted) triggerConfetti();
   };
 
   const toggleStudy = async (id: string) => {
@@ -376,6 +405,13 @@ const Index = () => {
                 </div>
 
 
+                {/* Motivational Quote */}
+                <div className="glass-card rounded-2xl p-4 text-center">
+                  <Quote className="w-5 h-5 text-primary mx-auto mb-1" />
+                  <p className="text-sm italic text-foreground/80">"{getDailyQuote().text}"</p>
+                  <p className="text-xs text-muted-foreground mt-1">— {getDailyQuote().author}</p>
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <button onClick={() => setActiveTab('deberes')} className="glass-card rounded-2xl p-4 text-center hover:ring-2 ring-primary/30 transition-all">
                     <p className="text-3xl font-extrabold text-primary">{pendingHomework}</p>
@@ -386,6 +422,10 @@ const Index = () => {
                     <p className="text-xs text-muted-foreground font-semibold mt-1">Exámenes próximos</p>
                   </button>
                 </div>
+
+                {/* Pomodoro Timer */}
+                <PomodoroTimer />
+
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <h2 className="font-bold text-foreground flex items-center gap-2"><Timer className="w-5 h-5 text-primary" /> Contadores</h2>
