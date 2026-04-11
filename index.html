@@ -27,14 +27,24 @@
     <script>
       (function(){
         var footer = document.getElementById('fixed-footer');
-        function checkScroll(){
+        function checkVisibility(){
           var el = document.scrollingElement || document.documentElement;
           var atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
-          footer.style.opacity = atBottom && el.scrollHeight > el.clientHeight + 100 ? '0' : '1';
-          footer.style.pointerEvents = atBottom && el.scrollHeight > el.clientHeight + 100 ? 'none' : 'auto';
+          var pageShort = el.scrollHeight <= el.clientHeight + 100;
+          var bottomNav = document.querySelector('nav.fixed.bottom-0');
+          var privacyFooter = document.querySelector('[data-privacy-footer]');
+          var privacyVisible = false;
+          if (privacyFooter) {
+            var rect = privacyFooter.getBoundingClientRect();
+            privacyVisible = rect.top < window.innerHeight && rect.bottom > 0;
+          }
+          var hide = privacyVisible || (atBottom && !pageShort);
+          footer.style.opacity = hide ? '0' : '1';
+          footer.style.pointerEvents = hide ? 'none' : 'auto';
+          footer.style.bottom = bottomNav ? (bottomNav.offsetHeight + 'px') : '0';
         }
-        window.addEventListener('scroll', checkScroll, true);
-        setInterval(checkScroll, 1000);
+        window.addEventListener('scroll', checkVisibility, true);
+        setInterval(checkVisibility, 500);
       })();
     </script>
     <div id="root"></div>
