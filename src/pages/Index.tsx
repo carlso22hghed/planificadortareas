@@ -369,9 +369,9 @@ const Index = () => {
             {activeTab === 'inicio' && (
               <div className="space-y-5 animate-slide-up">
                 {/* Greeting */}
-                <div className="text-center py-2">
-                  <h2 className="text-3xl font-extrabold text-foreground">{getGreeting()}</h2>
-                  <p className="text-sm text-muted-foreground mt-1">{getTodayDate()}</p>
+                <div className="text-center py-2" style={{ fontFamily: 'inherit' }}>
+                  <h2 className="text-3xl font-extrabold text-foreground" style={{ fontFamily: 'system-ui, sans-serif' }}>{getGreeting()}</h2>
+                  <p className="text-sm text-muted-foreground mt-1" style={{ fontFamily: 'system-ui, sans-serif' }}>{getTodayDate()}</p>
                   <p className="text-lg font-semibold text-foreground/70 mt-1" style={{ fontFamily: "'Comic Sans MS', 'Comic Sans', cursive" }}>{getTimeString()}</p>
                 </div>
 
