@@ -418,12 +418,17 @@ const Index = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <button onClick={() => setActiveTab('deberes')} className="glass-card rounded-2xl p-4 text-center hover:ring-2 ring-primary/30 transition-all">
                     <p className="text-3xl font-extrabold text-primary">{pendingHomework}</p>
-                    <p className="text-xs text-muted-foreground font-semibold mt-1">Deberes pendientes</p>
+                    <p className="text-xs text-muted-foreground font-semibold mt-1">{tl.pendingHomework}</p>
                   </button>
                   <button onClick={() => setActiveTab('examenes')} className="glass-card rounded-2xl p-4 text-center hover:ring-2 ring-primary/30 transition-all">
                     <p className="text-3xl font-extrabold text-exam">{pendingExams}</p>
-                    <p className="text-xs text-muted-foreground font-semibold mt-1">Exámenes próximos</p>
+                    <p className="text-xs text-muted-foreground font-semibold mt-1">{tl.pendingExams}</p>
                   </button>
+                </div>
+
+                {/* Template button */}
+                <div className="flex justify-center">
+                  <TaskTemplateDialog onAdd={addTask} subjects={allSubjects} />
                 </div>
 
                 {/* Pomodoro Timer */}
@@ -456,20 +461,20 @@ const Index = () => {
 
             {activeTab === 'deberes' && (
               <TaskList tasks={tasks} type="homework" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
-                triggerLabel="Añadir deber" emptyMessage="¡No tienes deberes pendientes!" emptyIcon={PartyPopper}
+                triggerLabel={tl.addHomework} emptyMessage={tl.emptyHomework} emptyIcon={PartyPopper}
                 subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} />
             )}
 
             {activeTab === 'examenes' && (
               <TaskList tasks={tasks} type="exam" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
                 onToggleStudy={toggleStudy}
-                triggerLabel="Añadir examen" emptyMessage="No hay exámenes próximos" emptyIcon={FileText}
+                triggerLabel={tl.addExam} emptyMessage={tl.emptyExam} emptyIcon={FileText}
                 subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} />
             )}
 
             {activeTab === 'tareas' && (
               <TaskList tasks={tasks} type="task" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
-                triggerLabel="Añadir tarea" emptyMessage="No hay tareas pendientes" emptyIcon={CheckCircle}
+                triggerLabel={tl.addTask} emptyMessage={tl.emptyTask} emptyIcon={CheckCircle}
                 subjects={allSubjects} sportTypes={settings.sport_types} />
             )}
 
