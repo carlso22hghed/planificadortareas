@@ -229,8 +229,43 @@ const Index = () => {
     const newCompleted = !task.completed;
     await supabase.from('tasks').update({ completed: newCompleted }).eq('id', id);
     queryClient.invalidateQueries({ queryKey: ['tasks'] });
-    if (newCompleted) triggerConfetti();
+    if (newCompleted) {
+      triggerConfetti();
+      // Auto-create next recurring task
+      const rule = (task as any).recurrence_rule;
+      if (rule && rule !== 'none' && task.due_date) {
+        const nextDate = getNextRecurrenceDate(task.due_date, rule);
+        if (nextDate) {
+          const { id: _id, created_at: _ca, completed: _c, study_completed: _sc, sort_order: _so, ...rest } = task as any;
+          await supabase.from('tasks').insert({
+            ...rest,
+            user_id: user!.id,
+            due_date: nextDate,
+            completed: false,
+            study_completed: false,
+          } as any);
+          queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        }
+      }
+    }
   };
+
+  function getNextRecurrenceDate(currentDate: string, rule: string): string | null {
+    const d = new Date(currentDate + 'T12:00:00');
+    switch (rule) {
+      case 'daily': d.setDate(d.getDate() + 1); break;
+      case 'weekly': d.setDate(d.getDate() + 7); break;
+      case 'biweekly': d.setDate(d.getDate() + 14); break;
+      case 'monthly': d.setMonth(d.getMonth() + 1); break;
+      case 'weekly_monday': d.setDate(d.getDate() + (((1 - d.getDay()) + 7) % 7 || 7)); break;
+      case 'weekly_tuesday': d.setDate(d.getDate() + (((2 - d.getDay()) + 7) % 7 || 7)); break;
+      case 'weekly_wednesday': d.setDate(d.getDate() + (((3 - d.getDay()) + 7) % 7 || 7)); break;
+      case 'weekly_thursday': d.setDate(d.getDate() + (((4 - d.getDay()) + 7) % 7 || 7)); break;
+      case 'weekly_friday': d.setDate(d.getDate() + (((5 - d.getDay()) + 7) % 7 || 7)); break;
+      default: return null;
+    }
+    return d.toISOString().split('T')[0];
+  }
 
   const toggleStudy = async (id: string) => {
     const task = tasks.find(t => t.id === id);
