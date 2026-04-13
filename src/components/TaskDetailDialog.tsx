@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, Clock, ExternalLink } from 'lucide-react';
+import { CalendarDays, Clock, ExternalLink, Paperclip, Repeat, Timer } from 'lucide-react';
 import type { DbTask } from '@/types/app';
 import { cn } from '@/lib/utils';
 import { getSubjectColor } from '@/lib/subject-colors';
@@ -125,6 +125,50 @@ const TaskDetailDialog = ({ task, open, onOpenChange }: TaskDetailDialogProps) =
           {/* Location */}
           {task.location && (
             <p className="text-sm text-muted-foreground">📍 {task.location}</p>
+          )}
+
+          {/* Estimated time */}
+          {(task as any).estimated_minutes && (
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Timer className="w-4 h-4" />
+              <span>Tiempo estimado: {(task as any).estimated_minutes} min</span>
+            </div>
+          )}
+
+          {/* Recurrence */}
+          {(task as any).recurrence_rule && (task as any).recurrence_rule !== 'none' && (
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Repeat className="w-4 h-4" />
+              <span>Tarea recurrente</span>
+            </div>
+          )}
+
+          {/* Attachments */}
+          {(task as any).attachments && (task as any).attachments.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium flex items-center gap-1"><Paperclip className="w-4 h-4" /> Archivos adjuntos</p>
+              <div className="space-y-1">
+                {((task as any).attachments as string[]).map((url, i) => {
+                  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
+                  return (
+                    <div key={i}>
+                      {isImage ? (
+                        <a href={url} target="_blank" rel="noopener noreferrer">
+                          <img src={url} alt={`Adjunto ${i + 1}`} className="rounded-lg max-h-40 object-cover border border-border" />
+                        </a>
+                      ) : (
+                        <a href={url} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 text-sm text-primary hover:bg-muted transition-colors">
+                          <Paperclip className="w-4 h-4" />
+                          Archivo {i + 1}
+                          <ExternalLink className="w-3 h-3 ml-auto" />
+                        </a>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           )}
 
           {/* Classroom link */}
