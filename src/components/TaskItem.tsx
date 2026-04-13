@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { DbTask } from '@/types/app';
-import { Check, Trash2, Clock, CalendarDays, MapPin, Pencil, CheckCircle, BookOpen, BarChart3, AlertCircle, CircleAlert } from 'lucide-react';
+import { Check, Trash2, Clock, CalendarDays, MapPin, Pencil, CheckCircle, BookOpen, BarChart3, AlertCircle, CircleAlert, Paperclip, Repeat } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -90,6 +90,19 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
               <span className="text-xs text-muted-foreground flex items-center gap-0.5">
                 <MapPin className="w-3 h-3" />{task.home_away === 'home' ? 'Casa' : 'Fuera'}
               </span>
+            )}
+            {(task as any).recurrence_rule && (task as any).recurrence_rule !== 'none' && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex items-center gap-0.5">
+                <Repeat className="w-2.5 h-2.5" /> Recurrente
+              </Badge>
+            )}
+            {(task as any).attachments && (task as any).attachments.length > 0 && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex items-center gap-0.5">
+                <Paperclip className="w-2.5 h-2.5" /> {(task as any).attachments.length}
+              </Badge>
+            )}
+            {(task as any).estimated_minutes && (
+              <span className="text-xs text-muted-foreground">⏱️ {(task as any).estimated_minutes}min</span>
             )}
           </div>
         </div>
