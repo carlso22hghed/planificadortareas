@@ -274,17 +274,17 @@ const Index = () => {
   const buildTabs = () => {
     const result: { id: TabType; label: string; shortLabel: string; icon: typeof Home }[] = [
       { id: 'inicio', label: 'Inicio', shortLabel: 'Ini.', icon: Home },
-      { id: 'deberes', label: 'Deberes', shortLabel: 'Deb.', icon: BookOpen },
-      { id: 'examenes', label: 'Exámenes', shortLabel: 'Exám.', icon: GraduationCap },
+      { id: 'deberes', label: tl.tabHomework, shortLabel: tl.shortHomework, icon: BookOpen },
+      { id: 'examenes', label: tl.tabExam, shortLabel: tl.shortExam, icon: GraduationCap },
     ];
-    if (settings.tareas_enabled) result.push({ id: 'tareas', label: 'Tareas', shortLabel: 'Tar.', icon: ClipboardList });
+    if (settings.tareas_enabled) result.push({ id: 'tareas', label: tl.tabTask, shortLabel: tl.shortTask, icon: ClipboardList });
     if (settings.partidos_mode === 'replace') {
       result.push({ id: 'partidos', label: 'Partidos', shortLabel: 'Part.', icon: Trophy });
     } else {
       result.push({ id: 'eventos', label: 'Eventos', shortLabel: 'Even.', icon: Calendar });
       if (settings.partidos_mode === 'new_tab') result.push({ id: 'partidos', label: 'Partidos', shortLabel: 'Part.', icon: Trophy });
     }
-    if (scheduleTabEnabled) result.push({ id: 'horario', label: 'Horario', shortLabel: 'Hor.', icon: CalendarClock });
+    if (scheduleTabEnabled) result.push({ id: 'horario', label: isTeacher ? 'Agenda' : 'Horario', shortLabel: isTeacher ? 'Ag.' : 'Hor.', icon: CalendarClock });
     if ((settings as any).dont_forget_enabled) result.push({ id: 'no-olvidar', label: '¡No olvidar!', shortLabel: '¡No!', icon: AlertTriangle });
     if ((settings as any).notes_enabled) result.push({ id: 'notas', label: 'Notas', shortLabel: 'Not.', icon: FileText });
     result.push({ id: 'productividad', label: 'Progreso', shortLabel: 'Prog.', icon: BarChart3 });
