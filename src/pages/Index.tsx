@@ -424,7 +424,7 @@ const Index = () => {
                 </div>
 
                 {/* Pomodoro Timer */}
-                <PomodoroTimer />
+                {(settings as any).pomodoro_enabled !== false && <PomodoroTimer />}
 
                 <div>
                   <div className="flex items-center justify-between mb-3">
