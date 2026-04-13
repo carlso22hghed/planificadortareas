@@ -495,6 +495,15 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
               />
             </div>
 
+            {/* Pomodoro Timer */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+              <Label className="cursor-pointer text-sm font-semibold">Temporizador Pomodoro</Label>
+              <Switch
+                checked={(settings as any).pomodoro_enabled !== false}
+                onCheckedChange={checked => onUpdate({ pomodoro_enabled: checked } as any)}
+              />
+            </div>
+
             {/* Notes Tab */}
             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
               <Label className="cursor-pointer text-sm font-semibold">Pestaña de Notas</Label>

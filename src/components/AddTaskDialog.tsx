@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,11 +7,13 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Plus } from 'lucide-react';
+import { Plus, Paperclip, X, Repeat } from 'lucide-react';
 import type { DbTask } from '@/types/app';
 import { SPORT_EMOJIS } from '@/types/app';
 import { getSportEmoji } from '@/lib/sport-emojis';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
 
 interface AddTaskDialogProps {
   type: DbTask['type'];
@@ -34,6 +36,7 @@ const timeLabels: Record<string, string> = {
 };
 
 const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = [] }: AddTaskDialogProps) => {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -50,11 +53,46 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
   const [homeAway, setHomeAway] = useState<'home' | 'away'>('home');
   const [sportType, setSportType] = useState(sportTypes[0] || 'Fútbol');
   const [location, setLocation] = useState('');
+  const [attachments, setAttachments] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [recurrenceRule, setRecurrenceRule] = useState('none');
+  const [estimatedMinutes, setEstimatedMinutes] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const showSubjects = (type === 'homework' || type === 'exam') && subjects.length > 0;
   const showMatchFields = type === 'match';
   const showLocation = type === 'event';
   const showImportance = type !== 'match' && type !== 'event';
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || !user) return;
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        if (file.size > 10 * 1024 * 1024) {
+          toast({ title: 'Archivo demasiado grande', description: 'Máximo 10MB por archivo', variant: 'destructive' });
+          continue;
+        }
+        const ext = file.name.split('.').pop();
+        const path = `${user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error } = await supabase.storage.from('task-attachments').upload(path, file);
+        if (error) {
+          toast({ title: 'Error al subir', description: error.message, variant: 'destructive' });
+        } else {
+          const { data: urlData } = supabase.storage.from('task-attachments').getPublicUrl(path);
+          setAttachments(prev => [...prev, urlData.publicUrl]);
+        }
+      }
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const removeAttachment = (idx: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== idx));
+  };
 
   const handleNotificationToggle = async (checked: boolean) => {
     if (!checked) { setNotificationsEnabled(false); return; }
@@ -101,39 +139,16 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
     if (showLocation && location) (taskData as any).location = location;
     if (notificationsEnabled && reminderDate) (taskData as any).reminder_date = reminderDate;
     if (notificationsEnabled && reminderFrequency > 0) (taskData as any).reminder_frequency = reminderFrequency;
-
-    // Schedule notification
-    if (notificationsEnabled && reminderTime && reminderDate && 'Notification' in window && Notification.permission === 'granted') {
-      const reminderDateObj = new Date(`${reminderDate}T${reminderTime}:00`);
-      const dueDateTime = dueDate ? new Date(`${dueDate}T${dueTime || '23:59'}:00`) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
-      const delay = reminderDateObj.getTime() - Date.now();
-
-      const sendNotification = () => {
-        new Notification(`Recordatorio: ${name}`, {
-          body: dueDate ? `${typeLabels[type]} para ${new Date(dueDate).toLocaleDateString('es-ES')}` : `${typeLabels[type]}: ${name}`,
-          icon: '/logo.png',
-        });
-        try { const audio = new Audio('/notification-sound.mp3'); audio.volume = 0.7; audio.play().catch(() => {}); } catch {}
-      };
-
-      if (delay > 0) {
-        setTimeout(() => {
-          sendNotification();
-          if (reminderFrequency > 0) {
-            const interval = setInterval(() => {
-              if (Date.now() >= dueDateTime.getTime()) { clearInterval(interval); return; }
-              sendNotification();
-            }, reminderFrequency * 60 * 1000);
-          }
-        }, delay);
-      }
-    }
+    if (attachments.length > 0) (taskData as any).attachments = attachments;
+    if (recurrenceRule && recurrenceRule !== 'none') (taskData as any).recurrence_rule = recurrenceRule;
+    if (estimatedMinutes && parseInt(estimatedMinutes) > 0) (taskData as any).estimated_minutes = parseInt(estimatedMinutes);
 
     onAdd(taskData);
     setName(''); setDescription(''); setImportance('normal'); setCustomImportance('');
     setDueDate(''); setDueTime(''); setReminderTime(''); setReminderDate('');
     setNotificationsEnabled(false); setReminderFrequency(0); setSubject(''); setRival(''); setLocation('');
     setHomeAway('home'); setSportType(sportTypes[0] || 'Fútbol');
+    setAttachments([]); setRecurrenceRule('none'); setEstimatedMinutes('');
     setOpen(false);
   };
 
@@ -239,6 +254,54 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
             <Label>{timeLabels[type] || 'Hora'} (opcional)</Label>
             <Input type="time" value={dueTime} onChange={e => setDueTime(e.target.value)} />
           </div>
+
+          {/* Estimated time */}
+          <div>
+            <Label>⏱️ Tiempo estimado (minutos, opcional)</Label>
+            <Input type="number" value={estimatedMinutes} onChange={e => setEstimatedMinutes(e.target.value)} placeholder="Ej: 45" min="1" />
+          </div>
+
+          {/* Recurrence */}
+          <div>
+            <Label className="flex items-center gap-1"><Repeat className="w-3.5 h-3.5" /> Repetir (opcional)</Label>
+            <Select value={recurrenceRule} onValueChange={setRecurrenceRule}>
+              <SelectTrigger><SelectValue placeholder="Sin repetición" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sin repetición</SelectItem>
+                <SelectItem value="daily">Cada día</SelectItem>
+                <SelectItem value="weekly_monday">Cada lunes</SelectItem>
+                <SelectItem value="weekly_tuesday">Cada martes</SelectItem>
+                <SelectItem value="weekly_wednesday">Cada miércoles</SelectItem>
+                <SelectItem value="weekly_thursday">Cada jueves</SelectItem>
+                <SelectItem value="weekly_friday">Cada viernes</SelectItem>
+                <SelectItem value="weekly">Cada semana (mismo día)</SelectItem>
+                <SelectItem value="biweekly">Cada 2 semanas</SelectItem>
+                <SelectItem value="monthly">Cada mes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* File attachments */}
+          <div>
+            <Label className="flex items-center gap-1"><Paperclip className="w-3.5 h-3.5" /> Adjuntar archivos</Label>
+            <input ref={fileInputRef} type="file" multiple accept="image/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt" className="hidden" onChange={handleFileUpload} />
+            <Button type="button" variant="outline" size="sm" className="w-full gap-2 mt-1" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+              <Paperclip className="w-4 h-4" />
+              {uploading ? 'Subiendo...' : 'Seleccionar archivos'}
+            </Button>
+            {attachments.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {attachments.map((url, i) => (
+                  <div key={i} className="flex items-center gap-1 bg-muted/50 rounded-lg px-2 py-1 text-xs">
+                    <Paperclip className="w-3 h-3" />
+                    <span className="max-w-[120px] truncate">Archivo {i + 1}</span>
+                    <button onClick={() => removeAttachment(i)} className="text-destructive"><X className="w-3 h-3" /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
             <Label className="cursor-pointer">¿Activar recordatorio?</Label>
             <Switch checked={notificationsEnabled} onCheckedChange={handleNotificationToggle} />
@@ -272,7 +335,7 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
               )}
             </div>
           )}
-          <Button onClick={handleSubmit} className="w-full" disabled={!name || (notificationsEnabled && reminderTime && !reminderDate ? true : false)}>
+          <Button onClick={handleSubmit} className="w-full" disabled={!name || uploading || (notificationsEnabled && reminderTime && !reminderDate ? true : false)}>
             Añadir {typeLabels[type].toLowerCase()}
           </Button>
         </div>

@@ -220,17 +220,20 @@ export type Database = {
       }
       tasks: {
         Row: {
+          attachments: string[] | null
           completed: boolean
           created_at: string
           description: string | null
           due_date: string | null
           due_time: string | null
+          estimated_minutes: number | null
           grade: string | null
           home_away: string | null
           id: string
           importance: string | null
           location: string | null
           name: string
+          recurrence_rule: string | null
           reminder_date: string | null
           reminder_frequency: number | null
           reminder_time: string | null
@@ -239,21 +242,25 @@ export type Database = {
           sport_type: string | null
           study_completed: boolean
           subject: string | null
+          template_name: string | null
           type: string
           user_id: string
         }
         Insert: {
+          attachments?: string[] | null
           completed?: boolean
           created_at?: string
           description?: string | null
           due_date?: string | null
           due_time?: string | null
+          estimated_minutes?: number | null
           grade?: string | null
           home_away?: string | null
           id?: string
           importance?: string | null
           location?: string | null
           name: string
+          recurrence_rule?: string | null
           reminder_date?: string | null
           reminder_frequency?: number | null
           reminder_time?: string | null
@@ -262,21 +269,25 @@ export type Database = {
           sport_type?: string | null
           study_completed?: boolean
           subject?: string | null
+          template_name?: string | null
           type: string
           user_id: string
         }
         Update: {
+          attachments?: string[] | null
           completed?: boolean
           created_at?: string
           description?: string | null
           due_date?: string | null
           due_time?: string | null
+          estimated_minutes?: number | null
           grade?: string | null
           home_away?: string | null
           id?: string
           importance?: string | null
           location?: string | null
           name?: string
+          recurrence_rule?: string | null
           reminder_date?: string | null
           reminder_frequency?: number | null
           reminder_time?: string | null
@@ -285,6 +296,7 @@ export type Database = {
           sport_type?: string | null
           study_completed?: boolean
           subject?: string | null
+          template_name?: string | null
           type?: string
           user_id?: string
         }
@@ -324,6 +336,7 @@ export type Database = {
           notes_enabled: boolean
           notification_sound: boolean
           partidos_mode: string
+          pomodoro_enabled: boolean
           schedule_tab_enabled: boolean
           school_background: string
           school_name: string
@@ -347,6 +360,7 @@ export type Database = {
           notes_enabled?: boolean
           notification_sound?: boolean
           partidos_mode?: string
+          pomodoro_enabled?: boolean
           schedule_tab_enabled?: boolean
           school_background?: string
           school_name?: string
@@ -370,6 +384,7 @@ export type Database = {
           notes_enabled?: boolean
           notification_sound?: boolean
           partidos_mode?: string
+          pomodoro_enabled?: boolean
           schedule_tab_enabled?: boolean
           school_background?: string
           school_name?: string

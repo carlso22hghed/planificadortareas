@@ -6,11 +6,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { useClassroom } from '@/hooks/use-classroom';
 import { useNoxAI } from '@/hooks/use-nox-ai';
+import { useTeacherMode } from '@/hooks/use-teacher-mode';
 import type { DbTask, DbCountdown, TabType } from '@/types/app';
 import SortableCountdownItem from '@/components/SortableCountdownItem';
 import AddCountdownDialog from '@/components/AddCountdownDialog';
 import EditCountdownDialog from '@/components/EditCountdownDialog';
 import TaskList from '@/components/TaskList';
+import TaskTemplateDialog from '@/components/TaskTemplateDialog';
 import ScheduleInline from '@/components/ScheduleInline';
 import SettingsPanel from '@/components/SettingsPanel';
 import SupportDialog from '@/components/SupportDialog';
@@ -35,6 +37,7 @@ const Index = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const classroom = useClassroom(user?.id);
+  const { isTeacher, labels: tl } = useTeacherMode();
   const classroomSyncedRef = useRef(false);
   const [activeTab, setActiveTab] = useState<TabType>('inicio');
   const [editCountdown, setEditCountdown] = useState<DbCountdown | null>(null);
@@ -226,8 +229,43 @@ const Index = () => {
     const newCompleted = !task.completed;
     await supabase.from('tasks').update({ completed: newCompleted }).eq('id', id);
     queryClient.invalidateQueries({ queryKey: ['tasks'] });
-    if (newCompleted) triggerConfetti();
+    if (newCompleted) {
+      triggerConfetti();
+      // Auto-create next recurring task
+      const rule = (task as any).recurrence_rule;
+      if (rule && rule !== 'none' && task.due_date) {
+        const nextDate = getNextRecurrenceDate(task.due_date, rule);
+        if (nextDate) {
+          const { id: _id, created_at: _ca, completed: _c, study_completed: _sc, sort_order: _so, ...rest } = task as any;
+          await supabase.from('tasks').insert({
+            ...rest,
+            user_id: user!.id,
+            due_date: nextDate,
+            completed: false,
+            study_completed: false,
+          } as any);
+          queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        }
+      }
+    }
   };
+
+  function getNextRecurrenceDate(currentDate: string, rule: string): string | null {
+    const d = new Date(currentDate + 'T12:00:00');
+    switch (rule) {
+      case 'daily': d.setDate(d.getDate() + 1); break;
+      case 'weekly': d.setDate(d.getDate() + 7); break;
+      case 'biweekly': d.setDate(d.getDate() + 14); break;
+      case 'monthly': d.setMonth(d.getMonth() + 1); break;
+      case 'weekly_monday': d.setDate(d.getDate() + (((1 - d.getDay()) + 7) % 7 || 7)); break;
+      case 'weekly_tuesday': d.setDate(d.getDate() + (((2 - d.getDay()) + 7) % 7 || 7)); break;
+      case 'weekly_wednesday': d.setDate(d.getDate() + (((3 - d.getDay()) + 7) % 7 || 7)); break;
+      case 'weekly_thursday': d.setDate(d.getDate() + (((4 - d.getDay()) + 7) % 7 || 7)); break;
+      case 'weekly_friday': d.setDate(d.getDate() + (((5 - d.getDay()) + 7) % 7 || 7)); break;
+      default: return null;
+    }
+    return d.toISOString().split('T')[0];
+  }
 
   const toggleStudy = async (id: string) => {
     const task = tasks.find(t => t.id === id);
@@ -271,17 +309,17 @@ const Index = () => {
   const buildTabs = () => {
     const result: { id: TabType; label: string; shortLabel: string; icon: typeof Home }[] = [
       { id: 'inicio', label: 'Inicio', shortLabel: 'Ini.', icon: Home },
-      { id: 'deberes', label: 'Deberes', shortLabel: 'Deb.', icon: BookOpen },
-      { id: 'examenes', label: 'Exámenes', shortLabel: 'Exám.', icon: GraduationCap },
+      { id: 'deberes', label: tl.tabHomework, shortLabel: tl.shortHomework, icon: BookOpen },
+      { id: 'examenes', label: tl.tabExam, shortLabel: tl.shortExam, icon: GraduationCap },
     ];
-    if (settings.tareas_enabled) result.push({ id: 'tareas', label: 'Tareas', shortLabel: 'Tar.', icon: ClipboardList });
+    if (settings.tareas_enabled) result.push({ id: 'tareas', label: tl.tabTask, shortLabel: tl.shortTask, icon: ClipboardList });
     if (settings.partidos_mode === 'replace') {
       result.push({ id: 'partidos', label: 'Partidos', shortLabel: 'Part.', icon: Trophy });
     } else {
       result.push({ id: 'eventos', label: 'Eventos', shortLabel: 'Even.', icon: Calendar });
       if (settings.partidos_mode === 'new_tab') result.push({ id: 'partidos', label: 'Partidos', shortLabel: 'Part.', icon: Trophy });
     }
-    if (scheduleTabEnabled) result.push({ id: 'horario', label: 'Horario', shortLabel: 'Hor.', icon: CalendarClock });
+    if (scheduleTabEnabled) result.push({ id: 'horario', label: isTeacher ? 'Agenda' : 'Horario', shortLabel: isTeacher ? 'Ag.' : 'Hor.', icon: CalendarClock });
     if ((settings as any).dont_forget_enabled) result.push({ id: 'no-olvidar', label: '¡No olvidar!', shortLabel: '¡No!', icon: AlertTriangle });
     if ((settings as any).notes_enabled) result.push({ id: 'notas', label: 'Notas', shortLabel: 'Not.', icon: FileText });
     result.push({ id: 'productividad', label: 'Progreso', shortLabel: 'Prog.', icon: BarChart3 });
@@ -415,16 +453,21 @@ const Index = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <button onClick={() => setActiveTab('deberes')} className="glass-card rounded-2xl p-4 text-center hover:ring-2 ring-primary/30 transition-all">
                     <p className="text-3xl font-extrabold text-primary">{pendingHomework}</p>
-                    <p className="text-xs text-muted-foreground font-semibold mt-1">Deberes pendientes</p>
+                    <p className="text-xs text-muted-foreground font-semibold mt-1">{tl.pendingHomework}</p>
                   </button>
                   <button onClick={() => setActiveTab('examenes')} className="glass-card rounded-2xl p-4 text-center hover:ring-2 ring-primary/30 transition-all">
                     <p className="text-3xl font-extrabold text-exam">{pendingExams}</p>
-                    <p className="text-xs text-muted-foreground font-semibold mt-1">Exámenes próximos</p>
+                    <p className="text-xs text-muted-foreground font-semibold mt-1">{tl.pendingExams}</p>
                   </button>
                 </div>
 
+                {/* Template button */}
+                <div className="flex justify-center">
+                  <TaskTemplateDialog onAdd={addTask} subjects={allSubjects} />
+                </div>
+
                 {/* Pomodoro Timer */}
-                <PomodoroTimer />
+                {(settings as any).pomodoro_enabled !== false && <PomodoroTimer />}
 
                 <div>
                   <div className="flex items-center justify-between mb-3">
@@ -453,20 +496,20 @@ const Index = () => {
 
             {activeTab === 'deberes' && (
               <TaskList tasks={tasks} type="homework" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
-                triggerLabel="Añadir deber" emptyMessage="¡No tienes deberes pendientes!" emptyIcon={PartyPopper}
+                triggerLabel={tl.addHomework} emptyMessage={tl.emptyHomework} emptyIcon={PartyPopper}
                 subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} />
             )}
 
             {activeTab === 'examenes' && (
               <TaskList tasks={tasks} type="exam" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
                 onToggleStudy={toggleStudy}
-                triggerLabel="Añadir examen" emptyMessage="No hay exámenes próximos" emptyIcon={FileText}
+                triggerLabel={tl.addExam} emptyMessage={tl.emptyExam} emptyIcon={FileText}
                 subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} />
             )}
 
             {activeTab === 'tareas' && (
               <TaskList tasks={tasks} type="task" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
-                triggerLabel="Añadir tarea" emptyMessage="No hay tareas pendientes" emptyIcon={CheckCircle}
+                triggerLabel={tl.addTask} emptyMessage={tl.emptyTask} emptyIcon={CheckCircle}
                 subjects={allSubjects} sportTypes={settings.sport_types} />
             )}
 
