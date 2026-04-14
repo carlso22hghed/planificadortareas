@@ -250,6 +250,7 @@ export type Database = {
           attachments: string[] | null
           completed: boolean
           created_at: string
+          deleted_at: string | null
           description: string | null
           due_date: string | null
           due_time: string | null
@@ -277,6 +278,7 @@ export type Database = {
           attachments?: string[] | null
           completed?: boolean
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           due_date?: string | null
           due_time?: string | null
@@ -304,6 +306,7 @@ export type Database = {
           attachments?: string[] | null
           completed?: boolean
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           due_date?: string | null
           due_time?: string | null
