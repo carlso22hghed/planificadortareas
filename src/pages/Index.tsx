@@ -24,8 +24,11 @@ import ProductivityPage from '@/components/ProductivityPage';
 import PrivacyFooter from '@/components/PrivacyFooter';
 import PomodoroTimer from '@/components/PomodoroTimer';
 import PremiosPage from '@/components/PremiosPage';
+import CalendarView from '@/components/CalendarView';
+import CommandPalette from '@/components/CommandPalette';
+import TrashPage from '@/components/TrashPage';
 import { useGamification } from '@/hooks/use-gamification';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree, Quote, Gift } from 'lucide-react';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree, Quote, Gift, CalendarDays, Trash2, Search } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -54,7 +57,7 @@ const Index = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const { data: tasks = [] } = useQuery({
+  const { data: allTasks = [] } = useQuery({
     queryKey: ['tasks', user?.id],
     queryFn: async () => {
       const { data } = await supabase.from('tasks').select('*').eq('user_id', user!.id).order('created_at', { ascending: false });
@@ -62,6 +65,8 @@ const Index = () => {
     },
     enabled: !!user,
   });
+
+  const tasks = useMemo(() => allTasks.filter(t => !(t as any).deleted_at), [allTasks]);
 
   const noxAI = useNoxAI(tasks);
   const { addPoints } = useGamification();
@@ -279,7 +284,7 @@ const Index = () => {
   };
 
   const deleteTask = async (id: string) => {
-    await supabase.from('tasks').delete().eq('id', id);
+    await supabase.from('tasks').update({ deleted_at: new Date().toISOString() } as any).eq('id', id);
     queryClient.invalidateQueries({ queryKey: ['tasks'] });
   };
 
@@ -327,7 +332,9 @@ const Index = () => {
     if ((settings as any).dont_forget_enabled) result.push({ id: 'no-olvidar', label: '¡No olvidar!', shortLabel: '¡No!', icon: AlertTriangle });
     if ((settings as any).notes_enabled) result.push({ id: 'notas', label: 'Notas', shortLabel: 'Not.', icon: FileText });
     result.push({ id: 'productividad', label: 'Progreso', shortLabel: 'Prog.', icon: BarChart3 });
-    result.push({ id: 'premios' as TabType, label: 'Premios', shortLabel: 'Prem.', icon: Gift });
+    result.push({ id: 'calendario', label: 'Calendario', shortLabel: 'Cal.', icon: CalendarDays });
+    result.push({ id: 'premios', label: 'Premios', shortLabel: 'Prem.', icon: Gift });
+    result.push({ id: 'papelera', label: 'Papelera', shortLabel: 'Pap.', icon: Trash2 });
     return result;
   };
 
@@ -534,7 +541,9 @@ const Index = () => {
             {activeTab === 'no-olvidar' && <DontForgetPage />}
             {activeTab === 'notas' && <NotesPage />}
             {activeTab === 'productividad' && <ProductivityPage tasks={tasks} />}
-            {activeTab === ('premios' as TabType) && <PremiosPage />}
+            {activeTab === 'premios' && <PremiosPage />}
+            {activeTab === 'calendario' && <CalendarView tasks={tasks} />}
+            {activeTab === 'papelera' && <TrashPage />}
             <PrivacyFooter />
           </main>
         </div>
@@ -590,6 +599,7 @@ const Index = () => {
         </DialogContent>
       </Dialog>
 
+      <CommandPalette tasks={tasks} onNavigate={setActiveTab} />
       <ClassroomPromoDialog onSync={classroom.startSync} />
       {noxAI.enabled && <NoxAIFab loading={noxAI.loading} recommendation={noxAI.recommendation} tasks={tasks} />}
       <SupportDialog />
