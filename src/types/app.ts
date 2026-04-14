@@ -6,7 +6,7 @@ export type DbProfile = Tables<'profiles'>;
 export type DbSettings = Tables<'user_settings'>;
 
 export type TaskType = 'homework' | 'exam' | 'event' | 'match' | 'task';
-export type TabType = 'inicio' | 'deberes' | 'examenes' | 'eventos' | 'partidos' | 'tareas' | 'horario' | 'no-olvidar' | 'notas' | 'productividad';
+export type TabType = 'inicio' | 'deberes' | 'examenes' | 'eventos' | 'partidos' | 'tareas' | 'horario' | 'no-olvidar' | 'notas' | 'productividad' | 'premios';
 export type PartidosMode = 'off' | 'replace' | 'new_tab';
 
 export const ALL_SUBJECTS = [
