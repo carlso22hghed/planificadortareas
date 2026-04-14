@@ -158,6 +158,33 @@ export type Database = {
         }
         Relationships: []
       }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          referral_code: string
+          referred_user_id: string | null
+          referrer_user_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referral_code: string
+          referred_user_id?: string | null
+          referrer_user_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_user_id?: string | null
+          referrer_user_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       schedule: {
         Row: {
           content: string
@@ -298,6 +325,78 @@ export type Database = {
           subject?: string | null
           template_name?: string | null
           type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_badges: {
+        Row: {
+          badge_description: string
+          badge_icon: string
+          badge_key: string
+          badge_name: string
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          badge_description?: string
+          badge_icon?: string
+          badge_key: string
+          badge_name: string
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          badge_description?: string
+          badge_icon?: string
+          badge_key?: string
+          badge_name?: string
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_gamification: {
+        Row: {
+          created_at: string
+          extra_storage_mb: number
+          id: string
+          level: number
+          premium_days_remaining: number
+          referral_code: string
+          referral_count: number
+          tasks_completed_total: number
+          total_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          extra_storage_mb?: number
+          id?: string
+          level?: number
+          premium_days_remaining?: number
+          referral_code?: string
+          referral_count?: number
+          tasks_completed_total?: number
+          total_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          extra_storage_mb?: number
+          id?: string
+          level?: number
+          premium_days_remaining?: number
+          referral_code?: string
+          referral_count?: number
+          tasks_completed_total?: number
+          total_points?: number
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

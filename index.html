@@ -41,10 +41,10 @@
             var rect = privacyFooter.getBoundingClientRect();
             privacyVisible = rect.top < window.innerHeight && rect.bottom > 0;
           }
-          var hide = privacyVisible || (atBottom && !pageShort);
+          // Hide if bottom nav exists, or if privacy footer visible, or at page bottom
+          var hide = !!bottomNav || privacyVisible || (atBottom && !pageShort);
           footer.style.opacity = hide ? '0' : '1';
           footer.style.pointerEvents = hide ? 'none' : 'auto';
-          footer.style.bottom = bottomNav ? (bottomNav.offsetHeight + 'px') : '0';
         }
         window.addEventListener('scroll', checkVisibility, true);
         setInterval(checkVisibility, 500);

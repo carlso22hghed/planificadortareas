@@ -23,7 +23,9 @@ import NoxAIFab from '@/components/NoxAIFab';
 import ProductivityPage from '@/components/ProductivityPage';
 import PrivacyFooter from '@/components/PrivacyFooter';
 import PomodoroTimer from '@/components/PomodoroTimer';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree, Quote } from 'lucide-react';
+import PremiosPage from '@/components/PremiosPage';
+import { useGamification } from '@/hooks/use-gamification';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree, Quote, Gift } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -62,6 +64,7 @@ const Index = () => {
   });
 
   const noxAI = useNoxAI(tasks);
+  const { addPoints } = useGamification();
 
   const { data: countdowns = [] } = useQuery({
     queryKey: ['countdowns', user?.id],
@@ -231,6 +234,7 @@ const Index = () => {
     queryClient.invalidateQueries({ queryKey: ['tasks'] });
     if (newCompleted) {
       triggerConfetti();
+      addPoints(10);
       // Auto-create next recurring task
       const rule = (task as any).recurrence_rule;
       if (rule && rule !== 'none' && task.due_date) {
@@ -323,6 +327,7 @@ const Index = () => {
     if ((settings as any).dont_forget_enabled) result.push({ id: 'no-olvidar', label: '¡No olvidar!', shortLabel: '¡No!', icon: AlertTriangle });
     if ((settings as any).notes_enabled) result.push({ id: 'notas', label: 'Notas', shortLabel: 'Not.', icon: FileText });
     result.push({ id: 'productividad', label: 'Progreso', shortLabel: 'Prog.', icon: BarChart3 });
+    result.push({ id: 'premios' as TabType, label: 'Premios', shortLabel: 'Prem.', icon: Gift });
     return result;
   };
 
@@ -529,6 +534,7 @@ const Index = () => {
             {activeTab === 'no-olvidar' && <DontForgetPage />}
             {activeTab === 'notas' && <NotesPage />}
             {activeTab === 'productividad' && <ProductivityPage tasks={tasks} />}
+            {activeTab === ('premios' as TabType) && <PremiosPage />}
             <PrivacyFooter />
           </main>
         </div>
