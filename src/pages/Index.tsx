@@ -599,6 +599,7 @@ const Index = () => {
         </DialogContent>
       </Dialog>
 
+      <CommandPalette tasks={tasks} onNavigate={setActiveTab} />
       <ClassroomPromoDialog onSync={classroom.startSync} />
       {noxAI.enabled && <NoxAIFab loading={noxAI.loading} recommendation={noxAI.recommendation} tasks={tasks} />}
       <SupportDialog />
