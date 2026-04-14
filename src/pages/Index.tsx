@@ -332,9 +332,9 @@ const Index = () => {
     if ((settings as any).dont_forget_enabled) result.push({ id: 'no-olvidar', label: '¡No olvidar!', shortLabel: '¡No!', icon: AlertTriangle });
     if ((settings as any).notes_enabled) result.push({ id: 'notas', label: 'Notas', shortLabel: 'Not.', icon: FileText });
     result.push({ id: 'productividad', label: 'Progreso', shortLabel: 'Prog.', icon: BarChart3 });
-    result.push({ id: 'calendario' as TabType, label: 'Calendario', shortLabel: 'Cal.', icon: CalendarDays });
-    result.push({ id: 'premios' as TabType, label: 'Premios', shortLabel: 'Prem.', icon: Gift });
-    result.push({ id: 'papelera' as TabType, label: 'Papelera', shortLabel: 'Pap.', icon: Trash2 });
+    result.push({ id: 'calendario', label: 'Calendario', shortLabel: 'Cal.', icon: CalendarDays });
+    result.push({ id: 'premios', label: 'Premios', shortLabel: 'Prem.', icon: Gift });
+    result.push({ id: 'papelera', label: 'Papelera', shortLabel: 'Pap.', icon: Trash2 });
     return result;
   };
 
@@ -541,9 +541,9 @@ const Index = () => {
             {activeTab === 'no-olvidar' && <DontForgetPage />}
             {activeTab === 'notas' && <NotesPage />}
             {activeTab === 'productividad' && <ProductivityPage tasks={tasks} />}
-            {activeTab === ('premios' as TabType) && <PremiosPage />}
-            {activeTab === ('calendario' as TabType) && <CalendarView tasks={tasks} />}
-            {activeTab === ('papelera' as TabType) && <TrashPage />}
+            {activeTab === 'premios' && <PremiosPage />}
+            {activeTab === 'calendario' && <CalendarView tasks={tasks} />}
+            {activeTab === 'papelera' && <TrashPage />}
             <PrivacyFooter />
           </main>
         </div>
