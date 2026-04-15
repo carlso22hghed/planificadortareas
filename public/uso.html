@@ -2,18 +2,188 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="privacy-policy" href="https://planificadortareas.lovable.app/uso.html"/>
-<title>Privacidad — Planificador de Tareas</title>
+<title>Privacidad y Términos — Planificador de Tareas</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #FFFFFF; color: #222222; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; font-size: 16px; line-height: 1.8; }
+  .container { max-width: 750px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  .back-link { display: inline-block; color: #4A90D9; text-decoration: none; font-weight: 600; margin-bottom: 1.5rem; }
+  .back-link:hover { text-decoration: underline; }
+  .badge { display: inline-block; background: #F3F0FF; color: #7C3AED; font-size: 0.8rem; font-weight: 600; padding: 0.3rem 0.9rem; border-radius: 999px; margin-bottom: 2rem; }
+  h1 { color: #111111; font-size: 2rem; margin-bottom: 0.5rem; }
+  .subtitle { color: #555; font-size: 1rem; margin-bottom: 2.5rem; }
+  .section { border-left: 4px solid #7C3AED; padding: 1.5rem 1.5rem 1.5rem 1.75rem; margin-bottom: 2rem; background: #FAFAFA; border-radius: 0 8px 8px 0; }
+  .section h2 { color: #111111; font-size: 1.25rem; margin-bottom: 0.75rem; }
+  .section h3 { color: #111111; font-size: 1.05rem; margin: 1.25rem 0 0.5rem; }
+  .section p { color: #222222; margin-bottom: 0.6rem; }
+  .section ul { padding-left: 1.25rem; margin-bottom: 0.75rem; }
+  .section ul li { color: #222222; margin-bottom: 0.3rem; }
+  .section a { color: #4A90D9; }
+  .section strong { color: #111111; }
+  .highlight { background: #F3F0FF; border-radius: 6px; padding: 0.8rem 1rem; margin: 0.75rem 0; color: #5B21B6; font-size: 0.9rem; }
+  footer { border-top: 1px solid #E5E5E5; text-align: center; padding: 2rem 0; color: #888; font-size: 0.85rem; margin-top: 2rem; }
+  footer a { color: #4A90D9; }
+  .tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap; }
+  .tabs a { padding: 0.5rem 1.2rem; border-radius: 999px; font-size: 0.9rem; font-weight: 600; text-decoration: none; background: #F0F0F0; color: #333; }
+  .tabs a.active, .tabs a:hover { background: #7C3AED; color: #fff; }
+</style>
 </head>
 <body>
-<h1>Política de Privacidad y Términos de Servicio</h1>
-<p>Aplicación: Planificador de Tareas</p>
-<p>URL: https://planificadortareas.lovable.app</p>
-<p>Política de privacidad: <a href="https://planificadortareas.lovable.app/uso.html">https://planificadortareas.lovable.app/uso.html</a></p>
-<h2>Privacidad</h2>
-<p>No vendemos datos. Solo leemos tareas de Google Classroom del propio usuario. Todo se guarda en el navegador del usuario. Cumplimos RGPD y LOPDGDD.</p>
-<h2>Términos</h2>
-<p>Uso personal para estudiantes. Sin publicidad. El desarrollador no se responsabiliza de pérdida de datos.</p>
-<p><a href="https://planificadortareas.lovable.app">Volver a la app</a></p>
+<div class="container">
+  <a href="https://planificadortareas.lovable.app" class="back-link">← Volver a la app</a>
+  <div class="badge">📅 Última actualización: abril 2026</div>
+  <h1>Privacidad y Términos de Servicio</h1>
+  <p class="subtitle">Planificador de Tareas — planificadortareas.lovable.app</p>
+
+  <div class="tabs">
+    <a href="#privacidad" class="active">Privacidad</a>
+    <a href="#condiciones">Condiciones</a>
+  </div>
+
+  <!-- PRIVACIDAD -->
+  <div class="section" id="intro">
+    <h2>01 — ¿Quién trata tus datos?</h2>
+    <p>Planificador de Tareas es una aplicación web que te permite gestionar tus tareas y sincronizarlas con Google Classroom. El responsable del tratamiento de tus datos es el desarrollador de la aplicación.</p>
+    <div class="highlight">Esta política cumple con el RGPD de la UE y la LOPDGDD de España.</div>
+  </div>
+
+  <div class="section">
+    <h2>02 — Datos que recopilamos</h2>
+    <h3>Datos que tú introduces</h3>
+    <ul>
+      <li>Tareas: título, descripción y fecha de vencimiento</li>
+      <li>Preferencias de configuración de la aplicación</li>
+    </ul>
+    <h3>Datos de Google Classroom (solo si sincronizas)</h3>
+    <ul>
+      <li>Nombre de tus cursos y asignaturas</li>
+      <li>Títulos, descripciones y fechas de entrega de tus tareas</li>
+      <li>Token de acceso OAuth de Google (guardado en tu dispositivo)</li>
+    </ul>
+    <h3>Datos técnicos</h3>
+    <ul>
+      <li>Preferencias almacenadas en localStorage de tu navegador</li>
+      <li>No utilizamos cookies de rastreo ni analítica de terceros</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>03 — Uso de los datos</h2>
+    <ul>
+      <li>Mostrar y gestionar tus tareas dentro de la aplicación</li>
+      <li>Sincronizar y actualizar tareas desde Google Classroom</li>
+      <li>Recordar tu preferencia de sincronización entre sesiones</li>
+      <li>Mejorar la experiencia de uso de la aplicación</li>
+    </ul>
+    <p>No vendemos, alquilamos ni compartimos tus datos con terceros para fines comerciales.</p>
+  </div>
+
+  <div class="section">
+    <h2>04 — Integración con Google Classroom</h2>
+    <p>Cuando usas la sincronización con Google Classroom, la aplicación accede a tu cuenta de Google únicamente con los siguientes permisos:</p>
+    <ul>
+      <li><strong>classroom.courses.readonly</strong> — Ver tus cursos</li>
+      <li><strong>classroom.coursework.me.readonly</strong> — Ver tus tareas asignadas</li>
+    </ul>
+    <p>El acceso se realiza mediante OAuth 2.0. Tu contraseña de Google nunca es accesible por esta aplicación. El token de acceso se almacena únicamente en tu navegador y no se envía a ningún servidor externo.</p>
+    <div class="highlight">Puedes revocar el acceso en cualquier momento desde <a href="https://myaccount.google.com/permissions" style="color:#5B21B6">myaccount.google.com/permissions</a></div>
+  </div>
+
+  <div class="section">
+    <h2>05 — Seguridad de los datos</h2>
+    <ul>
+      <li>Todos los datos transmitidos entre la app y Google Classroom están cifrados mediante HTTPS/TLS</li>
+      <li>Los tokens de acceso OAuth 2.0 se almacenan en el localStorage del navegador y nunca se transmiten a servidores externos</li>
+      <li>Los tokens de acceso caducan automáticamente tras 1 hora y deben ser renovados por el usuario</li>
+      <li>La aplicación nunca almacena ni accede a contraseñas</li>
+      <li>La app nunca almacena datos de usuario de Google en ninguna base de datos o servidor externo</li>
+      <li>Todos los datos personales permanecen exclusivamente en el dispositivo del usuario</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>06 — Control de acceso</h2>
+    <ul>
+      <li>Solo el usuario autenticado puede acceder a sus propios datos</li>
+      <li>La app utiliza el protocolo OAuth 2.0 de Google para verificar la identidad</li>
+      <li>Los usuarios menores de 14 años con cuentas de correo personales son bloqueados en el registro</li>
+      <li>Los menores de 14 años solo pueden acceder a la app usando una cuenta de correo escolar verificada</li>
+      <li>Las cuentas bloqueadas se almacenan de forma segura y se desbloquean automáticamente cuando el usuario cumple 14 años</li>
+      <li>Las cuentas escolares se benefician de la seguridad de Google Workspace for Education, que cumple con RGPD, COPPA y FERPA</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>07 — Almacenamiento seguro</h2>
+    <ul>
+      <li>Las tareas y preferencias se almacenan localmente en el navegador del usuario mediante localStorage</li>
+      <li>No se envían ni almacenan datos en ningún servidor de terceros</li>
+      <li>Los usuarios pueden eliminar todos sus datos en cualquier momento limpiando el localStorage desde los ajustes del navegador o usando la opción de desconexión en los ajustes de la app</li>
+      <li>Cuando un usuario desconecta su cuenta de Google de la app, todos los tokens y datos de Classroom se eliminan inmediatamente del localStorage</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>08 — Tus derechos</h2>
+    <p>Conforme al RGPD, tienes derecho a:</p>
+    <ul>
+      <li>Acceder a los datos que tenemos sobre ti</li>
+      <li>Rectificar datos incorrectos o incompletos</li>
+      <li>Eliminar tus datos (derecho al olvido)</li>
+      <li>Oponerte al tratamiento de tus datos</li>
+      <li>Revocar el consentimiento en cualquier momento</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>09 — Contacto</h2>
+    <p>Si tienes cualquier duda sobre esta política de privacidad, puedes contactarnos a través de los canales disponibles en la aplicación.</p>
+  </div>
+
+  <!-- CONDICIONES -->
+  <div class="section" id="condiciones">
+    <h2>Condiciones de uso</h2>
+    <p>Al acceder y usar Planificador de Tareas, aceptas quedar vinculado por estas Condiciones de Servicio. Si no estás de acuerdo, te pedimos que no uses la aplicación.</p>
+  </div>
+
+  <div class="section">
+    <h2>Descripción del servicio</h2>
+    <p>Planificador de Tareas es una aplicación web gratuita que permite crear, editar y organizar tareas personales, sincronizar con Google Classroom y gestionar fechas de entrega. Nos reservamos el derecho de modificar o discontinuar cualquier parte del servicio.</p>
+  </div>
+
+  <div class="section">
+    <h2>Normas de uso</h2>
+    <ul>
+      <li>Usar el servicio únicamente para fines personales y legítimos</li>
+      <li>No intentar acceder a datos de otros usuarios</li>
+      <li>No usar la aplicación para actividades ilegales</li>
+      <li>No intentar manipular o interferir con el funcionamiento de la app</li>
+      <li>Respetar los términos de uso de Google al sincronizar con Classroom</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Propiedad intelectual</h2>
+    <p>Todo el código, diseño, logotipos y contenido son propiedad del desarrollador y están protegidos por las leyes de propiedad intelectual. Se concede una licencia limitada, no exclusiva e intransferible para uso personal.</p>
+  </div>
+
+  <div class="section">
+    <h2>Limitación de responsabilidad</h2>
+    <p>La aplicación se proporciona "tal cual", sin garantías. No nos hacemos responsables de pérdida de datos, interrupciones del servicio de Google Classroom, daños derivados del uso, ni errores de sincronización.</p>
+    <div class="highlight">Recomendamos no usar esta aplicación como único sistema para tareas críticas.</div>
+  </div>
+
+  <div class="section">
+    <h2>Legislación aplicable</h2>
+    <p>Estas condiciones se rigen por la legislación española y de la Unión Europea. Cualquier disputa se someterá a la jurisdicción de los tribunales de España.</p>
+  </div>
+
+  <footer>
+    <p>© 2026 Planificador de Tareas — Todos los derechos reservados</p>
+    <p><a href="https://planificadortareas.lovable.app">Volver a la app</a></p>
+  </footer>
+</div>
 </body>
 </html>
