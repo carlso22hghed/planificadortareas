@@ -221,18 +221,17 @@ const NoxAIFab = ({ loading, recommendation, tasks = [] }: NoxAIFabProps) => {
                 )}
                 {messages.map((msg, i) => (
                   <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${
+                    <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap ${
                       msg.role === 'user'
                         ? 'bg-primary text-primary-foreground rounded-br-md'
                         : 'bg-muted text-foreground rounded-bl-md'
-                    }`}
-                      dangerouslySetInnerHTML={{
-                        __html: msg.content.replace(
-                          /(https?:\/\/[^\s<]+)/g,
-                          '<a href="$1" target="_blank" rel="noopener noreferrer" class="underline font-semibold" style="color:inherit">$1</a>'
-                        )
-                      }}
-                    />
+                    }`}>
+                      {msg.content.split(/(https?:\/\/[^\s<]+)/g).map((part, j) =>
+                        /^https?:\/\//.test(part) ? (
+                          <a key={j} href={part} target="_blank" rel="noopener noreferrer" className="underline font-semibold" style={{ color: 'inherit' }}>{part}</a>
+                        ) : part
+                      )}
+                    </div>
                   </div>
                 ))}
                 {streaming && messages[messages.length - 1]?.role !== 'assistant' && (
