@@ -14,6 +14,7 @@ import { getSportEmoji } from '@/lib/sport-emojis';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import { sanitizeInput } from '@/lib/sanitize';
 
 interface AddTaskDialogProps {
   type: DbTask['type'];
@@ -122,21 +123,21 @@ const AddTaskDialog = ({ type, onAdd, triggerLabel, subjects = [], sportTypes = 
     const finalImportance = importance === 'otro' ? (customImportance || 'normal') : importance;
 
     const taskData: Partial<DbTask> = {
-      name,
+      name: sanitizeInput(name),
       due_date: dueDate || null,
       due_time: dueTime || null,
       reminder_time: notificationsEnabled && reminderTime ? reminderTime : null,
       completed: false,
       type,
-      subject: showSubjects && subject ? subject : null,
-      rival: showMatchFields && rival ? rival : null,
+      subject: showSubjects && subject ? sanitizeInput(subject) : null,
+      rival: showMatchFields && rival ? sanitizeInput(rival) : null,
       home_away: showMatchFields ? homeAway : null,
       sport_type: showMatchFields ? sportType : null,
     } as any;
 
-    if (description) (taskData as any).description = description;
+    if (description) (taskData as any).description = sanitizeInput(description);
     if (showImportance && finalImportance !== 'normal') (taskData as any).importance = finalImportance;
-    if (showLocation && location) (taskData as any).location = location;
+    if (showLocation && location) (taskData as any).location = sanitizeInput(location);
     if (notificationsEnabled && reminderDate) (taskData as any).reminder_date = reminderDate;
     if (notificationsEnabled && reminderFrequency > 0) (taskData as any).reminder_frequency = reminderFrequency;
     if (attachments.length > 0) (taskData as any).attachments = attachments;

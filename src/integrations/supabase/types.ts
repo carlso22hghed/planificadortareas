@@ -123,6 +123,7 @@ export type Database = {
         Row: {
           created_at: string
           custom_role: string | null
+          date_of_birth: string | null
           display_name: string
           email: string | null
           id: string
@@ -130,11 +131,14 @@ export type Database = {
           last_location: string | null
           onboarding_completed: boolean
           role: string
+          status: string
+          unlocked_at: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
           custom_role?: string | null
+          date_of_birth?: string | null
           display_name?: string
           email?: string | null
           id?: string
@@ -142,11 +146,14 @@ export type Database = {
           last_location?: string | null
           onboarding_completed?: boolean
           role?: string
+          status?: string
+          unlocked_at?: string | null
           user_id: string
         }
         Update: {
           created_at?: string
           custom_role?: string | null
+          date_of_birth?: string | null
           display_name?: string
           email?: string | null
           id?: string
@@ -154,6 +161,8 @@ export type Database = {
           last_location?: string | null
           onboarding_completed?: boolean
           role?: string
+          status?: string
+          unlocked_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -571,6 +580,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auto_unblock_minor: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

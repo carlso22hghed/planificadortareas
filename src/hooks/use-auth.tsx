@@ -51,6 +51,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!profileRes.data.is_active) {
         await supabase.from('profiles').update({ is_active: true }).eq('user_id', userId);
       }
+      // Auto-unblock minor if they turned 14
+      if ((profileRes.data as any).status === 'bloqueado') {
+        await supabase.rpc('auto_unblock_minor');
+        // Reload profile after potential unblock
+        const { data: refreshed } = await supabase.from('profiles').select('*').eq('user_id', userId).single();
+        if (refreshed) setProfile(refreshed);
+      }
       // Update location
       getUserLocation().then(loc => {
         if (loc) {
