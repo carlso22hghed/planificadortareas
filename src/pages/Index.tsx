@@ -52,6 +52,9 @@ const Index = () => {
   const [dontForgetDismissed, setDontForgetDismissed] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
+  // Block UI for blocked minors
+  const isBlocked = (profile as any)?.status === 'bloqueado';
+
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
