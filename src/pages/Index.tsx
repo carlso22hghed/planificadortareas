@@ -372,6 +372,30 @@ const Index = () => {
     return currentTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   };
 
+  if (isBlocked) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="glass-card rounded-2xl p-8 max-w-sm text-center space-y-4">
+          <p className="text-5xl">🔒</p>
+          <h1 className="text-xl font-bold text-foreground">Cuenta restringida</h1>
+          <p className="text-sm text-muted-foreground">
+            Tu cuenta está bloqueada porque eres menor de 14 años y usas un correo personal.
+            Pide a tu colegio una cuenta institucional para acceder.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Cuando cumplas 14 años, tu cuenta se desbloqueará automáticamente.
+          </p>
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="mt-4 px-6 py-2 bg-destructive text-destructive-foreground rounded-xl text-sm font-semibold"
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={cn(
       'min-h-screen flex',
