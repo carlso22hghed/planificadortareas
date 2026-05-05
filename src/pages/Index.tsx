@@ -489,7 +489,7 @@ const Index = () => {
             </div>
           </header>
 
-          <main className={cn('flex-1 px-4 py-4 overflow-y-auto', !isLeftNav && 'pb-24')}>
+          <main onContextMenu={handleMainContextMenu} className={cn('flex-1 px-4 py-4 overflow-y-auto', !isLeftNav && 'pb-24')}>
             {activeTab === 'inicio' && (
               <div className="space-y-5 animate-slide-up">
                 {/* Greeting */}
