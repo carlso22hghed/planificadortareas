@@ -20,7 +20,11 @@ interface ChatMessage {
 const DAILY_LIMIT = 20;
 const NOX_CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nox-chat`;
 
-const NoxAIFab = ({ loading, recommendation, tasks = [] }: NoxAIFabProps) => {
+interface NoxAIFabInternalProps extends NoxAIFabProps {
+  isPremium?: boolean;
+}
+
+const NoxAIFab = ({ loading, recommendation, tasks = [], isPremium = false }: NoxAIFabInternalProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -79,8 +83,8 @@ const NoxAIFab = ({ loading, recommendation, tasks = [] }: NoxAIFabProps) => {
     const trimmed = input.trim();
     if (!trimmed || streaming || !user) return;
 
-    if (dailyCount >= DAILY_LIMIT) {
-      toast({ title: 'Límite diario alcanzado', description: `Solo puedes enviar ${DAILY_LIMIT} mensajes al día a Nox.`, variant: 'destructive' });
+    if (!isPremium && dailyCount >= DAILY_LIMIT) {
+      toast({ title: 'Límite diario alcanzado', description: `Solo puedes enviar ${DAILY_LIMIT} mensajes al día a Nox. ¡Hazte Premium para mensajes ilimitados!`, variant: 'destructive' });
       return;
     }
 

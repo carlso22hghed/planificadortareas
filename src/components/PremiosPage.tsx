@@ -1,4 +1,4 @@
-import { Gift, Trophy, Star, Lock, Copy, Check, Users, Zap, Medal, Crown, Sparkles } from 'lucide-react';
+import { Gift, Trophy, Star, Lock, Copy, Check, Users, Zap, Medal, Crown, Sparkles, Wifi, MessageSquare } from 'lucide-react';
 import { useGamification, ALL_BADGES } from '@/hooks/use-gamification';
 import { useState } from 'react';
 import { Progress } from '@/components/ui/progress';
@@ -8,9 +8,14 @@ const REWARDS = [
   { requiredReferrals: 1, name: 'Tema Premium: Amanecer', description: 'Un tema cálido exclusivo', icon: '🌅' },
   { requiredReferrals: 3, name: 'Tema Ciberpunk', description: 'Interfaz estilo neón futurista', icon: '🌃' },
   { requiredReferrals: 5, name: 'Tema Bosque Zen', description: 'Colores naturales relajantes', icon: '🌲' },
-  { requiredReferrals: 3, name: '+50MB Almacenamiento', description: 'Sube más archivos a tus tareas', icon: '💾' },
   { requiredReferrals: 1, name: '7 días Premium', description: 'Funciones Pro gratis para ti y tu amigo', icon: '⭐' },
   { requiredReferrals: 5, name: 'Icono Dorado', description: 'Un icono de app exclusivo', icon: '👑' },
+];
+
+const PREMIUM_FEATURES = [
+  { name: 'Mensajes ilimitados en Nox', description: 'Sin límite de 20 mensajes al día', icon: '💬' },
+  { name: 'Acceso Offline Total', description: 'Trabaja sin conexión y sincroniza al volver a tener internet', icon: '📡' },
+  { name: 'Espacios Compartidos', description: 'Listas de tareas colaborativas con chat integrado por tarea y asignación de responsables', icon: '👥' },
 ];
 
 const PremiosPage = () => {
@@ -24,6 +29,7 @@ const PremiosPage = () => {
   };
 
   const unlockedKeys = new Set(badges.map((b: any) => b.badge_key));
+  const isPremium = stats.premiumDaysRemaining > 0;
 
   return (
     <div className="space-y-5 animate-slide-up">
@@ -61,6 +67,37 @@ const PremiosPage = () => {
         </div>
       </div>
 
+      {/* Premium Status */}
+      {isPremium && (
+        <div className="glass-card rounded-2xl p-5 space-y-2 border-2 border-yellow-500/30 bg-yellow-500/5">
+          <div className="flex items-center gap-2">
+            <Crown className="w-5 h-5 text-yellow-500" />
+            <h3 className="font-bold text-foreground">Premium activo</h3>
+            <Badge className="ml-auto bg-yellow-500/20 text-yellow-600 border-yellow-500/30">{stats.premiumDaysRemaining} días restantes</Badge>
+          </div>
+        </div>
+      )}
+
+      {/* Premium Features */}
+      <div className="glass-card rounded-2xl p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <Star className="w-5 h-5 text-yellow-500" />
+          <h3 className="font-bold text-foreground">Ventajas Premium</h3>
+        </div>
+        <div className="space-y-2">
+          {PREMIUM_FEATURES.map((feature, i) => (
+            <div key={i} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isPremium ? 'bg-yellow-500/5 border-yellow-500/20' : 'bg-muted/10 border-border'}`}>
+              <div className="text-2xl">{isPremium ? feature.icon : '🔒'}</div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-bold ${isPremium ? 'text-foreground' : 'text-muted-foreground'}`}>{feature.name}</p>
+                <p className="text-[10px] text-muted-foreground">{feature.description}</p>
+              </div>
+              {isPremium && <Badge className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30 text-[9px]">Activo</Badge>}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Invite Section */}
       <div className="glass-card rounded-2xl p-5 space-y-3">
         <div className="flex items-center gap-2">
@@ -68,7 +105,7 @@ const PremiosPage = () => {
           <h3 className="font-bold text-foreground">Invita amigos, gana premios</h3>
         </div>
         <p className="text-xs text-muted-foreground">
-          Cada amigo que se una usando tu enlace os dará 7 días Premium gratis a ambos, +50MB de almacenamiento y puntos extra.
+          Cada amigo que se una usando tu enlace os dará 7 días Premium gratis a ambos y puntos extra.
         </p>
         <button
           onClick={handleCopy}

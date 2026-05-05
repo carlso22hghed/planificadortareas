@@ -1,13 +1,109 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { lovable } from '@/integrations/lovable';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [accepted, setAccepted] = useState(false);
+  const [searchParams] = useSearchParams();
+  const refCode = searchParams.get('ref');
+
+  // Store referral code before auth redirect
+  useEffect(() => {
+    if (refCode) {
+      localStorage.setItem('pendingReferralCode', refCode);
+    }
+  }, [refCode]);
+
+  // After login, process referral
+  useEffect(() => {
+    const processReferral = async () => {
+      const code = localStorage.getItem('pendingReferralCode');
+      if (!code) return;
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Find the referrer by their referral code
+      const { data: referrerGamification } = await supabase
+        .from('user_gamification')
+        .select('user_id')
+        .eq('referral_code', code)
+        .maybeSingle();
+
+      if (!referrerGamification || referrerGamification.user_id === user.id) {
+        localStorage.removeItem('pendingReferralCode');
+        return;
+      }
+
+      // Check if already referred
+      const { data: existing } = await supabase
+        .from('referrals')
+        .select('id')
+        .eq('referrer_user_id', referrerGamification.user_id)
+        .eq('referred_user_id', user.id)
+        .maybeSingle();
+
+      if (existing) {
+        localStorage.removeItem('pendingReferralCode');
+        return;
+      }
+
+      // Create referral record
+      await supabase.from('referrals').insert({
+        referrer_user_id: referrerGamification.user_id,
+        referred_user_id: user.id,
+        referral_code: code,
+        status: 'completed',
+      });
+
+      // Grant 7 days premium to BOTH users
+      // Referrer
+      const { data: referrerData } = await supabase
+        .from('user_gamification')
+        .select('premium_days_remaining, referral_count, total_points')
+        .eq('user_id', referrerGamification.user_id)
+        .single();
+      
+      if (referrerData) {
+        await supabase.from('user_gamification').update({
+          premium_days_remaining: (referrerData.premium_days_remaining || 0) + 7,
+          referral_count: (referrerData.referral_count || 0) + 1,
+          total_points: (referrerData.total_points || 0) + 50,
+        }).eq('user_id', referrerGamification.user_id);
+      }
+
+      // Referred user (current user)
+      const { data: myData } = await supabase
+        .from('user_gamification')
+        .select('premium_days_remaining, total_points')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (myData) {
+        await supabase.from('user_gamification').update({
+          premium_days_remaining: (myData.premium_days_remaining || 0) + 7,
+          total_points: (myData.total_points || 0) + 50,
+        }).eq('user_id', user.id);
+      }
+
+      localStorage.removeItem('pendingReferralCode');
+      toast({ title: '🎉 ¡Referido exitoso!', description: '¡Ambos habéis recibido 7 días Premium gratis!' });
+    };
+
+    // Listen for auth state changes to process referral after login
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
+        setTimeout(processReferral, 2000);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
@@ -38,6 +134,12 @@ const Auth = () => {
             <h2 className="text-lg font-bold text-foreground">Iniciar sesión</h2>
             <p className="text-sm text-muted-foreground mt-1">Inicia sesión con tu cuenta de Google</p>
           </div>
+
+          {refCode && (
+            <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-sm text-primary font-semibold">
+              🎁 ¡Te han invitado! Ambos recibiréis 7 días Premium gratis
+            </div>
+          )}
 
           <div className="flex items-start space-x-2">
             <Checkbox

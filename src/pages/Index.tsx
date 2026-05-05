@@ -28,7 +28,7 @@ import CalendarView from '@/components/CalendarView';
 import CommandPalette from '@/components/CommandPalette';
 import TrashPage from '@/components/TrashPage';
 import { useGamification } from '@/hooks/use-gamification';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree, Quote, Gift, CalendarDays, Trash2, Search } from 'lucide-react';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree, Quote, Gift, CalendarDays, Trash2, Search, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -51,6 +51,8 @@ const Index = () => {
   const [showDontForgetPopup, setShowDontForgetPopup] = useState(false);
   const [dontForgetDismissed, setDontForgetDismissed] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [showPageToggleMenu, setShowPageToggleMenu] = useState(false);
+  const [pageTogglePos, setPageTogglePos] = useState({ x: 0, y: 0 });
 
   // Block UI for blocked minors
   const isBlocked = (profile as any)?.status === 'bloqueado';
@@ -72,7 +74,9 @@ const Index = () => {
   const tasks = useMemo(() => allTasks.filter(t => !(t as any).deleted_at), [allTasks]);
 
   const noxAI = useNoxAI(tasks);
-  const { addPoints } = useGamification();
+  const { addPoints, stats: gamificationStats } = useGamification();
+  const isPremium = (gamificationStats?.premiumDaysRemaining ?? 0) > 0;
+  const isSpecialUser = profile?.email === 'antoniocalvillog.portaceli@fundacionloyola.net';
 
   const { data: countdowns = [] } = useQuery({
     queryKey: ['countdowns', user?.id],
@@ -318,6 +322,20 @@ const Index = () => {
   const scheduleTabEnabled = (settings as any).schedule_tab_enabled || false;
   const navPosition = (settings as any).nav_position || 'bottom';
 
+  // Toggleable pages configuration
+  const TOGGLEABLE_PAGES = [
+    { key: 'tareas_enabled', label: 'Tareas', settingKey: 'tareas_enabled' as const },
+    { key: 'dont_forget_enabled', label: '¡No olvidar!', settingKey: 'dont_forget_enabled' as const },
+    { key: 'pomodoro_enabled', label: 'Temporizador Pomodoro', settingKey: 'pomodoro_enabled' as const },
+    { key: 'notes_enabled', label: 'Notas', settingKey: 'notes_enabled' as const },
+  ];
+
+  const handleMainContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setPageTogglePos({ x: e.clientX, y: e.clientY });
+    setShowPageToggleMenu(true);
+  };
+
   const buildTabs = () => {
     const result: { id: TabType; label: string; shortLabel: string; icon: typeof Home }[] = [
       { id: 'inicio', label: 'Inicio', shortLabel: 'Ini.', icon: Home },
@@ -397,7 +415,7 @@ const Index = () => {
   }
 
   return (
-    <div className={cn(
+    <div onClick={() => showPageToggleMenu && setShowPageToggleMenu(false)} className={cn(
       'min-h-screen flex',
       isLeftNav ? 'flex-row' : 'flex-col',
       isGaming ? 'gaming-bg-container' : designStyle === 'school' ? 'school-bg-container' : 'bg-background'
@@ -471,7 +489,7 @@ const Index = () => {
             </div>
           </header>
 
-          <main className={cn('flex-1 px-4 py-4 overflow-y-auto', !isLeftNav && 'pb-24')}>
+          <main onContextMenu={handleMainContextMenu} className={cn('flex-1 px-4 py-4 overflow-y-auto', !isLeftNav && 'pb-24')}>
             {activeTab === 'inicio' && (
               <div className="space-y-5 animate-slide-up">
                 {/* Greeting */}
@@ -536,20 +554,20 @@ const Index = () => {
             {activeTab === 'deberes' && (
               <TaskList tasks={tasks} type="homework" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
                 triggerLabel={tl.addHomework} emptyMessage={tl.emptyHomework} emptyIcon={PartyPopper}
-                subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} />
+                subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} highlightUrgent={isSpecialUser} />
             )}
 
             {activeTab === 'examenes' && (
               <TaskList tasks={tasks} type="exam" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
                 onToggleStudy={toggleStudy}
                 triggerLabel={tl.addExam} emptyMessage={tl.emptyExam} emptyIcon={FileText}
-                subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} />
+                subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} highlightUrgent={isSpecialUser} />
             )}
 
             {activeTab === 'tareas' && (
               <TaskList tasks={tasks} type="task" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
                 triggerLabel={tl.addTask} emptyMessage={tl.emptyTask} emptyIcon={CheckCircle}
-                subjects={allSubjects} sportTypes={settings.sport_types} />
+                subjects={allSubjects} sportTypes={settings.sport_types} highlightUrgent={isSpecialUser} />
             )}
 
             {activeTab === 'eventos' && (
@@ -628,8 +646,46 @@ const Index = () => {
 
       <CommandPalette tasks={tasks} onNavigate={setActiveTab} />
       <ClassroomPromoDialog onSync={classroom.startSync} />
-      {noxAI.enabled && <NoxAIFab loading={noxAI.loading} recommendation={noxAI.recommendation} tasks={tasks} />}
+      {noxAI.enabled && <NoxAIFab loading={noxAI.loading} recommendation={noxAI.recommendation} tasks={tasks} isPremium={isPremium} />}
       <SupportDialog />
+
+      {/* Page Toggle Context Menu */}
+      {showPageToggleMenu && (
+        <div
+          className="fixed z-[100] bg-card border border-border rounded-xl shadow-xl p-3 space-y-2 min-w-[220px] animate-slide-up"
+          style={{ left: Math.min(pageTogglePos.x, window.innerWidth - 240), top: Math.min(pageTogglePos.y, window.innerHeight - 300) }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs font-bold text-foreground uppercase tracking-wide">Páginas visibles</p>
+            <button onClick={() => setShowPageToggleMenu(false)} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
+          </div>
+          {TOGGLEABLE_PAGES.map(page => {
+            const isOn = page.settingKey === 'pomodoro_enabled' 
+              ? (settings as any)[page.settingKey] !== false
+              : !!(settings as any)[page.settingKey];
+            return (
+              <div key={page.key} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-muted/50">
+                <span className="text-sm font-medium text-foreground">{page.label}</span>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => { updateSettings({ [page.settingKey]: true } as any); }}
+                    className={cn('px-2 py-0.5 rounded text-[10px] font-bold transition-colors',
+                      isOn ? 'bg-green-500/20 text-green-600' : 'bg-muted text-muted-foreground hover:bg-green-500/10'
+                    )}
+                  >ON</button>
+                  <button
+                    onClick={() => { updateSettings({ [page.settingKey]: false } as any); }}
+                    className={cn('px-2 py-0.5 rounded text-[10px] font-bold transition-colors',
+                      !isOn ? 'bg-red-500/20 text-red-600' : 'bg-muted text-muted-foreground hover:bg-red-500/10'
+                    )}
+                  >OFF</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

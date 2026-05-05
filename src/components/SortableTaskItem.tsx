@@ -9,9 +9,10 @@ interface SortableTaskItemProps {
   onDelete: (id: string) => void;
   onEdit: (task: DbTask) => void;
   onToggleStudy?: (id: string) => void;
+  highlightUrgent?: boolean;
 }
 
-const SortableTaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: SortableTaskItemProps) => {
+const SortableTaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy, highlightUrgent }: SortableTaskItemProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
     disabled: task.completed,
@@ -26,7 +27,7 @@ const SortableTaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: S
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <TaskItem task={task} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} onToggleStudy={onToggleStudy} />
+      <TaskItem task={task} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} onToggleStudy={onToggleStudy} highlightUrgent={highlightUrgent} />
     </div>
   );
 };

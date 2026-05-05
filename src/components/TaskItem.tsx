@@ -15,6 +15,7 @@ interface TaskItemProps {
   onDelete: (id: string) => void;
   onEdit: (task: DbTask) => void;
   onToggleStudy?: (id: string) => void;
+  highlightUrgent?: boolean;
 }
 
 const IMPORTANCE_BADGES: Record<string, { label: string; icon: typeof AlertCircle; className: string }> = {
@@ -23,13 +24,30 @@ const IMPORTANCE_BADGES: Record<string, { label: string; icon: typeof AlertCircl
   voluntario: { label: 'Voluntario', icon: CheckCircle, className: 'bg-success/20 text-success border-success/30' },
 };
 
-const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemProps) => {
+const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy, highlightUrgent = false }: TaskItemProps) => {
   const queryClient = useQueryClient();
   const isPast = task.due_date ? new Date(task.due_date) < new Date(new Date().toDateString()) : false;
   const isExam = task.type === 'exam';
   const [gradeInput, setGradeInput] = useState(task.grade || '');
   const [showGradeInput, setShowGradeInput] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
+
+  // Highlight logic: task is due today or tomorrow before 14:30
+  const isUrgentHighlight = (() => {
+    if (!highlightUrgent || !task.due_date || task.completed) return false;
+    const today = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    
+    if (task.due_date === today) return true;
+    if (task.due_date === tomorrowStr) {
+      const time = task.due_time || '23:59';
+      const [h, m] = time.split(':').map(Number);
+      if (h < 14 || (h === 14 && m <= 30)) return true;
+    }
+    return false;
+  })();
 
   const saveGrade = async (grade: string) => {
     await supabase.from('tasks').update({ grade }).eq('id', task.id);
@@ -44,7 +62,8 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy }: TaskItemP
     <>
     <div onClick={() => setShowDetail(true)} className={cn(
       'glass-card rounded-2xl p-4 animate-slide-up transition-all cursor-pointer hover:ring-1 ring-primary/20',
-      task.completed && 'opacity-50'
+      task.completed && 'opacity-50',
+      isUrgentHighlight && 'ring-2 ring-amber-500 border-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]'
     )}>
       <div className="flex items-center gap-3">
         <button onClick={(e) => { e.stopPropagation(); onToggle(task.id); }}
