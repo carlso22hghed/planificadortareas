@@ -23,9 +23,10 @@ interface TaskListProps {
   subjects?: string[];
   sportTypes?: string[];
   groupingMode?: string;
+  highlightUrgent?: boolean;
 }
 
-const TaskList = ({ tasks, type, onAdd, onToggle, onDelete, onUpdate, onToggleStudy, triggerLabel, emptyMessage, emptyIcon: EmptyIcon, subjects, sportTypes, groupingMode = 'none' }: TaskListProps) => {
+const TaskList = ({ tasks, type, onAdd, onToggle, onDelete, onUpdate, onToggleStudy, triggerLabel, emptyMessage, emptyIcon: EmptyIcon, subjects, sportTypes, groupingMode = 'none', highlightUrgent = false }: TaskListProps) => {
   const [editTask, setEditTask] = useState<DbTask | null>(null);
 
   const filtered = tasks
