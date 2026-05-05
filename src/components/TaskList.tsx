@@ -88,7 +88,7 @@ const TaskList = ({ tasks, type, onAdd, onToggle, onDelete, onUpdate, onToggleSt
                 <SortableContext items={groupTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
                   <div className="space-y-2">
                     {groupTasks.map(task => (
-                      <SortableTaskItem key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} onEdit={setEditTask} onToggleStudy={onToggleStudy} />
+                      <SortableTaskItem key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} onEdit={setEditTask} onToggleStudy={onToggleStudy} highlightUrgent={highlightUrgent} />
                     ))}
                   </div>
                 </SortableContext>
@@ -101,14 +101,14 @@ const TaskList = ({ tasks, type, onAdd, onToggle, onDelete, onUpdate, onToggleSt
           <SortableContext items={pendingTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-2">
               {pendingTasks.map(task => (
-                <SortableTaskItem key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} onEdit={setEditTask} onToggleStudy={onToggleStudy} />
+                <SortableTaskItem key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} onEdit={setEditTask} onToggleStudy={onToggleStudy} highlightUrgent={highlightUrgent} />
               ))}
             </div>
           </SortableContext>
           {completedTasks.length > 0 && (
             <div className="space-y-2 mt-3">
               {completedTasks.map(task => (
-                <SortableTaskItem key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} onEdit={setEditTask} onToggleStudy={onToggleStudy} />
+                <SortableTaskItem key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} onEdit={setEditTask} onToggleStudy={onToggleStudy} highlightUrgent={highlightUrgent} />
               ))}
             </div>
           )}
