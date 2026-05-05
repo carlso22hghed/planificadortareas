@@ -62,7 +62,8 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy, highlightUr
     <>
     <div onClick={() => setShowDetail(true)} className={cn(
       'glass-card rounded-2xl p-4 animate-slide-up transition-all cursor-pointer hover:ring-1 ring-primary/20',
-      task.completed && 'opacity-50'
+      task.completed && 'opacity-50',
+      isUrgentHighlight && 'ring-2 ring-amber-500 border-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]'
     )}>
       <div className="flex items-center gap-3">
         <button onClick={(e) => { e.stopPropagation(); onToggle(task.id); }}
