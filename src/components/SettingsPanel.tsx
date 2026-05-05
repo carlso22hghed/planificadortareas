@@ -468,48 +468,12 @@ const SettingsPanel = ({ settings, onUpdate }: SettingsPanelProps) => {
               )}
             </div>
 
-            {/* Tareas Tab */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-              <Label className="cursor-pointer text-sm font-semibold">Pestaña de Tareas</Label>
-              <Switch
-                checked={settings.tareas_enabled}
-                onCheckedChange={checked => onUpdate({ tareas_enabled: checked })}
-              />
-            </div>
-
             {/* Schedule Tab */}
             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
               <Label className="cursor-pointer text-sm font-semibold">Pestaña de Horario (abajo)</Label>
               <Switch
                 checked={settings.schedule_tab_enabled || false}
                 onCheckedChange={checked => onUpdate({ schedule_tab_enabled: checked })}
-              />
-            </div>
-
-            {/* Don't Forget Tab */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-              <Label className="cursor-pointer text-sm font-semibold">Pestaña ¡No olvidar!</Label>
-              <Switch
-                checked={(settings as any).dont_forget_enabled || false}
-                onCheckedChange={checked => onUpdate({ dont_forget_enabled: checked } as any)}
-              />
-            </div>
-
-            {/* Pomodoro Timer */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-              <Label className="cursor-pointer text-sm font-semibold">Temporizador Pomodoro</Label>
-              <Switch
-                checked={(settings as any).pomodoro_enabled !== false}
-                onCheckedChange={checked => onUpdate({ pomodoro_enabled: checked } as any)}
-              />
-            </div>
-
-            {/* Notes Tab */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-              <Label className="cursor-pointer text-sm font-semibold">Pestaña de Notas</Label>
-              <Switch
-                checked={(settings as any).notes_enabled || false}
-                onCheckedChange={checked => onUpdate({ notes_enabled: checked } as any)}
               />
             </div>
 
