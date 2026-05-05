@@ -415,7 +415,7 @@ const Index = () => {
   }
 
   return (
-    <div className={cn(
+    <div onClick={() => showPageToggleMenu && setShowPageToggleMenu(false)} className={cn(
       'min-h-screen flex',
       isLeftNav ? 'flex-row' : 'flex-col',
       isGaming ? 'gaming-bg-container' : designStyle === 'school' ? 'school-bg-container' : 'bg-background'
