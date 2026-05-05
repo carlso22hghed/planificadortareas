@@ -322,6 +322,20 @@ const Index = () => {
   const scheduleTabEnabled = (settings as any).schedule_tab_enabled || false;
   const navPosition = (settings as any).nav_position || 'bottom';
 
+  // Toggleable pages configuration
+  const TOGGLEABLE_PAGES = [
+    { key: 'tareas_enabled', label: 'Tareas', settingKey: 'tareas_enabled' as const },
+    { key: 'dont_forget_enabled', label: '¡No olvidar!', settingKey: 'dont_forget_enabled' as const },
+    { key: 'pomodoro_enabled', label: 'Temporizador Pomodoro', settingKey: 'pomodoro_enabled' as const },
+    { key: 'notes_enabled', label: 'Notas', settingKey: 'notes_enabled' as const },
+  ];
+
+  const handleMainContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setPageTogglePos({ x: e.clientX, y: e.clientY });
+    setShowPageToggleMenu(true);
+  };
+
   const buildTabs = () => {
     const result: { id: TabType; label: string; shortLabel: string; icon: typeof Home }[] = [
       { id: 'inicio', label: 'Inicio', shortLabel: 'Ini.', icon: Home },
