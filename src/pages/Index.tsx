@@ -554,20 +554,20 @@ const Index = () => {
             {activeTab === 'deberes' && (
               <TaskList tasks={tasks} type="homework" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
                 triggerLabel={tl.addHomework} emptyMessage={tl.emptyHomework} emptyIcon={PartyPopper}
-                subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} />
+                subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} highlightUrgent={isSpecialUser} />
             )}
 
             {activeTab === 'examenes' && (
               <TaskList tasks={tasks} type="exam" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
                 onToggleStudy={toggleStudy}
                 triggerLabel={tl.addExam} emptyMessage={tl.emptyExam} emptyIcon={FileText}
-                subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} />
+                subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} highlightUrgent={isSpecialUser} />
             )}
 
             {activeTab === 'tareas' && (
               <TaskList tasks={tasks} type="task" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
                 triggerLabel={tl.addTask} emptyMessage={tl.emptyTask} emptyIcon={CheckCircle}
-                subjects={allSubjects} sportTypes={settings.sport_types} />
+                subjects={allSubjects} sportTypes={settings.sport_types} highlightUrgent={isSpecialUser} />
             )}
 
             {activeTab === 'eventos' && (
