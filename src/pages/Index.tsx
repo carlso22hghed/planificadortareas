@@ -28,7 +28,7 @@ import CalendarView from '@/components/CalendarView';
 import CommandPalette from '@/components/CommandPalette';
 import TrashPage from '@/components/TrashPage';
 import { useGamification } from '@/hooks/use-gamification';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree, Quote, Gift, CalendarDays, Trash2, Search } from 'lucide-react';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree, Quote, Gift, CalendarDays, Trash2, Search, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -51,6 +51,8 @@ const Index = () => {
   const [showDontForgetPopup, setShowDontForgetPopup] = useState(false);
   const [dontForgetDismissed, setDontForgetDismissed] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [showPageToggleMenu, setShowPageToggleMenu] = useState(false);
+  const [pageTogglePos, setPageTogglePos] = useState({ x: 0, y: 0 });
 
   // Block UI for blocked minors
   const isBlocked = (profile as any)?.status === 'bloqueado';
