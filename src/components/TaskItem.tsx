@@ -15,6 +15,7 @@ interface TaskItemProps {
   onDelete: (id: string) => void;
   onEdit: (task: DbTask) => void;
   onToggleStudy?: (id: string) => void;
+  highlightUrgent?: boolean;
 }
 
 const IMPORTANCE_BADGES: Record<string, { label: string; icon: typeof AlertCircle; className: string }> = {
