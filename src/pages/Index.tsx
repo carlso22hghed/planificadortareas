@@ -324,7 +324,7 @@ const Index = () => {
   const navPosition = (settings as any).nav_position || 'bottom';
 
   // Toggleable pages configuration
-  const TOGGLEABLE_PAGES = [
+  const DEFAULT_TOGGLEABLE_PAGES = [
     { key: 'deberes_enabled', label: tl.tabHomework, settingKey: 'deberes_enabled' },
     { key: 'examenes_enabled', label: tl.tabExam, settingKey: 'examenes_enabled' },
     { key: 'tareas_enabled', label: tl.tabTask, settingKey: 'tareas_enabled' },
@@ -339,6 +339,31 @@ const Index = () => {
     { key: 'premios_enabled', label: 'Premios', settingKey: 'premios_enabled' },
     { key: 'papelera_enabled', label: 'Papelera', settingKey: 'papelera_enabled' },
   ];
+
+  const savedOrder: string[] = (settings as any).context_menu_order || [];
+  const TOGGLEABLE_PAGES = useMemo(() => {
+    if (!savedOrder.length) return DEFAULT_TOGGLEABLE_PAGES;
+    const ordered: typeof DEFAULT_TOGGLEABLE_PAGES = [];
+    for (const key of savedOrder) {
+      const found = DEFAULT_TOGGLEABLE_PAGES.find(p => p.key === key);
+      if (found) ordered.push(found);
+    }
+    // Add any new pages not yet in saved order
+    for (const p of DEFAULT_TOGGLEABLE_PAGES) {
+      if (!ordered.find(o => o.key === p.key)) ordered.push(p);
+    }
+    return ordered;
+  }, [savedOrder, isTeacher, tl]);
+
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+
+  const moveMenuItem = useCallback((fromIdx: number, toIdx: number) => {
+    const keys = TOGGLEABLE_PAGES.map(p => p.key);
+    const reordered = [...keys];
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+    updateSettings({ context_menu_order: reordered } as any);
+  }, [TOGGLEABLE_PAGES, updateSettings]);
 
   const handleMainContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
