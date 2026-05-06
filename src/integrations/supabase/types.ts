@@ -434,6 +434,7 @@ export type Database = {
       user_settings: {
         Row: {
           app_name: string
+          context_menu_order: string[]
           created_at: string
           custom_subjects: string[]
           dark_mode: boolean
@@ -458,6 +459,7 @@ export type Database = {
         }
         Insert: {
           app_name?: string
+          context_menu_order?: string[]
           created_at?: string
           custom_subjects?: string[]
           dark_mode?: boolean
@@ -482,6 +484,7 @@ export type Database = {
         }
         Update: {
           app_name?: string
+          context_menu_order?: string[]
           created_at?: string
           custom_subjects?: string[]
           dark_mode?: boolean
