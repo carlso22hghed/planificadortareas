@@ -666,8 +666,8 @@ const Index = () => {
       {/* Page Toggle Context Menu */}
       {showPageToggleMenu && (
         <div
-          className="fixed z-[100] bg-card border border-border rounded-xl shadow-xl p-3 space-y-2 min-w-[220px] animate-slide-up"
-          style={{ left: Math.min(pageTogglePos.x, window.innerWidth - 240), top: Math.min(pageTogglePos.y, window.innerHeight - 300) }}
+          className="fixed z-[100] bg-card border border-border rounded-xl shadow-xl p-3 space-y-1 min-w-[240px] max-h-[70vh] overflow-y-auto animate-slide-up"
+          style={{ left: Math.min(pageTogglePos.x, window.innerWidth - 260), top: Math.min(pageTogglePos.y, window.innerHeight - 500) }}
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-1">
@@ -675,26 +675,14 @@ const Index = () => {
             <button onClick={() => setShowPageToggleMenu(false)} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
           </div>
           {TOGGLEABLE_PAGES.map(page => {
-            const isOn = page.settingKey === 'pomodoro_enabled' 
-              ? (settings as any)[page.settingKey] !== false
-              : !!(settings as any)[page.settingKey];
+            const isOn = (settings as any)[page.settingKey] !== false;
             return (
               <div key={page.key} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-muted/50">
                 <span className="text-sm font-medium text-foreground">{page.label}</span>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => { updateSettings({ [page.settingKey]: true } as any); }}
-                    className={cn('px-2 py-0.5 rounded text-[10px] font-bold transition-colors',
-                      isOn ? 'bg-green-500/20 text-green-600' : 'bg-muted text-muted-foreground hover:bg-green-500/10'
-                    )}
-                  >ON</button>
-                  <button
-                    onClick={() => { updateSettings({ [page.settingKey]: false } as any); }}
-                    className={cn('px-2 py-0.5 rounded text-[10px] font-bold transition-colors',
-                      !isOn ? 'bg-red-500/20 text-red-600' : 'bg-muted text-muted-foreground hover:bg-red-500/10'
-                    )}
-                  >OFF</button>
-                </div>
+                <Switch
+                  checked={isOn}
+                  onCheckedChange={(checked) => updateSettings({ [page.settingKey]: checked } as any)}
+                />
               </div>
             );
           })}
