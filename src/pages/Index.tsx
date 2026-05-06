@@ -699,11 +699,23 @@ const Index = () => {
             <p className="text-xs font-bold text-foreground uppercase tracking-wide">Páginas visibles</p>
             <button onClick={() => setShowPageToggleMenu(false)} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
           </div>
-          {TOGGLEABLE_PAGES.map(page => {
+          {TOGGLEABLE_PAGES.map((page, idx) => {
             const isOn = (settings as any)[page.settingKey] !== false;
             return (
-              <div key={page.key} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-muted/50">
-                <span className="text-sm font-medium text-foreground">{page.label}</span>
+              <div key={page.key}
+                draggable
+                onDragStart={() => setDragIdx(idx)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={() => { if (dragIdx !== null && dragIdx !== idx) moveMenuItem(dragIdx, idx); setDragIdx(null); }}
+                onDragEnd={() => setDragIdx(null)}
+                className={cn(
+                  'flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-muted/50 cursor-grab active:cursor-grabbing select-none',
+                  dragIdx === idx && 'opacity-50'
+                )}>
+                <span className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <span className="text-muted-foreground text-xs">⠿</span>
+                  {page.label}
+                </span>
                 <Switch
                   checked={isOn}
                   onCheckedChange={(checked) => updateSettings({ [page.settingKey]: checked } as any)}
