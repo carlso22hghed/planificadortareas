@@ -325,10 +325,19 @@ const Index = () => {
 
   // Toggleable pages configuration
   const TOGGLEABLE_PAGES = [
-    { key: 'tareas_enabled', label: 'Tareas', settingKey: 'tareas_enabled' as const },
-    { key: 'dont_forget_enabled', label: '¡No olvidar!', settingKey: 'dont_forget_enabled' as const },
-    { key: 'pomodoro_enabled', label: 'Temporizador Pomodoro', settingKey: 'pomodoro_enabled' as const },
-    { key: 'notes_enabled', label: 'Notas', settingKey: 'notes_enabled' as const },
+    { key: 'deberes_enabled', label: tl.tabHomework, settingKey: 'deberes_enabled' },
+    { key: 'examenes_enabled', label: tl.tabExam, settingKey: 'examenes_enabled' },
+    { key: 'tareas_enabled', label: tl.tabTask, settingKey: 'tareas_enabled' },
+    { key: 'eventos_enabled', label: 'Eventos', settingKey: 'eventos_enabled' },
+    { key: 'partidos_enabled', label: 'Partidos', settingKey: 'partidos_enabled' },
+    { key: 'horario_enabled', label: isTeacher ? 'Agenda' : 'Horario', settingKey: 'schedule_tab_enabled' },
+    { key: 'dont_forget_enabled', label: '¡No olvidar!', settingKey: 'dont_forget_enabled' },
+    { key: 'notes_enabled', label: 'Notas', settingKey: 'notes_enabled' },
+    { key: 'pomodoro_enabled', label: 'Pomodoro', settingKey: 'pomodoro_enabled' },
+    { key: 'productividad_enabled', label: 'Progreso', settingKey: 'productividad_enabled' },
+    { key: 'calendario_enabled', label: 'Calendario', settingKey: 'calendario_enabled' },
+    { key: 'premios_enabled', label: 'Premios', settingKey: 'premios_enabled' },
+    { key: 'papelera_enabled', label: 'Papelera', settingKey: 'papelera_enabled' },
   ];
 
   const handleMainContextMenu = (e: React.MouseEvent) => {
