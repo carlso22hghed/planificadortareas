@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { Switch } from '@/components/ui/switch';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
@@ -76,7 +77,7 @@ const Index = () => {
   const noxAI = useNoxAI(tasks);
   const { addPoints, stats: gamificationStats } = useGamification();
   const isPremium = (gamificationStats?.premiumDaysRemaining ?? 0) > 0;
-  const isSpecialUser = profile?.email === 'antoniocalvillog.portaceli@fundacionloyola.net';
+  
 
   const { data: countdowns = [] } = useQuery({
     queryKey: ['countdowns', user?.id],
@@ -324,10 +325,19 @@ const Index = () => {
 
   // Toggleable pages configuration
   const TOGGLEABLE_PAGES = [
-    { key: 'tareas_enabled', label: 'Tareas', settingKey: 'tareas_enabled' as const },
-    { key: 'dont_forget_enabled', label: '¡No olvidar!', settingKey: 'dont_forget_enabled' as const },
-    { key: 'pomodoro_enabled', label: 'Temporizador Pomodoro', settingKey: 'pomodoro_enabled' as const },
-    { key: 'notes_enabled', label: 'Notas', settingKey: 'notes_enabled' as const },
+    { key: 'deberes_enabled', label: tl.tabHomework, settingKey: 'deberes_enabled' },
+    { key: 'examenes_enabled', label: tl.tabExam, settingKey: 'examenes_enabled' },
+    { key: 'tareas_enabled', label: tl.tabTask, settingKey: 'tareas_enabled' },
+    { key: 'eventos_enabled', label: 'Eventos', settingKey: 'eventos_enabled' },
+    { key: 'partidos_enabled', label: 'Partidos', settingKey: 'partidos_enabled' },
+    { key: 'horario_enabled', label: isTeacher ? 'Agenda' : 'Horario', settingKey: 'schedule_tab_enabled' },
+    { key: 'dont_forget_enabled', label: '¡No olvidar!', settingKey: 'dont_forget_enabled' },
+    { key: 'notes_enabled', label: 'Notas', settingKey: 'notes_enabled' },
+    { key: 'pomodoro_enabled', label: 'Pomodoro', settingKey: 'pomodoro_enabled' },
+    { key: 'productividad_enabled', label: 'Progreso', settingKey: 'productividad_enabled' },
+    { key: 'calendario_enabled', label: 'Calendario', settingKey: 'calendario_enabled' },
+    { key: 'premios_enabled', label: 'Premios', settingKey: 'premios_enabled' },
+    { key: 'papelera_enabled', label: 'Papelera', settingKey: 'papelera_enabled' },
   ];
 
   const handleMainContextMenu = (e: React.MouseEvent) => {
@@ -336,26 +346,30 @@ const Index = () => {
     setShowPageToggleMenu(true);
   };
 
+  const isPageEnabled = (key: string) => (settings as any)[key] !== false;
+
   const buildTabs = () => {
     const result: { id: TabType; label: string; shortLabel: string; icon: typeof Home }[] = [
       { id: 'inicio', label: 'Inicio', shortLabel: 'Ini.', icon: Home },
-      { id: 'deberes', label: tl.tabHomework, shortLabel: tl.shortHomework, icon: BookOpen },
-      { id: 'examenes', label: tl.tabExam, shortLabel: tl.shortExam, icon: GraduationCap },
     ];
+    if (isPageEnabled('deberes_enabled')) result.push({ id: 'deberes', label: tl.tabHomework, shortLabel: tl.shortHomework, icon: BookOpen });
+    if (isPageEnabled('examenes_enabled')) result.push({ id: 'examenes', label: tl.tabExam, shortLabel: tl.shortExam, icon: GraduationCap });
     if (settings.tareas_enabled) result.push({ id: 'tareas', label: tl.tabTask, shortLabel: tl.shortTask, icon: ClipboardList });
-    if (settings.partidos_mode === 'replace') {
-      result.push({ id: 'partidos', label: 'Partidos', shortLabel: 'Part.', icon: Trophy });
-    } else {
-      result.push({ id: 'eventos', label: 'Eventos', shortLabel: 'Even.', icon: Calendar });
-      if (settings.partidos_mode === 'new_tab') result.push({ id: 'partidos', label: 'Partidos', shortLabel: 'Part.', icon: Trophy });
+    if (isPageEnabled('eventos_enabled')) {
+      if (settings.partidos_mode === 'replace') {
+        result.push({ id: 'partidos', label: 'Partidos', shortLabel: 'Part.', icon: Trophy });
+      } else {
+        result.push({ id: 'eventos', label: 'Eventos', shortLabel: 'Even.', icon: Calendar });
+        if (settings.partidos_mode === 'new_tab' && isPageEnabled('partidos_enabled')) result.push({ id: 'partidos', label: 'Partidos', shortLabel: 'Part.', icon: Trophy });
+      }
     }
     if (scheduleTabEnabled) result.push({ id: 'horario', label: isTeacher ? 'Agenda' : 'Horario', shortLabel: isTeacher ? 'Ag.' : 'Hor.', icon: CalendarClock });
     if ((settings as any).dont_forget_enabled) result.push({ id: 'no-olvidar', label: '¡No olvidar!', shortLabel: '¡No!', icon: AlertTriangle });
     if ((settings as any).notes_enabled) result.push({ id: 'notas', label: 'Notas', shortLabel: 'Not.', icon: FileText });
-    result.push({ id: 'productividad', label: 'Progreso', shortLabel: 'Prog.', icon: BarChart3 });
-    result.push({ id: 'calendario', label: 'Calendario', shortLabel: 'Cal.', icon: CalendarDays });
-    result.push({ id: 'premios', label: 'Premios', shortLabel: 'Prem.', icon: Gift });
-    result.push({ id: 'papelera', label: 'Papelera', shortLabel: 'Pap.', icon: Trash2 });
+    if (isPageEnabled('productividad_enabled')) result.push({ id: 'productividad', label: 'Progreso', shortLabel: 'Prog.', icon: BarChart3 });
+    if (isPageEnabled('calendario_enabled')) result.push({ id: 'calendario', label: 'Calendario', shortLabel: 'Cal.', icon: CalendarDays });
+    if (isPageEnabled('premios_enabled')) result.push({ id: 'premios', label: 'Premios', shortLabel: 'Prem.', icon: Gift });
+    if (isPageEnabled('papelera_enabled')) result.push({ id: 'papelera', label: 'Papelera', shortLabel: 'Pap.', icon: Trash2 });
     return result;
   };
 
@@ -554,20 +568,20 @@ const Index = () => {
             {activeTab === 'deberes' && (
               <TaskList tasks={tasks} type="homework" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
                 triggerLabel={tl.addHomework} emptyMessage={tl.emptyHomework} emptyIcon={PartyPopper}
-                subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} highlightUrgent={isSpecialUser} />
+                subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} highlightUrgent />
             )}
 
             {activeTab === 'examenes' && (
               <TaskList tasks={tasks} type="exam" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
                 onToggleStudy={toggleStudy}
                 triggerLabel={tl.addExam} emptyMessage={tl.emptyExam} emptyIcon={FileText}
-                subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} highlightUrgent={isSpecialUser} />
+                subjects={allSubjects} sportTypes={settings.sport_types} groupingMode={(settings as any).grouping_mode || 'subject_title'} highlightUrgent />
             )}
 
             {activeTab === 'tareas' && (
               <TaskList tasks={tasks} type="task" onAdd={addTask} onToggle={toggleTask} onDelete={deleteTask} onUpdate={updateTask}
                 triggerLabel={tl.addTask} emptyMessage={tl.emptyTask} emptyIcon={CheckCircle}
-                subjects={allSubjects} sportTypes={settings.sport_types} highlightUrgent={isSpecialUser} />
+                subjects={allSubjects} sportTypes={settings.sport_types} highlightUrgent />
             )}
 
             {activeTab === 'eventos' && (
@@ -652,8 +666,8 @@ const Index = () => {
       {/* Page Toggle Context Menu */}
       {showPageToggleMenu && (
         <div
-          className="fixed z-[100] bg-card border border-border rounded-xl shadow-xl p-3 space-y-2 min-w-[220px] animate-slide-up"
-          style={{ left: Math.min(pageTogglePos.x, window.innerWidth - 240), top: Math.min(pageTogglePos.y, window.innerHeight - 300) }}
+          className="fixed z-[100] bg-card border border-border rounded-xl shadow-xl p-3 space-y-1 min-w-[240px] max-h-[70vh] overflow-y-auto animate-slide-up"
+          style={{ left: Math.min(pageTogglePos.x, window.innerWidth - 260), top: Math.min(pageTogglePos.y, window.innerHeight - 500) }}
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-1">
@@ -661,26 +675,14 @@ const Index = () => {
             <button onClick={() => setShowPageToggleMenu(false)} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
           </div>
           {TOGGLEABLE_PAGES.map(page => {
-            const isOn = page.settingKey === 'pomodoro_enabled' 
-              ? (settings as any)[page.settingKey] !== false
-              : !!(settings as any)[page.settingKey];
+            const isOn = (settings as any)[page.settingKey] !== false;
             return (
               <div key={page.key} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-muted/50">
                 <span className="text-sm font-medium text-foreground">{page.label}</span>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => { updateSettings({ [page.settingKey]: true } as any); }}
-                    className={cn('px-2 py-0.5 rounded text-[10px] font-bold transition-colors',
-                      isOn ? 'bg-green-500/20 text-green-600' : 'bg-muted text-muted-foreground hover:bg-green-500/10'
-                    )}
-                  >ON</button>
-                  <button
-                    onClick={() => { updateSettings({ [page.settingKey]: false } as any); }}
-                    className={cn('px-2 py-0.5 rounded text-[10px] font-bold transition-colors',
-                      !isOn ? 'bg-red-500/20 text-red-600' : 'bg-muted text-muted-foreground hover:bg-red-500/10'
-                    )}
-                  >OFF</button>
-                </div>
+                <Switch
+                  checked={isOn}
+                  onCheckedChange={(checked) => updateSettings({ [page.settingKey]: checked } as any)}
+                />
               </div>
             );
           })}
