@@ -77,7 +77,7 @@ const Index = () => {
   const noxAI = useNoxAI(tasks);
   const { addPoints, stats: gamificationStats } = useGamification();
   const isPremium = (gamificationStats?.premiumDaysRemaining ?? 0) > 0;
-  const isSpecialUser = profile?.email === 'antoniocalvillog.portaceli@fundacionloyola.net';
+  
 
   const { data: countdowns = [] } = useQuery({
     queryKey: ['countdowns', user?.id],
