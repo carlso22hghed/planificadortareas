@@ -577,9 +577,13 @@ const Index = () => {
                   </button>
                 </div>
 
-                {/* Template button */}
-                <div className="flex justify-center">
+                {/* Quick Capture */}
+                <QuickCapture onAdd={addTask} />
+
+                {/* Share & Template buttons */}
+                <div className="flex justify-center gap-2">
                   <TaskTemplateDialog onAdd={addTask} subjects={allSubjects} />
+                  <ShareListButton />
                 </div>
 
                 {/* Pomodoro Timer */}
