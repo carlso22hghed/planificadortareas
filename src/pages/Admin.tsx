@@ -20,7 +20,9 @@ const Admin = () => {
   const [selectedUser, setSelectedUser] = useState<DbProfile | null>(null);
   const [activeTab, setActiveTab] = useState<'users' | 'support'>('users');
   const [search, setSearch] = useState('');
-  const [sortMode, setSortMode] = useState<SortMode>('alpha');
+  const [sortMode, setSortMode] = useState<SortMode>(() => {
+    return (localStorage.getItem('admin-sort-mode') as SortMode) || 'alpha';
+  });
   const [lastActivity, setLastActivity] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -101,7 +103,7 @@ const Admin = () => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por nombre o correo..." className="pl-9 h-9 rounded-xl text-sm" />
               </div>
-              <Select value={sortMode} onValueChange={v => setSortMode(v as SortMode)}>
+              <Select value={sortMode} onValueChange={v => { setSortMode(v as SortMode); localStorage.setItem('admin-sort-mode', v); }}>
                 <SelectTrigger className="w-auto h-9 gap-1 rounded-xl text-xs">
                   <ArrowUpDown className="w-3 h-3" />
                   <SelectValue />

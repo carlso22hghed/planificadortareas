@@ -29,7 +29,9 @@ import CalendarView from '@/components/CalendarView';
 import CommandPalette from '@/components/CommandPalette';
 import TrashPage from '@/components/TrashPage';
 import { useGamification } from '@/hooks/use-gamification';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree, Quote, Gift, CalendarDays, Trash2, Search, ToggleLeft, ToggleRight } from 'lucide-react';
+import QuickCapture from '@/components/QuickCapture';
+import ShareListButton from '@/components/ShareListButton';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree, Quote, Gift, CalendarDays, Trash2, Search, ToggleLeft, ToggleRight, RotateCcw } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -575,9 +577,13 @@ const Index = () => {
                   </button>
                 </div>
 
-                {/* Template button */}
-                <div className="flex justify-center">
+                {/* Quick Capture */}
+                <QuickCapture onAdd={addTask} />
+
+                {/* Share & Template buttons */}
+                <div className="flex justify-center gap-2">
                   <TaskTemplateDialog onAdd={addTask} subjects={allSubjects} />
+                  <ShareListButton />
                 </div>
 
                 {/* Pomodoro Timer */}
@@ -715,7 +721,10 @@ const Index = () => {
         >
           <div className="flex items-center justify-between mb-1">
             <p className="text-xs font-bold text-foreground uppercase tracking-wide">Páginas visibles</p>
-            <button onClick={() => setShowPageToggleMenu(false)} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
+            <div className="flex items-center gap-1">
+              <button onClick={() => updateSettings({ context_menu_order: [] } as any)} className="text-muted-foreground hover:text-foreground" title="Restablecer orden"><RotateCcw className="w-3.5 h-3.5" /></button>
+              <button onClick={() => setShowPageToggleMenu(false)} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
+            </div>
           </div>
           {TOGGLEABLE_PAGES.map((page, idx) => {
             const isOn = (settings as any)[page.settingKey] !== false;

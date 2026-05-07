@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { DbTask, DbCountdown, DbSettings, DbProfile, TabType } from '@/types/app';
 import ScheduleInline from '@/components/ScheduleInline';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, ArrowLeft, AlertTriangle, FileText, BarChart3, CalendarDays, Gift, Trash2 } from 'lucide-react';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, ArrowLeft, AlertTriangle, FileText, BarChart3, CalendarDays, Gift, Trash2, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -12,6 +12,12 @@ interface AdminUserViewProps {
   profile: DbProfile;
   onBack: () => void;
 }
+
+const TAB_ICONS: Record<string, typeof Home> = {
+  inicio: Home, deberes: BookOpen, examenes: GraduationCap, tareas: ClipboardList,
+  eventos: Calendar, partidos: Trophy, horario: CalendarClock, 'no-olvidar': AlertTriangle,
+  notas: FileText, productividad: BarChart3, calendario: CalendarDays, premios: Gift, papelera: Trash2,
+};
 
 const AdminUserViewInner = ({ userId, profile, onBack }: AdminUserViewProps) => {
   const [activeTab, setActiveTab] = useState<TabType>('inicio');
@@ -86,262 +92,328 @@ const AdminUserViewInner = ({ userId, profile, onBack }: AdminUserViewProps) => 
   const pendingHomework = tasks.filter(t => t.type === 'homework' && !t.completed).length;
   const pendingExams = tasks.filter(t => t.type === 'exam' && !t.completed).length;
 
+  // Build tabs matching user's enabled pages and order
+  const isPageEnabled = (key: string) => (settings as any)[key] !== false;
+  const navPosition = (settings as any).nav_position || 'bottom';
+  const isLeftNav = navPosition === 'left';
+
+  const DEFAULT_TAB_KEYS = [
+    { key: 'deberes_enabled', id: 'deberes' as TabType, label: 'Deberes', shortLabel: 'Deb.', icon: BookOpen },
+    { key: 'examenes_enabled', id: 'examenes' as TabType, label: 'Exámenes', shortLabel: 'Exám.', icon: GraduationCap },
+    { key: 'tareas_enabled', id: 'tareas' as TabType, label: 'Tareas', shortLabel: 'Tar.', icon: ClipboardList },
+    { key: 'eventos_enabled', id: 'eventos' as TabType, label: 'Eventos', shortLabel: 'Even.', icon: Calendar },
+    { key: 'partidos_enabled', id: 'partidos' as TabType, label: 'Partidos', shortLabel: 'Part.', icon: Trophy },
+    { key: 'schedule_tab_enabled', id: 'horario' as TabType, label: 'Horario', shortLabel: 'Hor.', icon: CalendarClock },
+    { key: 'dont_forget_enabled', id: 'no-olvidar' as TabType, label: '¡No olvidar!', shortLabel: '¡No!', icon: AlertTriangle },
+    { key: 'notes_enabled', id: 'notas' as TabType, label: 'Notas', shortLabel: 'Not.', icon: FileText },
+    { key: 'pomodoro_enabled', id: null, label: 'Pomodoro', shortLabel: 'Pom.', icon: Timer },
+    { key: 'productividad_enabled', id: 'productividad' as TabType, label: 'Progreso', shortLabel: 'Prog.', icon: BarChart3 },
+    { key: 'calendario_enabled', id: 'calendario' as TabType, label: 'Calendario', shortLabel: 'Cal.', icon: CalendarDays },
+    { key: 'premios_enabled', id: 'premios' as TabType, label: 'Premios', shortLabel: 'Prem.', icon: Gift },
+    { key: 'papelera_enabled', id: 'papelera' as TabType, label: 'Papelera', shortLabel: 'Pap.', icon: Trash2 },
+  ];
+
+  // Apply user's context_menu_order
+  const savedOrder: string[] = (settings as any).context_menu_order || [];
+  const orderedKeys = savedOrder.length > 0
+    ? [...savedOrder.map(k => DEFAULT_TAB_KEYS.find(t => t.key === k)).filter(Boolean), ...DEFAULT_TAB_KEYS.filter(t => !savedOrder.includes(t.key))]
+    : DEFAULT_TAB_KEYS;
+
   const buildTabs = () => {
-    const result: { id: TabType; label: string; icon: typeof Home }[] = [
-      { id: 'inicio', label: 'Inicio', icon: Home },
-      { id: 'deberes', label: 'Deberes', icon: BookOpen },
-      { id: 'examenes', label: 'Exámenes', icon: GraduationCap },
-      { id: 'tareas', label: 'Tareas', icon: ClipboardList },
-      { id: 'eventos', label: 'Eventos', icon: Calendar },
-      { id: 'partidos', label: 'Partidos', icon: Trophy },
-      { id: 'horario' as TabType, label: 'Horario', icon: CalendarClock },
-      { id: 'no-olvidar' as TabType, label: '¡No olvidar!', icon: AlertTriangle },
-      { id: 'notas' as TabType, label: 'Notas', icon: FileText },
-      { id: 'productividad' as TabType, label: 'Progreso', icon: BarChart3 },
-      { id: 'calendario' as TabType, label: 'Calendario', icon: CalendarDays },
-      { id: 'premios' as TabType, label: 'Premios', icon: Gift },
-      { id: 'papelera' as TabType, label: 'Papelera', icon: Trash2 },
+    const result: { id: TabType; label: string; shortLabel: string; icon: typeof Home }[] = [
+      { id: 'inicio', label: 'Inicio', shortLabel: 'Ini.', icon: Home },
     ];
+    for (const tab of orderedKeys) {
+      if (!tab || !tab.id) continue; // skip pomodoro etc
+      const settingKey = tab.key;
+      // Handle eventos/partidos mode
+      if (settingKey === 'eventos_enabled') {
+        if (!isPageEnabled('eventos_enabled')) continue;
+        if ((settings as any).partidos_mode === 'replace') {
+          result.push({ id: 'partidos', label: 'Partidos', shortLabel: 'Part.', icon: Trophy });
+        } else {
+          result.push({ id: 'eventos' as TabType, label: 'Eventos', shortLabel: 'Even.', icon: Calendar });
+        }
+        continue;
+      }
+      if (settingKey === 'partidos_enabled') {
+        if ((settings as any).partidos_mode === 'new_tab' && isPageEnabled('partidos_enabled')) {
+          result.push({ id: 'partidos', label: 'Partidos', shortLabel: 'Part.', icon: Trophy });
+        }
+        continue;
+      }
+      if (!isPageEnabled(settingKey)) continue;
+      result.push({ id: tab.id!, label: tab.label, shortLabel: tab.shortLabel, icon: tab.icon });
+    }
     return result;
   };
 
   const currentTabs = buildTabs();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-4xl mx-auto">
-      <header className="gradient-hero px-5 pt-8 pb-6 rounded-b-3xl flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={onBack} className="text-primary-foreground hover:bg-primary-foreground/20">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-extrabold text-primary-foreground">{settings.app_name}</h1>
-            <p className="text-primary-foreground/70 text-sm font-medium mt-0.5">{settings.school_name}</p>
-            <p className="text-primary-foreground/60 text-xs mt-0.5">Vista de {profile.display_name} 👁️ (Solo lectura)</p>
+    <div className={cn('min-h-screen bg-background flex', isLeftNav ? 'flex-row' : 'flex-col')}>
+      {/* Left sidebar (if user uses left nav) */}
+      {isLeftNav && (
+        <nav className="shrink-0 bg-card/90 backdrop-blur-md border-r border-border flex flex-col pt-4 w-48">
+          <div className="px-4 pb-4 flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0">
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <span className="text-xs font-bold text-foreground truncate">{profile.display_name}</span>
           </div>
-        </div>
-      </header>
-
-      {/* Scrollable tab bar */}
-      <div className="border-b border-border bg-card/50 overflow-x-auto">
-        <div className="flex min-w-max px-2">
           {currentTabs.map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                className={cn('flex items-center gap-1.5 px-3 py-2.5 text-xs font-bold uppercase tracking-wide whitespace-nowrap border-b-2 transition-colors',
-                  isActive ? 'text-primary border-primary' : 'text-muted-foreground border-transparent hover:text-foreground')}>
-                <Icon className="w-4 h-4" />
-                {tab.label}
+                className={cn(
+                  'flex items-center gap-2 transition-colors w-full py-3 px-4',
+                  isActive ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                )}>
+                <Icon className="w-5 h-5 shrink-0" />
+                <span className="text-xs font-bold uppercase tracking-wide whitespace-nowrap">{tab.label}</span>
               </button>
             );
           })}
-        </div>
-      </div>
+        </nav>
+      )}
 
-      <main className="flex-1 px-4 py-4 overflow-y-auto pb-8">
-        {activeTab === 'inicio' && (
-          <div className="space-y-5 animate-slide-up">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="glass-card rounded-2xl p-4 text-center">
-                <p className="text-3xl font-extrabold text-primary">{pendingHomework}</p>
-                <p className="text-xs text-muted-foreground font-semibold mt-1">Deberes pendientes</p>
-              </div>
-              <div className="glass-card rounded-2xl p-4 text-center">
-                <p className="text-3xl font-extrabold text-exam">{pendingExams}</p>
-                <p className="text-xs text-muted-foreground font-semibold mt-1">Exámenes próximos</p>
-              </div>
-            </div>
-            {/* Gamification summary */}
-            {gamification && (
-              <div className="glass-card rounded-2xl p-4">
-                <h3 className="font-bold text-sm mb-2">🏆 Gamificación</h3>
-                <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                  <div><p className="text-lg font-bold text-primary">{gamification.level}</p><p className="text-muted-foreground">Nivel</p></div>
-                  <div><p className="text-lg font-bold text-primary">{gamification.total_points}</p><p className="text-muted-foreground">Puntos</p></div>
-                  <div><p className="text-lg font-bold text-primary">{gamification.tasks_completed_total}</p><p className="text-muted-foreground">Completadas</p></div>
-                </div>
-                <div className="mt-2 text-xs text-muted-foreground">
-                  Premium: {gamification.premium_days_remaining > 0 ? `${gamification.premium_days_remaining} días` : 'No'} · Referidos: {gamification.referral_count}
-                </div>
-              </div>
+      <div className={cn('flex-1 flex flex-col max-w-4xl', !isLeftNav && 'mx-auto w-full')}>
+        <header className="gradient-hero px-5 pt-8 pb-6 rounded-b-3xl flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            {!isLeftNav && (
+              <Button variant="ghost" size="icon" onClick={onBack} className="text-primary-foreground hover:bg-primary-foreground/20">
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
             )}
-            {/* Badges */}
-            {badges.length > 0 && (
-              <div className="glass-card rounded-2xl p-4">
-                <h3 className="font-bold text-sm mb-2">🎖️ Insignias ({badges.length})</h3>
-                <div className="flex flex-wrap gap-2">
-                  {badges.map((b: any) => (
-                    <span key={b.id} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-xs">
-                      {b.badge_icon} {b.badge_name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {/* Countdowns */}
             <div>
-              <h2 className="font-bold text-foreground mb-3">⏳ Contadores</h2>
-              {countdowns.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Sin contadores</p>
-              ) : (
-                <div className="space-y-2">
-                  {countdowns.map(c => (
-                    <div key={c.id} className="glass-card rounded-2xl p-4">
-                      <p className="font-semibold text-sm">{c.name}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(c.target_date).toLocaleDateString('es-ES')} · {c.target_time}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            {/* Settings overview */}
-            <div className="glass-card rounded-2xl p-4">
-              <h3 className="font-bold text-sm mb-2">⚙️ Ajustes del usuario</h3>
-              <div className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
-                <span>Tema: {(settings as any).theme}</span>
-                <span>Estilo: {(settings as any).design_style}</span>
-                <span>Nav: {(settings as any).nav_position}</span>
-                <span>Fuente: {(settings as any).font_family}</span>
-                <span>Asignaturas: {settings.enabled_subjects?.length || 0}</span>
-                <span>Deportes: {settings.sport_types?.length || 0}</span>
-              </div>
+              <h1 className="text-xl font-extrabold text-primary-foreground">{(settings as any).app_name}</h1>
+              <p className="text-primary-foreground/70 text-sm font-medium mt-0.5">{(settings as any).school_name}</p>
+              <p className="text-primary-foreground/60 text-xs mt-0.5">Vista de {profile.display_name} 👁️ (Solo lectura)</p>
             </div>
           </div>
-        )}
+        </header>
 
-        {activeTab === 'deberes' && <ReadOnlyTaskList tasks={tasks} type="homework" groupingMode={(settings as any).grouping_mode} />}
-        {activeTab === 'examenes' && <ReadOnlyTaskList tasks={tasks} type="exam" groupingMode={(settings as any).grouping_mode} />}
-        {activeTab === 'tareas' && <ReadOnlyTaskList tasks={tasks} type="task" />}
-        {activeTab === 'eventos' && <ReadOnlyTaskList tasks={tasks} type="event" />}
-        {activeTab === 'partidos' && <ReadOnlyTaskList tasks={tasks} type="match" />}
-        {activeTab === ('horario' as TabType) && <ScheduleInline userId={userId} readOnly />}
-
-        {activeTab === ('no-olvidar' as TabType) && (
-          <div className="space-y-2">
-            <h2 className="font-bold text-foreground mb-3">🔴 ¡No olvidar!</h2>
-            {dontForgetItems.length === 0 ? <p className="text-sm text-muted-foreground text-center py-8">Sin recordatorios</p> : (
-              dontForgetItems.map((item: any) => (
-                <div key={item.id} className="glass-card rounded-2xl p-4 border-l-4 border-destructive">
-                  <p className="font-semibold text-sm">{item.content}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{new Date(item.created_at).toLocaleDateString('es-ES')}</p>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {activeTab === ('notas' as TabType) && (
-          <div className="space-y-4">
-            <h2 className="font-bold text-foreground mb-3">📝 Notas escritas ({writtenNotes.length})</h2>
-            {writtenNotes.map((n: any) => (
-              <div key={n.id} className="glass-card rounded-2xl p-4">
-                <p className="font-semibold text-sm">{n.title}</p>
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-3">{n.content}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">{new Date(n.created_at).toLocaleDateString('es-ES')}</p>
-              </div>
-            ))}
-            <h2 className="font-bold text-foreground mb-3 mt-6">🎙️ Notas de voz ({voiceNotes.length})</h2>
-            {voiceNotes.map((n: any) => (
-              <div key={n.id} className="glass-card rounded-2xl p-4">
-                <p className="font-semibold text-sm">{n.title}</p>
-                <p className="text-xs text-muted-foreground">{n.duration_seconds ? `${Math.floor(n.duration_seconds / 60)}:${String(n.duration_seconds % 60).padStart(2, '0')}` : 'Sin duración'}</p>
-                {n.audio_url && <audio controls src={n.audio_url} className="mt-2 w-full h-8" />}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {activeTab === ('productividad' as TabType) && (
-          <div className="space-y-4">
-            <h2 className="font-bold text-foreground mb-3">📊 Progreso</h2>
-            {gamification && (
+        <main className={cn('flex-1 px-4 py-4 overflow-y-auto', !isLeftNav && 'pb-24')}>
+          {activeTab === 'inicio' && (
+            <div className="space-y-5 animate-slide-up">
               <div className="grid grid-cols-2 gap-3">
                 <div className="glass-card rounded-2xl p-4 text-center">
-                  <p className="text-2xl font-bold text-primary">{gamification.level}</p>
-                  <p className="text-xs text-muted-foreground">Nivel</p>
+                  <p className="text-3xl font-extrabold text-primary">{pendingHomework}</p>
+                  <p className="text-xs text-muted-foreground font-semibold mt-1">Deberes pendientes</p>
                 </div>
                 <div className="glass-card rounded-2xl p-4 text-center">
-                  <p className="text-2xl font-bold text-primary">{gamification.total_points}</p>
-                  <p className="text-xs text-muted-foreground">Puntos totales</p>
-                </div>
-                <div className="glass-card rounded-2xl p-4 text-center">
-                  <p className="text-2xl font-bold text-primary">{gamification.tasks_completed_total}</p>
-                  <p className="text-xs text-muted-foreground">Tareas completadas</p>
-                </div>
-                <div className="glass-card rounded-2xl p-4 text-center">
-                  <p className="text-2xl font-bold text-primary">{gamification.referral_count}</p>
-                  <p className="text-xs text-muted-foreground">Referidos</p>
+                  <p className="text-3xl font-extrabold text-exam">{pendingExams}</p>
+                  <p className="text-xs text-muted-foreground font-semibold mt-1">Exámenes próximos</p>
                 </div>
               </div>
-            )}
-          </div>
-        )}
+              {gamification && (
+                <div className="glass-card rounded-2xl p-4">
+                  <h3 className="font-bold text-sm mb-2">🏆 Gamificación</h3>
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div><p className="text-lg font-bold text-primary">{gamification.level}</p><p className="text-muted-foreground">Nivel</p></div>
+                    <div><p className="text-lg font-bold text-primary">{gamification.total_points}</p><p className="text-muted-foreground">Puntos</p></div>
+                    <div><p className="text-lg font-bold text-primary">{gamification.tasks_completed_total}</p><p className="text-muted-foreground">Completadas</p></div>
+                  </div>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Premium: {gamification.premium_days_remaining > 0 ? `${gamification.premium_days_remaining} días` : 'No'} · Referidos: {gamification.referral_count}
+                  </div>
+                </div>
+              )}
+              {badges.length > 0 && (
+                <div className="glass-card rounded-2xl p-4">
+                  <h3 className="font-bold text-sm mb-2">🎖️ Insignias ({badges.length})</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {badges.map((b: any) => (
+                      <span key={b.id} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-xs">
+                        {b.badge_icon} {b.badge_name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div>
+                <h2 className="font-bold text-foreground mb-3">⏳ Contadores</h2>
+                {countdowns.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Sin contadores</p>
+                ) : (
+                  <div className="space-y-2">
+                    {countdowns.map(c => (
+                      <div key={c.id} className="glass-card rounded-2xl p-4">
+                        <p className="font-semibold text-sm">{c.name}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(c.target_date).toLocaleDateString('es-ES')} · {c.target_time}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="glass-card rounded-2xl p-4">
+                <h3 className="font-bold text-sm mb-2">⚙️ Ajustes del usuario</h3>
+                <div className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
+                  <span>Tema: {(settings as any).theme}</span>
+                  <span>Estilo: {(settings as any).design_style}</span>
+                  <span>Nav: {(settings as any).nav_position}</span>
+                  <span>Fuente: {(settings as any).font_family}</span>
+                  <span>Asignaturas: {settings.enabled_subjects?.length || 0}</span>
+                  <span>Deportes: {settings.sport_types?.length || 0}</span>
+                </div>
+              </div>
+            </div>
+          )}
 
-        {activeTab === ('calendario' as TabType) && (
-          <div className="space-y-2">
-            <h2 className="font-bold text-foreground mb-3">📅 Calendario</h2>
-            <p className="text-sm text-muted-foreground">Vista calendario del usuario con {tasks.filter(t => !t.completed).length} tareas pendientes.</p>
+          {activeTab === 'deberes' && <ReadOnlyTaskList tasks={tasks} type="homework" groupingMode={(settings as any).grouping_mode} />}
+          {activeTab === 'examenes' && <ReadOnlyTaskList tasks={tasks} type="exam" groupingMode={(settings as any).grouping_mode} />}
+          {activeTab === 'tareas' && <ReadOnlyTaskList tasks={tasks} type="task" />}
+          {activeTab === 'eventos' && <ReadOnlyTaskList tasks={tasks} type="event" />}
+          {activeTab === 'partidos' && <ReadOnlyTaskList tasks={tasks} type="match" />}
+          {activeTab === ('horario' as TabType) && <ScheduleInline userId={userId} readOnly />}
+
+          {activeTab === ('no-olvidar' as TabType) && (
             <div className="space-y-2">
-              {tasks.filter(t => !t.completed && t.due_date).sort((a, b) => (a.due_date || '').localeCompare(b.due_date || '')).slice(0, 20).map(t => (
-                <div key={t.id} className="glass-card rounded-xl p-3 flex items-center gap-3">
-                  <span className="text-xs font-mono text-muted-foreground w-16 shrink-0">{t.due_date ? new Date(t.due_date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '—'}</span>
-                  <span className="text-sm font-medium">{t.name}</span>
-                  <span className="text-[10px] text-muted-foreground ml-auto uppercase">{t.type}</span>
+              <h2 className="font-bold text-foreground mb-3">🔴 ¡No olvidar!</h2>
+              {dontForgetItems.length === 0 ? <p className="text-sm text-muted-foreground text-center py-8">Sin recordatorios</p> : (
+                dontForgetItems.map((item: any) => (
+                  <div key={item.id} className="glass-card rounded-2xl p-4 border-l-4 border-destructive">
+                    <p className="font-semibold text-sm">{item.content}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{new Date(item.created_at).toLocaleDateString('es-ES')}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {activeTab === ('notas' as TabType) && (
+            <div className="space-y-4">
+              <h2 className="font-bold text-foreground mb-3">📝 Notas escritas ({writtenNotes.length})</h2>
+              {writtenNotes.map((n: any) => (
+                <div key={n.id} className="glass-card rounded-2xl p-4">
+                  <p className="font-semibold text-sm">{n.title}</p>
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-3">{n.content}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{new Date(n.created_at).toLocaleDateString('es-ES')}</p>
+                </div>
+              ))}
+              <h2 className="font-bold text-foreground mb-3 mt-6">🎙️ Notas de voz ({voiceNotes.length})</h2>
+              {voiceNotes.map((n: any) => (
+                <div key={n.id} className="glass-card rounded-2xl p-4">
+                  <p className="font-semibold text-sm">{n.title}</p>
+                  <p className="text-xs text-muted-foreground">{n.duration_seconds ? `${Math.floor(n.duration_seconds / 60)}:${String(n.duration_seconds % 60).padStart(2, '0')}` : 'Sin duración'}</p>
+                  {n.audio_url && <audio controls src={n.audio_url} className="mt-2 w-full h-8" />}
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
 
-        {activeTab === ('premios' as TabType) && (
-          <div className="space-y-4">
-            <h2 className="font-bold text-foreground mb-3">🎁 Premios</h2>
-            {gamification && (
-              <div className="glass-card rounded-2xl p-4">
-                <p className="text-sm"><strong>Código de referido:</strong> {gamification.referral_code}</p>
-                <p className="text-sm mt-1"><strong>Referidos:</strong> {gamification.referral_count}</p>
-                <p className="text-sm mt-1"><strong>Premium:</strong> {gamification.premium_days_remaining > 0 ? `${gamification.premium_days_remaining} días restantes` : 'No activo'}</p>
-              </div>
-            )}
-            {badges.length > 0 && (
-              <div className="glass-card rounded-2xl p-4">
-                <h3 className="font-bold text-sm mb-2">Insignias desbloqueadas</h3>
-                <div className="space-y-2">
-                  {badges.map((b: any) => (
-                    <div key={b.id} className="flex items-center gap-2">
-                      <span className="text-lg">{b.badge_icon}</span>
-                      <div>
-                        <p className="text-sm font-semibold">{b.badge_name}</p>
-                        <p className="text-xs text-muted-foreground">{b.badge_description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === ('papelera' as TabType) && (
-          <div className="space-y-2">
-            <h2 className="font-bold text-foreground mb-3">🗑️ Papelera ({trashedTasks.length})</h2>
-            {trashedTasks.length === 0 ? <p className="text-sm text-muted-foreground text-center py-8">Papelera vacía</p> : (
-              trashedTasks.map(t => (
-                <div key={t.id} className="glass-card rounded-2xl p-4 opacity-60">
-                  <p className="font-semibold text-sm line-through">{t.name}</p>
-                  <div className="flex gap-2 text-xs text-muted-foreground mt-1">
-                    <span>{t.type}</span>
-                    {t.subject && <span>· {t.subject}</span>}
-                    <span>· Eliminado: {new Date((t as any).deleted_at).toLocaleDateString('es-ES')}</span>
+          {activeTab === ('productividad' as TabType) && (
+            <div className="space-y-4">
+              <h2 className="font-bold text-foreground mb-3">📊 Progreso</h2>
+              {gamification && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="glass-card rounded-2xl p-4 text-center">
+                    <p className="text-2xl font-bold text-primary">{gamification.level}</p>
+                    <p className="text-xs text-muted-foreground">Nivel</p>
+                  </div>
+                  <div className="glass-card rounded-2xl p-4 text-center">
+                    <p className="text-2xl font-bold text-primary">{gamification.total_points}</p>
+                    <p className="text-xs text-muted-foreground">Puntos totales</p>
+                  </div>
+                  <div className="glass-card rounded-2xl p-4 text-center">
+                    <p className="text-2xl font-bold text-primary">{gamification.tasks_completed_total}</p>
+                    <p className="text-xs text-muted-foreground">Tareas completadas</p>
+                  </div>
+                  <div className="glass-card rounded-2xl p-4 text-center">
+                    <p className="text-2xl font-bold text-primary">{gamification.referral_count}</p>
+                    <p className="text-xs text-muted-foreground">Referidos</p>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === ('calendario' as TabType) && (
+            <div className="space-y-2">
+              <h2 className="font-bold text-foreground mb-3">📅 Calendario</h2>
+              <div className="space-y-2">
+                {tasks.filter(t => !t.completed && t.due_date).sort((a, b) => (a.due_date || '').localeCompare(b.due_date || '')).slice(0, 20).map(t => (
+                  <div key={t.id} className="glass-card rounded-xl p-3 flex items-center gap-3">
+                    <span className="text-xs font-mono text-muted-foreground w-16 shrink-0">{t.due_date ? new Date(t.due_date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '—'}</span>
+                    <span className="text-sm font-medium">{t.name}</span>
+                    <span className="text-[10px] text-muted-foreground ml-auto uppercase">{t.type}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === ('premios' as TabType) && (
+            <div className="space-y-4">
+              <h2 className="font-bold text-foreground mb-3">🎁 Premios</h2>
+              {gamification && (
+                <div className="glass-card rounded-2xl p-4">
+                  <p className="text-sm"><strong>Código de referido:</strong> {gamification.referral_code}</p>
+                  <p className="text-sm mt-1"><strong>Referidos:</strong> {gamification.referral_count}</p>
+                  <p className="text-sm mt-1"><strong>Premium:</strong> {gamification.premium_days_remaining > 0 ? `${gamification.premium_days_remaining} días restantes` : 'No activo'}</p>
+                </div>
+              )}
+              {badges.length > 0 && (
+                <div className="glass-card rounded-2xl p-4">
+                  <h3 className="font-bold text-sm mb-2">Insignias desbloqueadas</h3>
+                  <div className="space-y-2">
+                    {badges.map((b: any) => (
+                      <div key={b.id} className="flex items-center gap-2">
+                        <span className="text-lg">{b.badge_icon}</span>
+                        <div>
+                          <p className="text-sm font-semibold">{b.badge_name}</p>
+                          <p className="text-xs text-muted-foreground">{b.badge_description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === ('papelera' as TabType) && (
+            <div className="space-y-2">
+              <h2 className="font-bold text-foreground mb-3">🗑️ Papelera ({trashedTasks.length})</h2>
+              {trashedTasks.length === 0 ? <p className="text-sm text-muted-foreground text-center py-8">Papelera vacía</p> : (
+                trashedTasks.map(t => (
+                  <div key={t.id} className="glass-card rounded-2xl p-4 opacity-60">
+                    <p className="font-semibold text-sm line-through">{t.name}</p>
+                    <div className="flex gap-2 text-xs text-muted-foreground mt-1">
+                      <span>{t.type}</span>
+                      {t.subject && <span>· {t.subject}</span>}
+                      <span>· Eliminado: {new Date((t as any).deleted_at).toLocaleDateString('es-ES')}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </main>
+
+        {/* Bottom nav (if user uses bottom nav) */}
+        {!isLeftNav && (
+          <nav className="fixed bottom-0 left-0 right-0 bg-card/90 backdrop-blur-md border-t border-border">
+            <div className="max-w-lg mx-auto flex overflow-x-auto">
+              {currentTabs.map(tab => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                    className={cn(
+                      'flex flex-1 flex-col items-center py-3 gap-1 justify-center transition-colors',
+                      isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                    )}>
+                    <Icon className="w-5 h-5" />
+                    <span className="text-[10px] font-bold uppercase tracking-wide">{tab.shortLabel}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
         )}
-      </main>
+      </div>
     </div>
   );
 };

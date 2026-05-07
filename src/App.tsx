@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import ForceProfileDialog from "@/components/ForceProfileDialog";
 import Index from "./pages/Index";
@@ -12,6 +12,7 @@ import Admin from "./pages/Admin";
 import Schedule from "./pages/Schedule";
 import Uso from "./pages/Uso";
 import NotFound from "./pages/NotFound";
+import SharedListView from "./components/SharedListView";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,12 @@ const OnboardingRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const SharedRoute = () => {
+  const { token } = useParams<{ token: string }>();
+  if (!token) return <NotFound />;
+  return <SharedListView token={token} />;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -70,6 +77,7 @@ const App = () => (
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
             <Route path="/uso" element={<Uso />} />
+            <Route path="/shared/:token" element={<SharedRoute />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

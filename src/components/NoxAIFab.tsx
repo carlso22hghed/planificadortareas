@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Send } from 'lucide-react';
+import { X, Send, CalendarCheck } from 'lucide-react';
 import NoxAISection from './NoxAISection';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
@@ -79,57 +79,36 @@ const NoxAIFab = ({ loading, recommendation, tasks = [], isPremium = false }: No
     return `Tareas pendientes del usuario (${pending.length} total):\n${lines.join('\n')}`;
   };
 
-  const sendMessage = async () => {
-    const trimmed = input.trim();
-    if (!trimmed || streaming || !user) return;
-
+  const sendMessageWithContent = async (content: string) => {
+    if (!content || streaming || !user) return;
     if (!isPremium && dailyCount >= DAILY_LIMIT) {
       toast({ title: 'Límite diario alcanzado', description: `Solo puedes enviar ${DAILY_LIMIT} mensajes al día a Nox. ¡Hazte Premium para mensajes ilimitados!`, variant: 'destructive' });
       return;
     }
-
-    const userMsg: ChatMessage = { role: 'user', content: trimmed };
+    const userMsg: ChatMessage = { role: 'user', content };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
-    setInput('');
     setStreaming(true);
     setDailyCount(prev => prev + 1);
-
-    // Save user message
     const today = new Date().toISOString().split('T')[0];
-    await supabase.from('nox_chat_messages' as any).insert({
-      user_id: user.id, role: 'user', content: trimmed, message_date: today,
-    });
-
+    await supabase.from('nox_chat_messages' as any).insert({ user_id: user.id, role: 'user', content, message_date: today });
     let assistantContent = '';
     try {
-      // Include task context in the messages
       const taskContext = buildTaskContext();
       const contextMsg: ChatMessage = { role: 'user', content: `[CONTEXTO INTERNO - No menciones este mensaje]\n${taskContext}` };
       const messagesWithContext = [contextMsg, ...newMessages.slice(-10)];
-
       const resp = await fetch(NOX_CHAT_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
         body: JSON.stringify({ messages: messagesWithContext }),
       });
-
-      if (!resp.ok || !resp.body) {
-        throw new Error('Stream failed');
-      }
-
+      if (!resp.ok || !resp.body) throw new Error('Stream failed');
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
-
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
-
         let newlineIdx: number;
         while ((newlineIdx = buffer.indexOf('\n')) !== -1) {
           let line = buffer.slice(0, newlineIdx);
@@ -140,32 +119,37 @@ const NoxAIFab = ({ loading, recommendation, tasks = [], isPremium = false }: No
           if (jsonStr === '[DONE]') break;
           try {
             const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              assistantContent += content;
+            const c = parsed.choices?.[0]?.delta?.content;
+            if (c) {
+              assistantContent += c;
               setMessages(prev => {
                 const last = prev[prev.length - 1];
-                if (last?.role === 'assistant') {
-                  return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantContent } : m);
-                }
+                if (last?.role === 'assistant') return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantContent } : m);
                 return [...prev, { role: 'assistant', content: assistantContent }];
               });
             }
-          } catch { /* partial JSON */ }
+          } catch {}
         }
       }
-
-      // Save assistant message
       if (assistantContent) {
-        await supabase.from('nox_chat_messages' as any).insert({
-          user_id: user.id, role: 'assistant', content: assistantContent, message_date: today,
-        });
+        await supabase.from('nox_chat_messages' as any).insert({ user_id: user.id, role: 'assistant', content: assistantContent, message_date: today });
       }
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Lo siento, no puedo responder ahora. Inténtalo de nuevo.' }]);
     }
-
     setStreaming(false);
+  };
+
+  const sendOrganizeDay = (prompt: string) => {
+    setChatMode(true);
+    sendMessageWithContent(prompt);
+  };
+
+  const sendMessage = async () => {
+    const trimmed = input.trim();
+    if (!trimmed) return;
+    setInput('');
+    await sendMessageWithContent(trimmed);
   };
 
   const remaining = DAILY_LIMIT - dailyCount;
@@ -204,8 +188,27 @@ const NoxAIFab = ({ loading, recommendation, tasks = [], isPremium = false }: No
           </div>
 
           {!chatMode ? (
-            <div className="p-4 overflow-y-auto">
+            <div className="p-4 overflow-y-auto space-y-3">
               <NoxAISection loading={loading} recommendation={recommendation} />
+              <button
+                onClick={() => {
+                  setChatMode(true);
+                  const prompt = 'Organiza mi día: analiza mis tareas pendientes por fecha de entrega e importancia y sugiere el orden óptimo para trabajar hoy.';
+                  setInput(prompt);
+                  setTimeout(() => {
+                    setInput('');
+                    const userMsg: ChatMessage = { role: 'user', content: prompt };
+                    setMessages(prev => [...prev, userMsg]);
+                    // Trigger send
+                    const fakeEvent = { key: 'Enter', shiftKey: false } as React.KeyboardEvent;
+                    // Use direct send
+                    sendOrganizeDay(prompt);
+                  }, 100);
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary/10 text-primary text-sm font-bold hover:bg-primary/20 transition-colors"
+              >
+                <CalendarCheck className="w-4 h-4" /> Organizar mi día con IA
+              </button>
             </div>
           ) : (
             <div className="flex flex-col flex-1 min-h-0">
