@@ -204,8 +204,27 @@ const NoxAIFab = ({ loading, recommendation, tasks = [], isPremium = false }: No
           </div>
 
           {!chatMode ? (
-            <div className="p-4 overflow-y-auto">
+            <div className="p-4 overflow-y-auto space-y-3">
               <NoxAISection loading={loading} recommendation={recommendation} />
+              <button
+                onClick={() => {
+                  setChatMode(true);
+                  const prompt = 'Organiza mi día: analiza mis tareas pendientes por fecha de entrega e importancia y sugiere el orden óptimo para trabajar hoy.';
+                  setInput(prompt);
+                  setTimeout(() => {
+                    setInput('');
+                    const userMsg: ChatMessage = { role: 'user', content: prompt };
+                    setMessages(prev => [...prev, userMsg]);
+                    // Trigger send
+                    const fakeEvent = { key: 'Enter', shiftKey: false } as React.KeyboardEvent;
+                    // Use direct send
+                    sendOrganizeDay(prompt);
+                  }, 100);
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary/10 text-primary text-sm font-bold hover:bg-primary/20 transition-colors"
+              >
+                <CalendarCheck className="w-4 h-4" /> Organizar mi día con IA
+              </button>
             </div>
           ) : (
             <div className="flex flex-col flex-1 min-h-0">
