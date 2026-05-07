@@ -16,6 +16,12 @@ interface ProductivityData {
   activeMinutesToday: number;
 }
 
+interface DayHistory {
+  date: string;
+  completed: number;
+  total: number;
+}
+
 export type ProductivityLevel = 'Vago' | 'Aprendiz' | 'Constante' | 'Estudioso' | 'Máquina';
 
 const LEVEL_CONFIG: { name: ProductivityLevel; emoji: string; minScore: number; color: string }[] = [
@@ -27,6 +33,7 @@ const LEVEL_CONFIG: { name: ProductivityLevel; emoji: string; minScore: number; 
 ];
 
 const STORAGE_KEY = 'productivityStreak';
+const HISTORY_KEY = 'productivityHistory';
 
 function getToday(): string {
   return new Date().toISOString().split('T')[0];
@@ -62,65 +69,66 @@ function saveStreakData(data: StreakData) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
+function getHistory(): DayHistory[] {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(history: DayHistory[]) {
+  // Keep last 60 days max
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 60);
+  const cutoffStr = cutoff.toISOString().split('T')[0];
+  const trimmed = history.filter(h => h.date >= cutoffStr);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
+}
+
 export function useProductivity(tasks: DbTask[], scheduleBlocks?: { day: number; time: string }[]) {
   const [streak, setStreak] = useState<StreakData>(() => getStreakData());
 
-  // Check if any task was completed today
   const hasCompletedTaskToday = useMemo(() => {
     const today = getToday();
     return tasks.some(t => t.completed && (t.due_date === today || t.created_at?.startsWith(today)));
   }, [tasks]);
 
-  // Update streak whenever tasks change
   useEffect(() => {
     const data = getStreakData();
     const today = getToday();
     const yesterday = getYesterday();
 
     if (hasCompletedTaskToday) {
-      // User completed a task today
       if (data.lastActiveDate === today) {
-        // Already recorded today, no change needed
         setStreak({ ...data });
         return;
       }
-      
-      // New active day
       if (!data.activeDates) data.activeDates = [];
       if (!data.activeDates.includes(today)) data.activeDates.push(today);
-
       if (data.lastActiveDate === yesterday) {
-        // Consecutive day - extend streak
         data.currentStreak += 1;
       } else if (!data.lastActiveDate) {
-        // First ever active day
         data.currentStreak = 1;
       } else {
-        // Missed at least one day - reset streak to 1
         data.currentStreak = 1;
       }
-      
       data.lastActiveDate = today;
       if (data.currentStreak > (data.bestStreak || 0)) {
         data.bestStreak = data.currentStreak;
       }
     } else {
-      // No task completed today
-      // If last active was before yesterday, streak is broken
       if (data.lastActiveDate && data.lastActiveDate !== today && data.lastActiveDate !== yesterday) {
         data.currentStreak = 0;
       }
     }
-
     saveStreakData(data);
     setStreak({ ...data });
   }, [hasCompletedTaskToday, tasks]);
 
-  // Calculate productivity - includes today AND tomorrow morning tasks
   const productivity = useMemo<ProductivityData>(() => {
     const today = getToday();
     const tomorrow = getTomorrow();
-    
     const relevantTasks = tasks.filter(t => {
       if (t.due_date === today) return true;
       if (t.completed && t.created_at?.startsWith(today)) return true;
@@ -131,11 +139,9 @@ export function useProductivity(tasks: DbTask[], scheduleBlocks?: { day: number;
       }
       return false;
     });
-
     const completed = relevantTasks.filter(t => t.completed).length;
     const total = Math.max(relevantTasks.length, 1);
     const percent = Math.round((completed / total) * 100);
-
     const now = new Date();
     const todayDay = now.getDay();
     let busyMinutes = 0;
@@ -144,21 +150,54 @@ export function useProductivity(tasks: DbTask[], scheduleBlocks?: { day: number;
     }
     const availableMinutes = Math.max(360 - busyMinutes, 60);
     const avgPerTask = completed > 0 ? Math.round(availableMinutes / completed) : 0;
-
-    return {
-      tasksCompletedToday: completed,
-      totalTasksToday: relevantTasks.length,
-      percentComplete: percent,
-      avgMinutesPerTask: avgPerTask,
-      activeMinutesToday: availableMinutes,
-    };
+    return { tasksCompletedToday: completed, totalTasksToday: relevantTasks.length, percentComplete: percent, avgMinutesPerTask: avgPerTask, activeMinutesToday: availableMinutes };
   }, [tasks, scheduleBlocks]);
+
+  // Build and save daily history
+  const weeklyHistory = useMemo<DayHistory[]>(() => {
+    const history = getHistory();
+    const today = getToday();
+    
+    // Update today's entry
+    const todayTasks = tasks.filter(t => t.due_date === today || t.created_at?.startsWith(today));
+    const todayCompleted = todayTasks.filter(t => t.completed).length;
+    const todayTotal = todayTasks.length;
+    
+    const existingIdx = history.findIndex(h => h.date === today);
+    if (existingIdx >= 0) {
+      history[existingIdx] = { date: today, completed: todayCompleted, total: todayTotal };
+    } else {
+      history.push({ date: today, completed: todayCompleted, total: todayTotal });
+    }
+
+    // Also build entries from task data for past dates we might have missed
+    const dateMap = new Map<string, { completed: number; total: number }>();
+    tasks.forEach(t => {
+      const date = t.due_date || (t.created_at ? t.created_at.split('T')[0] : null);
+      if (!date) return;
+      const entry = dateMap.get(date) || { completed: 0, total: 0 };
+      entry.total++;
+      if (t.completed) entry.completed++;
+      dateMap.set(date, entry);
+    });
+
+    dateMap.forEach((val, date) => {
+      if (date === today) return; // already handled
+      const idx = history.findIndex(h => h.date === date);
+      if (idx < 0) {
+        history.push({ date, completed: val.completed, total: val.total });
+      }
+    });
+
+    history.sort((a, b) => a.date.localeCompare(b.date));
+    saveHistory(history);
+    return history;
+  }, [tasks]);
 
   const level = useMemo(() => {
     const streakScore = Math.min(streak.currentStreak * 10, 50);
     const productivityScore = productivity.percentComplete * 0.5;
     const totalScore = streakScore + productivityScore;
-
     let current = LEVEL_CONFIG[0];
     for (const l of LEVEL_CONFIG) {
       if (totalScore >= l.minScore) current = l;
@@ -166,5 +205,5 @@ export function useProductivity(tasks: DbTask[], scheduleBlocks?: { day: number;
     return { ...current, score: Math.round(totalScore) };
   }, [streak.currentStreak, productivity.percentComplete]);
 
-  return { streak, productivity, level, levelConfig: LEVEL_CONFIG };
+  return { streak, productivity, level, levelConfig: LEVEL_CONFIG, weeklyHistory };
 }
