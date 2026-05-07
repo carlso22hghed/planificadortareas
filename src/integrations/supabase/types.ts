@@ -224,6 +224,33 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_lists: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          list_type: string
+          share_token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          list_type?: string
+          share_token?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          list_type?: string
+          share_token?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       support_tickets: {
         Row: {
           admin_reply: string | null
