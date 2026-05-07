@@ -12,6 +12,7 @@ import Admin from "./pages/Admin";
 import Schedule from "./pages/Schedule";
 import Uso from "./pages/Uso";
 import NotFound from "./pages/NotFound";
+import SharedListView from "./components/SharedListView";
 
 const queryClient = new QueryClient();
 
