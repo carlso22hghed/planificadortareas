@@ -717,7 +717,10 @@ const Index = () => {
         >
           <div className="flex items-center justify-between mb-1">
             <p className="text-xs font-bold text-foreground uppercase tracking-wide">Páginas visibles</p>
-            <button onClick={() => setShowPageToggleMenu(false)} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
+            <div className="flex items-center gap-1">
+              <button onClick={() => updateSettings({ context_menu_order: [] } as any)} className="text-muted-foreground hover:text-foreground" title="Restablecer orden"><RotateCcw className="w-3.5 h-3.5" /></button>
+              <button onClick={() => setShowPageToggleMenu(false)} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
+            </div>
           </div>
           {TOGGLEABLE_PAGES.map((page, idx) => {
             const isOn = (settings as any)[page.settingKey] !== false;
