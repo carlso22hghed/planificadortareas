@@ -71,6 +71,7 @@ const App = () => (
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
             <Route path="/uso" element={<Uso />} />
+            <Route path="/shared/:token" element={<SharedRoute />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
