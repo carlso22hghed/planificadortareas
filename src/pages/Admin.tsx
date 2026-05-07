@@ -20,7 +20,9 @@ const Admin = () => {
   const [selectedUser, setSelectedUser] = useState<DbProfile | null>(null);
   const [activeTab, setActiveTab] = useState<'users' | 'support'>('users');
   const [search, setSearch] = useState('');
-  const [sortMode, setSortMode] = useState<SortMode>('alpha');
+  const [sortMode, setSortMode] = useState<SortMode>(() => {
+    return (localStorage.getItem('admin-sort-mode') as SortMode) || 'alpha';
+  });
   const [lastActivity, setLastActivity] = useState<Record<string, string>>({});
 
   useEffect(() => {
