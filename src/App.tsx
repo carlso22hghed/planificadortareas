@@ -57,6 +57,12 @@ const OnboardingRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const SharedRoute = () => {
+  const { token } = useParams<{ token: string }>();
+  if (!token) return <NotFound />;
+  return <SharedListView token={token} />;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
