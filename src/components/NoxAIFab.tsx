@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Send, CalendarCheck } from 'lucide-react';
 import NoxAISection from './NoxAISection';
+import OrganizeDayDialog from './OrganizeDayDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -39,6 +40,8 @@ const NoxAIFab = ({ loading, recommendation, tasks = [], isPremium = false }: No
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [dailyCount, setDailyCount] = useState(0);
+  const [showOrganize, setShowOrganize] = useState(false);
+  const [scheduleData, setScheduleData] = useState<any[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Load daily count
@@ -54,6 +57,16 @@ const NoxAIFab = ({ loading, recommendation, tasks = [], isPremium = false }: No
       .then(({ count }) => setDailyCount(count || 0));
   }, [user, open]);
 
+  // Load schedule data for context
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('schedule')
+      .select('*')
+      .eq('user_id', user.id)
+      .then(({ data }) => setScheduleData(data || []));
+  }, [user]);
+
   // Persist messages to sessionStorage
   useEffect(() => {
     sessionStorage.setItem('nox-chat-messages', JSON.stringify(messages));
@@ -63,20 +76,38 @@ const NoxAIFab = ({ loading, recommendation, tasks = [], isPremium = false }: No
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Build task context for Nox
+  // Build task context for Nox including schedule
   const buildTaskContext = (): string => {
     const pending = tasks.filter(t => !t.completed);
-    if (pending.length === 0) return 'El usuario no tiene tareas pendientes.';
-    const lines = pending.slice(0, 15).map(t => {
-      let line = `- ${t.name}`;
-      if (t.subject) line += ` (${t.subject})`;
-      if (t.type) line += ` [tipo: ${t.type}]`;
-      if (t.due_date) line += ` — entrega: ${t.due_date}`;
-      if (t.due_time) line += ` a las ${t.due_time}`;
-      if (t.importance) line += ` | importancia: ${t.importance}`;
-      return line;
-    });
-    return `Tareas pendientes del usuario (${pending.length} total):\n${lines.join('\n')}`;
+    let context = '';
+    if (pending.length === 0) {
+      context = 'El usuario no tiene tareas pendientes.';
+    } else {
+      const lines = pending.slice(0, 20).map(t => {
+        let line = `- ${t.name}`;
+        if (t.subject) line += ` (${t.subject})`;
+        if (t.type) line += ` [tipo: ${t.type}]`;
+        if (t.due_date) line += ` — entrega: ${t.due_date}`;
+        if (t.due_time) line += ` a las ${t.due_time}`;
+        if (t.importance) line += ` | importancia: ${t.importance}`;
+        if ((t as any).estimated_minutes) line += ` | ~${(t as any).estimated_minutes}min`;
+        if ((t as any).task_status && (t as any).task_status !== 'pendiente') line += ` | estado: ${(t as any).task_status}`;
+        return line;
+      });
+      context = `Tareas pendientes del usuario (${pending.length} total):\n${lines.join('\n')}`;
+    }
+
+    // Add schedule context
+    if (scheduleData.length > 0) {
+      const today = new Date().getDay();
+      const todaySchedule = scheduleData.filter((s: any) => s.day_of_week === today);
+      if (todaySchedule.length > 0) {
+        const scheduleLines = todaySchedule.map((s: any) => `- ${s.time_slot}: ${s.content}`).sort();
+        context += `\n\nHorario de hoy del usuario (horas ocupadas, NO puede hacer tareas en estas horas):\n${scheduleLines.join('\n')}`;
+      }
+    }
+
+    return context;
   };
 
   const sendMessageWithContent = async (content: string) => {
@@ -156,7 +187,7 @@ const NoxAIFab = ({ loading, recommendation, tasks = [], isPremium = false }: No
 
   return (
     <>
-      {/* FAB - white circle, separated from support */}
+      {/* FAB */}
       <button
         onClick={() => setOpen(prev => !prev)}
         className="fixed bottom-36 right-4 z-50 w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform overflow-hidden bg-white border border-border"
@@ -171,18 +202,13 @@ const NoxAIFab = ({ loading, recommendation, tasks = [], isPremium = false }: No
       {/* Panel */}
       {open && (
         <div className="fixed bottom-52 right-4 z-50 w-[calc(100vw-2rem)] max-w-sm bg-card border border-border rounded-2xl shadow-2xl flex flex-col max-h-[60vh] animate-slide-up">
-          {/* Tabs: Resumen / Chat */}
           <div className="flex border-b border-border">
-            <button
-              onClick={() => setChatMode(false)}
-              className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors ${!chatMode ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}
-            >
+            <button onClick={() => setChatMode(false)}
+              className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors ${!chatMode ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}>
               Resumen
             </button>
-            <button
-              onClick={() => setChatMode(true)}
-              className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors ${chatMode ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}
-            >
+            <button onClick={() => setChatMode(true)}
+              className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors ${chatMode ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}>
               Chat
             </button>
           </div>
@@ -191,20 +217,7 @@ const NoxAIFab = ({ loading, recommendation, tasks = [], isPremium = false }: No
             <div className="p-4 overflow-y-auto space-y-3">
               <NoxAISection loading={loading} recommendation={recommendation} />
               <button
-                onClick={() => {
-                  setChatMode(true);
-                  const prompt = 'Organiza mi día: analiza mis tareas pendientes por fecha de entrega e importancia y sugiere el orden óptimo para trabajar hoy.';
-                  setInput(prompt);
-                  setTimeout(() => {
-                    setInput('');
-                    const userMsg: ChatMessage = { role: 'user', content: prompt };
-                    setMessages(prev => [...prev, userMsg]);
-                    // Trigger send
-                    const fakeEvent = { key: 'Enter', shiftKey: false } as React.KeyboardEvent;
-                    // Use direct send
-                    sendOrganizeDay(prompt);
-                  }, 100);
-                }}
+                onClick={() => setShowOrganize(true)}
                 className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary/10 text-primary text-sm font-bold hover:bg-primary/20 transition-colors"
               >
                 <CalendarCheck className="w-4 h-4" /> Organizar mi día con IA
@@ -212,7 +225,6 @@ const NoxAIFab = ({ loading, recommendation, tasks = [], isPremium = false }: No
             </div>
           ) : (
             <div className="flex flex-col flex-1 min-h-0">
-              {/* Remaining messages indicator */}
               <div className="px-3 py-1.5 text-center border-b border-border">
                 <span className="text-[10px] font-semibold text-muted-foreground">
                   {remaining > 0 ? `${remaining} mensajes restantes hoy` : 'Límite diario alcanzado'}
@@ -272,6 +284,8 @@ const NoxAIFab = ({ loading, recommendation, tasks = [], isPremium = false }: No
           )}
         </div>
       )}
+
+      <OrganizeDayDialog open={showOrganize} onOpenChange={setShowOrganize} onSubmit={sendOrganizeDay} />
     </>
   );
 };
