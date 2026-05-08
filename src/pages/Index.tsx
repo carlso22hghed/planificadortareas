@@ -583,8 +583,7 @@ const Index = () => {
                   </button>
                 </div>
 
-                {/* Quick Capture */}
-                <QuickCapture onAdd={addTask} />
+                {/* Quick Capture moved to individual task pages */}
 
                 {/* Share & Template buttons */}
                 <div className="flex justify-center gap-2">
