@@ -59,6 +59,8 @@ const Index = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showPageToggleMenu, setShowPageToggleMenu] = useState(false);
   const [pageTogglePos, setPageTogglePos] = useState({ x: 0, y: 0 });
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Block UI for blocked minors
   const isBlocked = (profile as any)?.status === 'bloqueado';
