@@ -716,6 +716,8 @@ const Index = () => {
       <ClassroomPromoDialog onSync={classroom.startSync} />
       {noxAI.enabled && <NoxAIFab loading={noxAI.loading} recommendation={noxAI.recommendation} tasks={tasks} isPremium={isPremium} />}
       <SupportDialog />
+      <WeeklySummaryDialog {...(noxAI as any).lastWeekSummary || { completed: 0, pending: 0, bestDay: '', total: 0 }} />
+      <KeyboardShortcutsHelp open={showShortcuts} onOpenChange={setShowShortcuts} />
 
       {/* Page Toggle Context Menu */}
       {showPageToggleMenu && (
