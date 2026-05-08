@@ -5,7 +5,7 @@ import type { DbTask } from '@/types/app';
 import { cn } from '@/lib/utils';
 
 interface QuickCaptureProps {
-  onAdd: (task: Partial<DbTask>) => Promise<void>;
+  onAdd: (task: Partial<DbTask>) => void | Promise<void>;
   type?: string;
   placeholder?: string;
 }
