@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { DbTask } from '@/types/app';
-import { Check, Trash2, Clock, CalendarDays, MapPin, Pencil, CheckCircle, BookOpen, BarChart3, AlertCircle, CircleAlert, Paperclip, Repeat } from 'lucide-react';
+import { Check, Trash2, Clock, CalendarDays, MapPin, Pencil, CheckCircle, BookOpen, BarChart3, AlertCircle, CircleAlert, Paperclip, Repeat, PauseCircle, Ban } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -113,6 +113,16 @@ const TaskItem = ({ task, onToggle, onDelete, onEdit, onToggleStudy, highlightUr
             {(task as any).recurrence_rule && (task as any).recurrence_rule !== 'none' && (
               <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex items-center gap-0.5">
                 <Repeat className="w-2.5 h-2.5" /> Recurrente
+              </Badge>
+            )}
+            {(task as any).task_status === 'en_pausa' && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex items-center gap-0.5 bg-warning/20 text-warning border-warning/30">
+                <PauseCircle className="w-2.5 h-2.5" /> En pausa
+              </Badge>
+            )}
+            {(task as any).task_status === 'bloqueada' && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex items-center gap-0.5 bg-destructive/20 text-destructive border-destructive/30">
+                <Ban className="w-2.5 h-2.5" /> Bloqueada
               </Badge>
             )}
             {(task as any).attachments && (task as any).attachments.length > 0 && (

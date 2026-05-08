@@ -1,16 +1,20 @@
-import { useState } from 'react';
-import { Zap } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Zap, Mic, MicOff } from 'lucide-react';
 import { parseNaturalLanguage } from '@/lib/natural-language-parser';
 import type { DbTask } from '@/types/app';
 import { cn } from '@/lib/utils';
 
 interface QuickCaptureProps {
-  onAdd: (task: Partial<DbTask>) => Promise<void>;
+  onAdd: (task: Partial<DbTask>) => void | Promise<void>;
+  type?: string;
+  placeholder?: string;
 }
 
-const QuickCapture = ({ onAdd }: QuickCaptureProps) => {
+const QuickCapture = ({ onAdd, type = 'task', placeholder }: QuickCaptureProps) => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
   const handleSubmit = async () => {
     const parsed = parseNaturalLanguage(input);
@@ -19,7 +23,7 @@ const QuickCapture = ({ onAdd }: QuickCaptureProps) => {
     setLoading(true);
     await onAdd({
       name: parsed.name,
-      type: 'task',
+      type,
       due_date: parsed.due_date,
       due_time: parsed.due_time,
     });
@@ -27,7 +31,41 @@ const QuickCapture = ({ onAdd }: QuickCaptureProps) => {
     setLoading(false);
   };
 
+  const toggleVoice = () => {
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'es-ES';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(prev => prev ? `${prev} ${transcript}` : transcript);
+      setListening(false);
+    };
+    recognition.onerror = () => setListening(false);
+    recognition.onend = () => setListening(false);
+    recognitionRef.current = recognition;
+    recognition.start();
+    setListening(true);
+  };
+
   const preview = input.trim() ? parseNaturalLanguage(input) : null;
+  const placeholderText = placeholder || (
+    type === 'homework' ? 'mañana ejercicios de matemáticas...'
+    : type === 'exam' ? 'jueves examen de historia...'
+    : type === 'event' ? 'viernes 18:00 reunión de padres...'
+    : type === 'match' ? 'sábado 11:00 partido vs Alcalá...'
+    : 'mañana 18:00 comprar leche...'
+  );
+  const hasSpeech = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
   return (
     <div className="glass-card rounded-2xl p-3 space-y-2">
@@ -38,11 +76,22 @@ const QuickCapture = ({ onAdd }: QuickCaptureProps) => {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-            placeholder="mañana 18:00 comprar leche..."
+            placeholder={placeholderText}
             className="w-full bg-muted/50 rounded-xl pl-9 pr-3 py-2.5 text-sm outline-none placeholder:text-muted-foreground"
             disabled={loading}
           />
         </div>
+        {hasSpeech && (
+          <button
+            onClick={toggleVoice}
+            className={cn(
+              'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all',
+              listening ? 'bg-destructive text-destructive-foreground animate-pulse' : 'bg-muted/50 text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {listening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          </button>
+        )}
         <button
           onClick={handleSubmit}
           disabled={!input.trim() || loading}

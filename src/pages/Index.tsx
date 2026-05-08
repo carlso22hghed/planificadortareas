@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useProductivity } from '@/hooks/use-productivity';
 import { Switch } from '@/components/ui/switch';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
@@ -31,6 +32,9 @@ import TrashPage from '@/components/TrashPage';
 import { useGamification } from '@/hooks/use-gamification';
 import QuickCapture from '@/components/QuickCapture';
 import ShareListButton from '@/components/ShareListButton';
+import WeeklySummaryDialog from '@/components/WeeklySummaryDialog';
+import OnboardingTour from '@/components/OnboardingTour';
+import KeyboardShortcutsHelp from '@/components/KeyboardShortcutsHelp';
 import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree, Quote, Gift, CalendarDays, Trash2, Search, ToggleLeft, ToggleRight, RotateCcw } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -56,6 +60,8 @@ const Index = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showPageToggleMenu, setShowPageToggleMenu] = useState(false);
   const [pageTogglePos, setPageTogglePos] = useState({ x: 0, y: 0 });
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Block UI for blocked minors
   const isBlocked = (profile as any)?.status === 'bloqueado';
@@ -77,6 +83,7 @@ const Index = () => {
   const tasks = useMemo(() => allTasks.filter(t => !(t as any).deleted_at), [allTasks]);
 
   const noxAI = useNoxAI(tasks);
+  const { lastWeekSummary } = useProductivity(tasks);
   const { addPoints, stats: gamificationStats } = useGamification();
   const isPremium = (gamificationStats?.premiumDaysRemaining ?? 0) > 0;
   
@@ -143,9 +150,10 @@ const Index = () => {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.key === 'Escape') {
-        // Close modals handled by Radix
-      }
+      if (e.key === '?' && !e.ctrlKey) { setShowShortcuts(true); return; }
+      if (e.key === 'n' || e.key === 'N') { setActiveTab('tareas'); return; }
+      if (e.key === 'd' || e.key === 'D') { setActiveTab('deberes'); return; }
+      if (e.key === 'e' || e.key === 'E') { setActiveTab('examenes'); return; }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
@@ -577,8 +585,7 @@ const Index = () => {
                   </button>
                 </div>
 
-                {/* Quick Capture */}
-                <QuickCapture onAdd={addTask} />
+                {/* Quick Capture moved to individual task pages */}
 
                 {/* Share & Template buttons */}
                 <div className="flex justify-center gap-2">
@@ -711,6 +718,8 @@ const Index = () => {
       <ClassroomPromoDialog onSync={classroom.startSync} />
       {noxAI.enabled && <NoxAIFab loading={noxAI.loading} recommendation={noxAI.recommendation} tasks={tasks} isPremium={isPremium} />}
       <SupportDialog />
+      <WeeklySummaryDialog completed={lastWeekSummary.completed} pending={lastWeekSummary.pending} bestDay={lastWeekSummary.bestDay} total={lastWeekSummary.total} />
+      <KeyboardShortcutsHelp open={showShortcuts} onOpenChange={setShowShortcuts} />
 
       {/* Page Toggle Context Menu */}
       {showPageToggleMenu && (

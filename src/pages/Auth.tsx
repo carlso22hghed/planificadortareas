@@ -4,71 +4,58 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Eye } from 'lucide-react';
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const refCode = searchParams.get('ref');
 
-  // Store referral code before auth redirect
   useEffect(() => {
     if (refCode) {
       localStorage.setItem('pendingReferralCode', refCode);
     }
   }, [refCode]);
 
-  // After login, process referral
   useEffect(() => {
     const processReferral = async () => {
       const code = localStorage.getItem('pendingReferralCode');
       if (!code) return;
-      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-
-      // Find the referrer by their referral code
       const { data: referrerGamification } = await supabase
         .from('user_gamification')
         .select('user_id')
         .eq('referral_code', code)
         .maybeSingle();
-
       if (!referrerGamification || referrerGamification.user_id === user.id) {
         localStorage.removeItem('pendingReferralCode');
         return;
       }
-
-      // Check if already referred
       const { data: existing } = await supabase
         .from('referrals')
         .select('id')
         .eq('referrer_user_id', referrerGamification.user_id)
         .eq('referred_user_id', user.id)
         .maybeSingle();
-
       if (existing) {
         localStorage.removeItem('pendingReferralCode');
         return;
       }
-
-      // Create referral record
       await supabase.from('referrals').insert({
         referrer_user_id: referrerGamification.user_id,
         referred_user_id: user.id,
         referral_code: code,
         status: 'completed',
       });
-
-      // Grant 7 days premium to BOTH users
-      // Referrer
       const { data: referrerData } = await supabase
         .from('user_gamification')
         .select('premium_days_remaining, referral_count, total_points')
         .eq('user_id', referrerGamification.user_id)
         .single();
-      
       if (referrerData) {
         await supabase.from('user_gamification').update({
           premium_days_remaining: (referrerData.premium_days_remaining || 0) + 7,
@@ -76,32 +63,26 @@ const Auth = () => {
           total_points: (referrerData.total_points || 0) + 50,
         }).eq('user_id', referrerGamification.user_id);
       }
-
-      // Referred user (current user)
       const { data: myData } = await supabase
         .from('user_gamification')
         .select('premium_days_remaining, total_points')
         .eq('user_id', user.id)
         .maybeSingle();
-
       if (myData) {
         await supabase.from('user_gamification').update({
           premium_days_remaining: (myData.premium_days_remaining || 0) + 7,
           total_points: (myData.total_points || 0) + 50,
         }).eq('user_id', user.id);
       }
-
       localStorage.removeItem('pendingReferralCode');
       toast({ title: '🎉 ¡Referido exitoso!', description: '¡Ambos habéis recibido 7 días Premium gratis!' });
     };
 
-    // Listen for auth state changes to process referral after login
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN') {
         setTimeout(processReferral, 2000);
       }
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
@@ -119,6 +100,12 @@ const Auth = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const enterDemoMode = () => {
+    localStorage.setItem('demo-mode', 'true');
+    navigate('/');
+    window.location.reload();
   };
 
   return (
@@ -169,6 +156,19 @@ const Auth = () => {
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
             {loading ? 'Conectando...' : 'Continuar con Google'}
+          </Button>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+            <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">o</span></div>
+          </div>
+
+          <Button
+            onClick={enterDemoMode}
+            variant="ghost"
+            className="w-full gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <Eye className="w-4 h-4" /> Probar sin cuenta (modo demo)
           </Button>
         </div>
 

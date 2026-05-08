@@ -7,6 +7,7 @@ import type { LucideIcon } from 'lucide-react';
 import SortableTaskItem from './SortableTaskItem';
 import AddTaskDialog from './AddTaskDialog';
 import EditTaskDialog from './EditTaskDialog';
+import QuickCapture from './QuickCapture';
 import { supabase } from '@/integrations/supabase/client';
 
 interface TaskListProps {
@@ -65,6 +66,9 @@ const TaskList = ({ tasks, type, onAdd, onToggle, onDelete, onUpdate, onToggleSt
 
   return (
     <div className="space-y-4">
+      {/* Quick Capture for this task type */}
+      <QuickCapture onAdd={onAdd} type={type} />
+
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground font-semibold">
           {pendingTasks.length} pendiente{pendingTasks.length !== 1 ? 's' : ''}

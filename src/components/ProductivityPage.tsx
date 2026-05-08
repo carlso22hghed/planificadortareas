@@ -1,7 +1,8 @@
-import { Flame, Trophy, TrendingUp, Clock, Target, Zap, Bed, BookOpen, Dumbbell, GraduationCap, Rocket, Calendar, BarChart3, ArrowUp, ArrowDown, Activity } from 'lucide-react';
+import { Flame, Trophy, TrendingUp, Clock, Target, Zap, Bed, BookOpen, Dumbbell, GraduationCap, Rocket, Calendar, BarChart3, ArrowUp, ArrowDown, Activity, Download } from 'lucide-react';
 import type { DbTask } from '@/types/app';
 import { useProductivity } from '@/hooks/use-productivity';
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
+import { jsPDF } from 'jspdf';
 
 const LEVEL_ICONS: Record<string, typeof Bed> = {
   'bed': Bed, 'book-open': BookOpen, 'dumbbell': Dumbbell, 'graduation-cap': GraduationCap, 'rocket': Rocket,
@@ -17,12 +18,10 @@ const ProductivityPage = ({ tasks }: ProductivityPageProps) => {
   const { streak, productivity, level, levelConfig, weeklyHistory } = useProductivity(tasks);
   const LevelIcon = LEVEL_ICONS[level.emoji] || Bed;
 
-  // Compute analytics from weeklyHistory
   const analytics = useMemo(() => {
     const history = weeklyHistory || [];
     if (history.length === 0) return null;
 
-    // Most productive days
     const dayTotals = [0, 0, 0, 0, 0, 0, 0];
     const dayCounts = [0, 0, 0, 0, 0, 0, 0];
     history.forEach(h => {
@@ -34,12 +33,10 @@ const ProductivityPage = ({ tasks }: ProductivityPageProps) => {
     const bestDayIdx = dayAvgs.indexOf(Math.max(...dayAvgs));
     const worstDayIdx = dayAvgs.indexOf(Math.min(...dayAvgs.filter(a => a >= 0)));
 
-    // Daily average
     const totalCompleted = history.reduce((s, h) => s + h.completed, 0);
     const activeDays = history.filter(h => h.completed > 0).length;
     const dailyAvg = activeDays > 0 ? (totalCompleted / activeDays).toFixed(1) : '0';
 
-    // Peak hours (approximation using task creation times)
     const hourCounts: number[] = new Array(24).fill(0);
     tasks.filter(t => t.completed).forEach(t => {
       if (t.created_at) {
@@ -49,7 +46,6 @@ const ProductivityPage = ({ tasks }: ProductivityPageProps) => {
     });
     const peakHour = hourCounts.indexOf(Math.max(...hourCounts));
 
-    // Weekly scores (last 4 weeks)
     const weeks: { label: string; score: number; completed: number }[] = [];
     const now = new Date();
     for (let w = 3; w >= 0; w--) {
@@ -63,15 +59,10 @@ const ProductivityPage = ({ tasks }: ProductivityPageProps) => {
       const comp = weekDays.reduce((s, d) => s + d.completed, 0);
       const total = weekDays.reduce((s, d) => s + d.total, 0);
       const score = total > 0 ? Math.round((comp / total) * 100) : 0;
-      weeks.push({
-        label: `${weekStart.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}`,
-        score,
-        completed: comp,
-      });
+      weeks.push({ label: `${weekStart.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}`, score, completed: comp });
     }
 
-    // Patterns
-    const weekdayAvg = [1,2,3,4,5].reduce((s, d) => s + dayAvgs[d], 0) / 5;
+    const weekdayAvg = [1, 2, 3, 4, 5].reduce((s, d) => s + dayAvgs[d], 0) / 5;
     const weekendAvg = (dayAvgs[0] + dayAvgs[6]) / 2;
     const pattern = weekdayAvg > weekendAvg * 1.5
       ? 'Eres más productivo entre semana'
@@ -79,18 +70,110 @@ const ProductivityPage = ({ tasks }: ProductivityPageProps) => {
         ? 'Rindes más los fines de semana'
         : 'Tu productividad es constante toda la semana';
 
-    // Weak days (days with 0 completed in last 14 days)
     const last14 = history.slice(-14);
     const weakDays = last14.filter(h => h.completed === 0 && h.total > 0).length;
 
     return { bestDayIdx, worstDayIdx, dailyAvg, peakHour, weeks, pattern, weakDays, dayAvgs, history };
   }, [weeklyHistory, tasks]);
 
-  // Current week score
   const currentWeekScore = analytics?.weeks?.[analytics.weeks.length - 1]?.score ?? 0;
+
+  const exportPDF = useCallback(() => {
+    const doc = new jsPDF();
+    const w = doc.internal.pageSize.getWidth();
+    let y = 20;
+
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Informe Semanal de Productividad', w / 2, y, { align: 'center' });
+    y += 10;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }), w / 2, y, { align: 'center' });
+    y += 15;
+
+    // Level & streak
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Nivel: ${level.name} (${level.score}/100)`, 20, y);
+    y += 8;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Racha actual: ${streak.currentStreak} dias | Mejor racha: ${streak.bestStreak} dias`, 20, y);
+    y += 10;
+
+    // Today
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Productividad de hoy', 20, y);
+    y += 7;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Completadas: ${productivity.tasksCompletedToday} / ${productivity.totalTasksToday} (${productivity.percentComplete}%)`, 20, y);
+    y += 10;
+
+    if (analytics) {
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Estadisticas', 20, y);
+      y += 7;
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Dia mas productivo: ${DAY_NAMES[analytics.bestDayIdx]} (${analytics.dayAvgs[analytics.bestDayIdx].toFixed(1)} tareas/dia)`, 20, y);
+      y += 6;
+      doc.text(`Dia mas flojo: ${DAY_NAMES[analytics.worstDayIdx]} (${analytics.dayAvgs[analytics.worstDayIdx].toFixed(1)} tareas/dia)`, 20, y);
+      y += 6;
+      doc.text(`Promedio diario: ${analytics.dailyAvg} tareas`, 20, y);
+      y += 6;
+      doc.text(`Pico productivo: ${analytics.peakHour}:00`, 20, y);
+      y += 6;
+      doc.text(`Patron: ${analytics.pattern}`, 20, y);
+      y += 10;
+
+      // Weeks
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Semanas', 20, y);
+      y += 7;
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      analytics.weeks.forEach(wk => {
+        doc.text(`${wk.label}: ${wk.completed} completadas (${wk.score}/100)`, 20, y);
+        y += 6;
+      });
+      y += 5;
+
+      // Completed tasks list
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Tareas completadas esta semana', 20, y);
+      y += 7;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      const now = new Date();
+      const weekStart = new Date(now);
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+      const startStr = weekStart.toISOString().split('T')[0];
+      const weekTasks = tasks.filter(t => t.completed && (t.due_date || '') >= startStr);
+      weekTasks.slice(0, 30).forEach(t => {
+        if (y > 270) { doc.addPage(); y = 20; }
+        doc.text(`- ${t.name}${t.subject ? ` (${t.subject})` : ''}${t.due_date ? ` - ${t.due_date}` : ''}`, 20, y);
+        y += 5;
+      });
+    }
+
+    doc.save('informe-productividad.pdf');
+  }, [level, streak, productivity, analytics, tasks]);
 
   return (
     <div className="space-y-4 animate-slide-up">
+      {/* Export button */}
+      <div className="flex justify-end">
+        <button onClick={exportPDF} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 transition-colors">
+          <Download className="w-3.5 h-3.5" /> Exportar PDF
+        </button>
+      </div>
+
       {/* Level Card */}
       <div className="glass-card rounded-2xl p-5 text-center space-y-3">
         <LevelIcon className={`w-12 h-12 mx-auto ${level.color}`} />
@@ -101,9 +184,7 @@ const ProductivityPage = ({ tasks }: ProductivityPageProps) => {
         <div className="flex gap-1 justify-center">
           {levelConfig.map((l) => (
             <div key={l.name} className="flex flex-col items-center gap-1">
-              <div className={`w-12 h-2 rounded-full transition-all ${
-                level.score >= l.minScore ? 'bg-gradient-to-r from-purple-500 to-purple-400' : 'bg-muted/30'
-              }`} />
+              <div className={`w-12 h-2 rounded-full transition-all ${level.score >= l.minScore ? 'bg-gradient-to-r from-purple-500 to-purple-400' : 'bg-muted/30'}`} />
               {(() => { const I = LEVEL_ICONS[l.emoji] || Bed; return <I className="w-3 h-3 text-muted-foreground" />; })()}
             </div>
           ))}
@@ -133,7 +214,6 @@ const ProductivityPage = ({ tasks }: ProductivityPageProps) => {
           <TrendingUp className="w-5 h-5 text-primary" />
           <h3 className="font-bold text-foreground">Productividad de hoy</h3>
         </div>
-
         <div className="flex items-center justify-center">
           <div className="relative w-28 h-28">
             <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
@@ -147,7 +227,6 @@ const ProductivityPage = ({ tasks }: ProductivityPageProps) => {
             </div>
           </div>
         </div>
-
         <div className="grid grid-cols-3 gap-2">
           <div className="text-center p-2 rounded-xl bg-muted/20">
             <Target className="w-4 h-4 mx-auto text-primary mb-1" />
@@ -169,7 +248,6 @@ const ProductivityPage = ({ tasks }: ProductivityPageProps) => {
 
       {analytics && (
         <>
-          {/* Weekly Score */}
           <div className="glass-card rounded-2xl p-5 space-y-3">
             <div className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-primary" />
@@ -183,7 +261,6 @@ const ProductivityPage = ({ tasks }: ProductivityPageProps) => {
             </div>
           </div>
 
-          {/* Productivity Graph (bar chart) */}
           <div className="glass-card rounded-2xl p-5 space-y-3">
             <div className="flex items-center gap-2">
               <Activity className="w-5 h-5 text-primary" />
@@ -195,10 +272,7 @@ const ProductivityPage = ({ tasks }: ProductivityPageProps) => {
                 const height = (h.completed / maxVal) * 100;
                 return (
                   <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
-                    <div
-                      className="w-full rounded-t bg-primary/70 transition-all"
-                      style={{ height: `${Math.max(height, 4)}%` }}
-                    />
+                    <div className="w-full rounded-t bg-primary/70 transition-all" style={{ height: `${Math.max(height, 4)}%` }} />
                     <span className="text-[7px] text-muted-foreground">{DAY_NAMES[new Date(h.date + 'T12:00:00').getDay()]}</span>
                   </div>
                 );
@@ -207,7 +281,6 @@ const ProductivityPage = ({ tasks }: ProductivityPageProps) => {
             <p className="text-[10px] text-muted-foreground text-center">Últimos 14 días</p>
           </div>
 
-          {/* Most/Least Productive Days */}
           <div className="grid grid-cols-2 gap-3">
             <div className="glass-card rounded-2xl p-4 text-center space-y-1">
               <ArrowUp className="w-5 h-5 text-success mx-auto" />
@@ -223,7 +296,6 @@ const ProductivityPage = ({ tasks }: ProductivityPageProps) => {
             </div>
           </div>
 
-          {/* Stats row */}
           <div className="grid grid-cols-3 gap-3">
             <div className="glass-card rounded-2xl p-3 text-center">
               <p className="text-xl font-extrabold text-primary">{analytics.dailyAvg}</p>
@@ -239,7 +311,6 @@ const ProductivityPage = ({ tasks }: ProductivityPageProps) => {
             </div>
           </div>
 
-          {/* Weeks comparison */}
           <div className="glass-card rounded-2xl p-5 space-y-3">
             <div className="flex items-center gap-2">
               <Calendar className="w-5 h-5 text-primary" />
@@ -258,7 +329,6 @@ const ProductivityPage = ({ tasks }: ProductivityPageProps) => {
             </div>
           </div>
 
-          {/* Patterns */}
           <div className="glass-card rounded-2xl p-5 space-y-2">
             <div className="flex items-center gap-2">
               <Activity className="w-5 h-5 text-primary" />
@@ -269,10 +339,8 @@ const ProductivityPage = ({ tasks }: ProductivityPageProps) => {
               {analytics.dayAvgs.map((avg, i) => (
                 <div key={i} className="flex-1 text-center">
                   <div className="h-12 flex items-end justify-center">
-                    <div
-                      className="w-full rounded-t bg-primary/50"
-                      style={{ height: `${Math.max((avg / Math.max(...analytics.dayAvgs, 1)) * 100, 8)}%` }}
-                    />
+                    <div className="w-full rounded-t bg-primary/50"
+                      style={{ height: `${Math.max((avg / Math.max(...analytics.dayAvgs, 1)) * 100, 8)}%` }} />
                   </div>
                   <span className="text-[8px] text-muted-foreground">{DAY_NAMES[i]}</span>
                 </div>
@@ -283,7 +351,7 @@ const ProductivityPage = ({ tasks }: ProductivityPageProps) => {
       )}
 
       <p className="text-[10px] text-muted-foreground text-center">
-        Se resetea cada día · No cuenta horas de actividades extraescolares
+        Datos calculados directamente desde tus tareas · Sincronizado entre dispositivos
       </p>
     </div>
   );

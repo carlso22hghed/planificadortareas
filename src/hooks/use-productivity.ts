@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import type { DbTask } from '@/types/app';
 
 interface StreakData {
@@ -32,17 +32,10 @@ const LEVEL_CONFIG: { name: ProductivityLevel; emoji: string; minScore: number; 
   { name: 'Máquina', emoji: 'rocket', minScore: 85, color: 'text-purple-400' },
 ];
 
-const STORAGE_KEY = 'productivityStreak';
-const HISTORY_KEY = 'productivityHistory';
+const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
 function getToday(): string {
   return new Date().toISOString().split('T')[0];
-}
-
-function getYesterday(): string {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  return d.toISOString().split('T')[0];
 }
 
 function getTomorrow(): string {
@@ -51,80 +44,98 @@ function getTomorrow(): string {
   return d.toISOString().split('T')[0];
 }
 
-function getStreakData(): StreakData {
-  try {
-    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    return {
-      currentStreak: raw.currentStreak || 0,
-      bestStreak: raw.bestStreak || 0,
-      lastActiveDate: raw.lastActiveDate || '',
-      activeDates: raw.activeDates || [],
-    };
-  } catch {
-    return { currentStreak: 0, bestStreak: 0, lastActiveDate: '', activeDates: [] };
-  }
-}
-
-function saveStreakData(data: StreakData) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-
-function getHistory(): DayHistory[] {
-  try {
-    return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-  } catch {
-    return [];
-  }
-}
-
-function saveHistory(history: DayHistory[]) {
-  // Keep last 60 days max
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - 60);
-  const cutoffStr = cutoff.toISOString().split('T')[0];
-  const trimmed = history.filter(h => h.date >= cutoffStr);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
+function getDateStr(d: Date): string {
+  return d.toISOString().split('T')[0];
 }
 
 export function useProductivity(tasks: DbTask[], scheduleBlocks?: { day: number; time: string }[]) {
-  const [streak, setStreak] = useState<StreakData>(() => getStreakData());
+  // Build complete history from task data only (no localStorage)
+  const weeklyHistory = useMemo<DayHistory[]>(() => {
+    const dateMap = new Map<string, { completed: number; total: number }>();
 
-  const hasCompletedTaskToday = useMemo(() => {
-    const today = getToday();
-    return tasks.some(t => t.completed && (t.due_date === today || t.created_at?.startsWith(today)));
+    tasks.forEach(t => {
+      // Use due_date as the primary date, fallback to created_at
+      const date = t.due_date || (t.created_at ? t.created_at.split('T')[0] : null);
+      if (!date) return;
+      const entry = dateMap.get(date) || { completed: 0, total: 0 };
+      entry.total++;
+      if (t.completed) entry.completed++;
+      dateMap.set(date, entry);
+    });
+
+    const history: DayHistory[] = [];
+    dateMap.forEach((val, date) => {
+      history.push({ date, completed: val.completed, total: val.total });
+    });
+
+    history.sort((a, b) => a.date.localeCompare(b.date));
+
+    // Keep last 60 days
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 60);
+    const cutoffStr = getDateStr(cutoff);
+    return history.filter(h => h.date >= cutoffStr);
   }, [tasks]);
 
-  useEffect(() => {
-    const data = getStreakData();
+  // Calculate streaks from task completion data
+  const streak = useMemo<StreakData>(() => {
     const today = getToday();
-    const yesterday = getYesterday();
 
-    if (hasCompletedTaskToday) {
-      if (data.lastActiveDate === today) {
-        setStreak({ ...data });
-        return;
-      }
-      if (!data.activeDates) data.activeDates = [];
-      if (!data.activeDates.includes(today)) data.activeDates.push(today);
-      if (data.lastActiveDate === yesterday) {
-        data.currentStreak += 1;
-      } else if (!data.lastActiveDate) {
-        data.currentStreak = 1;
-      } else {
-        data.currentStreak = 1;
-      }
-      data.lastActiveDate = today;
-      if (data.currentStreak > (data.bestStreak || 0)) {
-        data.bestStreak = data.currentStreak;
-      }
-    } else {
-      if (data.lastActiveDate && data.lastActiveDate !== today && data.lastActiveDate !== yesterday) {
-        data.currentStreak = 0;
+    // Get unique dates where user completed at least one task
+    const completedDates = new Set<string>();
+    tasks.forEach(t => {
+      if (!t.completed) return;
+      const date = t.due_date || (t.created_at ? t.created_at.split('T')[0] : null);
+      if (date) completedDates.add(date);
+    });
+
+    const sortedDates = Array.from(completedDates).sort().reverse();
+    if (sortedDates.length === 0) {
+      return { currentStreak: 0, bestStreak: 0, lastActiveDate: '', activeDates: [] };
+    }
+
+    // Calculate current streak - must include today or yesterday
+    let currentStreak = 0;
+    const checkDate = new Date();
+    const todayStr = getDateStr(checkDate);
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayStr = getDateStr(yesterdayDate);
+
+    if (completedDates.has(todayStr) || completedDates.has(yesterdayStr)) {
+      // Start counting from the most recent active date
+      const startDate = completedDates.has(todayStr) ? new Date(todayStr + 'T12:00:00') : new Date(yesterdayStr + 'T12:00:00');
+      const d = new Date(startDate);
+      while (completedDates.has(getDateStr(d))) {
+        currentStreak++;
+        d.setDate(d.getDate() - 1);
       }
     }
-    saveStreakData(data);
-    setStreak({ ...data });
-  }, [hasCompletedTaskToday, tasks]);
+
+    // Calculate best streak
+    let bestStreak = 0;
+    let tempStreak = 1;
+    const allDates = Array.from(completedDates).sort();
+    for (let i = 1; i < allDates.length; i++) {
+      const prev = new Date(allDates[i - 1] + 'T12:00:00');
+      const curr = new Date(allDates[i] + 'T12:00:00');
+      const diffDays = Math.round((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays === 1) {
+        tempStreak++;
+      } else {
+        bestStreak = Math.max(bestStreak, tempStreak);
+        tempStreak = 1;
+      }
+    }
+    bestStreak = Math.max(bestStreak, tempStreak, currentStreak);
+
+    return {
+      currentStreak,
+      bestStreak,
+      lastActiveDate: sortedDates[0] || '',
+      activeDates: Array.from(completedDates),
+    };
+  }, [tasks]);
 
   const productivity = useMemo<ProductivityData>(() => {
     const today = getToday();
@@ -153,47 +164,6 @@ export function useProductivity(tasks: DbTask[], scheduleBlocks?: { day: number;
     return { tasksCompletedToday: completed, totalTasksToday: relevantTasks.length, percentComplete: percent, avgMinutesPerTask: avgPerTask, activeMinutesToday: availableMinutes };
   }, [tasks, scheduleBlocks]);
 
-  // Build and save daily history
-  const weeklyHistory = useMemo<DayHistory[]>(() => {
-    const history = getHistory();
-    const today = getToday();
-    
-    // Update today's entry
-    const todayTasks = tasks.filter(t => t.due_date === today || t.created_at?.startsWith(today));
-    const todayCompleted = todayTasks.filter(t => t.completed).length;
-    const todayTotal = todayTasks.length;
-    
-    const existingIdx = history.findIndex(h => h.date === today);
-    if (existingIdx >= 0) {
-      history[existingIdx] = { date: today, completed: todayCompleted, total: todayTotal };
-    } else {
-      history.push({ date: today, completed: todayCompleted, total: todayTotal });
-    }
-
-    // Also build entries from task data for past dates we might have missed
-    const dateMap = new Map<string, { completed: number; total: number }>();
-    tasks.forEach(t => {
-      const date = t.due_date || (t.created_at ? t.created_at.split('T')[0] : null);
-      if (!date) return;
-      const entry = dateMap.get(date) || { completed: 0, total: 0 };
-      entry.total++;
-      if (t.completed) entry.completed++;
-      dateMap.set(date, entry);
-    });
-
-    dateMap.forEach((val, date) => {
-      if (date === today) return; // already handled
-      const idx = history.findIndex(h => h.date === date);
-      if (idx < 0) {
-        history.push({ date, completed: val.completed, total: val.total });
-      }
-    });
-
-    history.sort((a, b) => a.date.localeCompare(b.date));
-    saveHistory(history);
-    return history;
-  }, [tasks]);
-
   const level = useMemo(() => {
     const streakScore = Math.min(streak.currentStreak * 10, 50);
     const productivityScore = productivity.percentComplete * 0.5;
@@ -205,5 +175,38 @@ export function useProductivity(tasks: DbTask[], scheduleBlocks?: { day: number;
     return { ...current, score: Math.round(totalScore) };
   }, [streak.currentStreak, productivity.percentComplete]);
 
-  return { streak, productivity, level, levelConfig: LEVEL_CONFIG, weeklyHistory };
+  // Weekly summary data for Monday recap
+  const lastWeekSummary = useMemo(() => {
+    const now = new Date();
+    const lastMonday = new Date(now);
+    lastMonday.setDate(lastMonday.getDate() - lastMonday.getDay() - 6);
+    const lastSunday = new Date(lastMonday);
+    lastSunday.setDate(lastSunday.getDate() + 6);
+    const startStr = getDateStr(lastMonday);
+    const endStr = getDateStr(lastSunday);
+
+    const weekTasks = tasks.filter(t => {
+      const d = t.due_date || (t.created_at ? t.created_at.split('T')[0] : null);
+      return d && d >= startStr && d <= endStr;
+    });
+
+    const completed = weekTasks.filter(t => t.completed).length;
+    const pending = weekTasks.filter(t => !t.completed).length;
+
+    // Most productive day
+    const dayCount = [0, 0, 0, 0, 0, 0, 0];
+    weekTasks.filter(t => t.completed).forEach(t => {
+      const d = t.due_date || (t.created_at ? t.created_at.split('T')[0] : null);
+      if (d) {
+        const dow = new Date(d + 'T12:00:00').getDay();
+        dayCount[dow]++;
+      }
+    });
+    const bestDayIdx = dayCount.indexOf(Math.max(...dayCount));
+    const bestDay = DAY_NAMES[bestDayIdx];
+
+    return { completed, pending, bestDay, total: weekTasks.length };
+  }, [tasks]);
+
+  return { streak, productivity, level, levelConfig: LEVEL_CONFIG, weeklyHistory, lastWeekSummary };
 }
