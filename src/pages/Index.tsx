@@ -148,9 +148,10 @@ const Index = () => {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.key === 'Escape') {
-        // Close modals handled by Radix
-      }
+      if (e.key === '?' && !e.ctrlKey) { setShowShortcuts(true); return; }
+      if (e.key === 'n' || e.key === 'N') { setActiveTab('tareas'); return; }
+      if (e.key === 'd' || e.key === 'D') { setActiveTab('deberes'); return; }
+      if (e.key === 'e' || e.key === 'E') { setActiveTab('examenes'); return; }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
