@@ -284,6 +284,7 @@ export type Database = {
       tasks: {
         Row: {
           attachments: string[] | null
+          comments: Json
           completed: boolean
           created_at: string
           deleted_at: string | null
@@ -306,12 +307,14 @@ export type Database = {
           sport_type: string | null
           study_completed: boolean
           subject: string | null
+          task_status: string
           template_name: string | null
           type: string
           user_id: string
         }
         Insert: {
           attachments?: string[] | null
+          comments?: Json
           completed?: boolean
           created_at?: string
           deleted_at?: string | null
@@ -334,12 +337,14 @@ export type Database = {
           sport_type?: string | null
           study_completed?: boolean
           subject?: string | null
+          task_status?: string
           template_name?: string | null
           type: string
           user_id: string
         }
         Update: {
           attachments?: string[] | null
+          comments?: Json
           completed?: boolean
           created_at?: string
           deleted_at?: string | null
@@ -362,6 +367,7 @@ export type Database = {
           sport_type?: string | null
           study_completed?: boolean
           subject?: string | null
+          task_status?: string
           template_name?: string | null
           type?: string
           user_id?: string
@@ -474,6 +480,7 @@ export type Database = {
           nav_position: string
           notes_enabled: boolean
           notification_sound: boolean
+          onboarding_tour_completed: boolean
           partidos_mode: string
           pomodoro_enabled: boolean
           schedule_tab_enabled: boolean
@@ -499,6 +506,7 @@ export type Database = {
           nav_position?: string
           notes_enabled?: boolean
           notification_sound?: boolean
+          onboarding_tour_completed?: boolean
           partidos_mode?: string
           pomodoro_enabled?: boolean
           schedule_tab_enabled?: boolean
@@ -524,6 +532,7 @@ export type Database = {
           nav_position?: string
           notes_enabled?: boolean
           notification_sound?: boolean
+          onboarding_tour_completed?: boolean
           partidos_mode?: string
           pomodoro_enabled?: boolean
           schedule_tab_enabled?: boolean
