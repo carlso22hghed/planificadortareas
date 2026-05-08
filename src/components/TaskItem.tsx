@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { DbTask } from '@/types/app';
-import { Check, Trash2, Clock, CalendarDays, MapPin, Pencil, CheckCircle, BookOpen, BarChart3, AlertCircle, CircleAlert, Paperclip, Repeat } from 'lucide-react';
+import { Check, Trash2, Clock, CalendarDays, MapPin, Pencil, CheckCircle, BookOpen, BarChart3, AlertCircle, CircleAlert, Paperclip, Repeat, PauseCircle, Ban } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
