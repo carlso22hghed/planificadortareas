@@ -82,6 +82,7 @@ const Index = () => {
   const tasks = useMemo(() => allTasks.filter(t => !(t as any).deleted_at), [allTasks]);
 
   const noxAI = useNoxAI(tasks);
+  const { lastWeekSummary } = useProductivity(tasks);
   const { addPoints, stats: gamificationStats } = useGamification();
   const isPremium = (gamificationStats?.premiumDaysRemaining ?? 0) > 0;
   
