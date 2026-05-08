@@ -7,6 +7,7 @@ import type { LucideIcon } from 'lucide-react';
 import SortableTaskItem from './SortableTaskItem';
 import AddTaskDialog from './AddTaskDialog';
 import EditTaskDialog from './EditTaskDialog';
+import QuickCapture from './QuickCapture';
 import { supabase } from '@/integrations/supabase/client';
 
 interface TaskListProps {
