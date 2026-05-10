@@ -237,10 +237,10 @@ const VoiceNotes = ({ userId }: { userId?: string }) => {
     const fileName = `${userId}/${Date.now()}.webm`;
     const { error } = await supabase.storage.from('voice-notes').upload(fileName, audioBlob);
     if (error) { toast({ title: 'Error', description: 'No se pudo guardar el audio.', variant: 'destructive' }); return; }
-    const { data: urlData } = supabase.storage.from('voice-notes').getPublicUrl(fileName);
+    // Store the storage path (not a public URL) — bucket is private; signed URLs are generated at display time
     const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
     await supabase.from('voice_notes').insert({
-      title: title.trim(), audio_url: urlData.publicUrl, duration_seconds: duration, user_id: userId,
+      title: title.trim(), audio_url: fileName, duration_seconds: duration, user_id: userId,
       reminder_date: reminderEnabled && reminderDate ? reminderDate : null,
       reminder_time: reminderEnabled && reminderTime ? reminderTime : null,
       reminder_frequency: reminderEnabled && reminderFrequency > 0 ? reminderFrequency : null,
