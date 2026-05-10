@@ -104,8 +104,7 @@ const Auth = () => {
 
   const enterDemoMode = () => {
     localStorage.setItem('demo-mode', 'true');
-    navigate('/');
-    window.location.reload();
+    navigate('/demo');
   };
 
   return (
@@ -165,10 +164,10 @@ const Auth = () => {
 
           <Button
             onClick={enterDemoMode}
-            variant="ghost"
-            className="w-full gap-2 text-muted-foreground hover:text-foreground"
+            variant="secondary"
+            className="w-full gap-2 h-11 rounded-xl font-bold"
           >
-            <Eye className="w-4 h-4" /> Probar sin cuenta (modo demo)
+            <Eye className="w-4 h-4" /> Probar Demo Gratis
           </Button>
         </div>
 
