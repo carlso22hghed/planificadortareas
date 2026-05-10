@@ -286,6 +286,7 @@ export type Database = {
           attachments: string[] | null
           comments: Json
           completed: boolean
+          completed_at: string | null
           created_at: string
           deleted_at: string | null
           description: string | null
@@ -316,6 +317,7 @@ export type Database = {
           attachments?: string[] | null
           comments?: Json
           completed?: boolean
+          completed_at?: string | null
           created_at?: string
           deleted_at?: string | null
           description?: string | null
@@ -346,6 +348,7 @@ export type Database = {
           attachments?: string[] | null
           comments?: Json
           completed?: boolean
+          completed_at?: string | null
           created_at?: string
           deleted_at?: string | null
           description?: string | null

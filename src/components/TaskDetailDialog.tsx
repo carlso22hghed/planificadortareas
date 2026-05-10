@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, Clock, ExternalLink, Paperclip, Repeat, Timer, PauseCircle, Ban, Send, MessageCircle } from 'lucide-react';
+import { CalendarDays, Clock, ExternalLink, Paperclip, Repeat, Timer, PauseCircle, Ban, Send, MessageCircle, Trash2 } from 'lucide-react';
 import type { DbTask } from '@/types/app';
 import { cn } from '@/lib/utils';
 import { getSubjectColor } from '@/lib/subject-colors';
@@ -87,6 +87,13 @@ const TaskDetailDialog = ({ task, open, onOpenChange }: TaskDetailDialogProps) =
     await supabase.from('tasks').update({ comments: updated } as any).eq('id', task.id);
     setComments(updated);
     setNewComment('');
+    queryClient.invalidateQueries({ queryKey: ['tasks'] });
+  };
+
+  const deleteComment = async (idx: number) => {
+    const updated = comments.filter((_, i) => i !== idx);
+    await supabase.from('tasks').update({ comments: updated } as any).eq('id', task.id);
+    setComments(updated);
     queryClient.invalidateQueries({ queryKey: ['tasks'] });
   };
 
@@ -196,11 +203,20 @@ const TaskDetailDialog = ({ task, open, onOpenChange }: TaskDetailDialogProps) =
             {comments.length > 0 && (
               <div className="space-y-1.5 max-h-40 overflow-y-auto">
                 {comments.map((c, i) => (
-                  <div key={i} className="bg-muted/30 rounded-lg p-2">
-                    <p className="text-sm text-foreground">{c.text}</p>
-                    <p className="text-[9px] text-muted-foreground mt-0.5">
-                      {new Date(c.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                    </p>
+                  <div key={i} className="bg-muted/30 rounded-lg p-2 group flex items-start gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-foreground break-words">{c.text}</p>
+                      <p className="text-[9px] text-muted-foreground mt-0.5">
+                        {new Date(c.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => deleteComment(i)}
+                      className="opacity-60 hover:opacity-100 hover:text-destructive transition-opacity p-1 -m-1 shrink-0"
+                      title="Borrar comentario"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 ))}
               </div>

@@ -8,16 +8,17 @@ interface QuickCaptureProps {
   onAdd: (task: Partial<DbTask>) => void | Promise<void>;
   type?: string;
   placeholder?: string;
+  subjects?: string[];
 }
 
-const QuickCapture = ({ onAdd, type = 'task', placeholder }: QuickCaptureProps) => {
+const QuickCapture = ({ onAdd, type = 'task', placeholder, subjects = [] }: QuickCaptureProps) => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef<any>(null);
 
   const handleSubmit = async () => {
-    const parsed = parseNaturalLanguage(input);
+    const parsed = parseNaturalLanguage(input, subjects);
     if (!parsed) return;
     
     setLoading(true);
@@ -26,6 +27,7 @@ const QuickCapture = ({ onAdd, type = 'task', placeholder }: QuickCaptureProps) 
       type,
       due_date: parsed.due_date,
       due_time: parsed.due_time,
+      ...(parsed.subject ? { subject: parsed.subject } : {}),
     });
     setInput('');
     setLoading(false);
@@ -57,7 +59,7 @@ const QuickCapture = ({ onAdd, type = 'task', placeholder }: QuickCaptureProps) 
     setListening(true);
   };
 
-  const preview = input.trim() ? parseNaturalLanguage(input) : null;
+  const preview = input.trim() ? parseNaturalLanguage(input, subjects) : null;
   const placeholderText = placeholder || (
     type === 'homework' ? 'mañana ejercicios de matemáticas...'
     : type === 'exam' ? 'jueves examen de historia...'
@@ -108,6 +110,7 @@ const QuickCapture = ({ onAdd, type = 'task', placeholder }: QuickCaptureProps) 
           <span className="font-semibold text-foreground">{preview.name}</span>
           {preview.due_date && <span>📅 {new Date(preview.due_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>}
           {preview.due_time && <span>🕐 {preview.due_time}</span>}
+          {preview.subject && <span>📚 {preview.subject}</span>}
         </div>
       )}
     </div>
