@@ -196,7 +196,17 @@ const VoiceNotes = ({ userId }: { userId?: string }) => {
     queryKey: ['voice-notes', userId],
     queryFn: async () => {
       const { data } = await supabase.from('voice_notes').select('*').eq('user_id', userId!).order('created_at', { ascending: false });
-      return data || [];
+      const rows = data || [];
+      // Resolve a fresh signed URL for each note. Legacy rows store a full public URL — extract the path.
+      const resolved = await Promise.all(rows.map(async (n: any) => {
+        let path: string = n.audio_url || '';
+        const marker = '/voice-notes/';
+        if (path.includes(marker)) path = path.split(marker)[1];
+        if (!path) return { ...n, signed_url: '' };
+        const { data: signed } = await supabase.storage.from('voice-notes').createSignedUrl(path, 3600);
+        return { ...n, signed_url: signed?.signedUrl || '' };
+      }));
+      return resolved;
     },
     enabled: !!userId,
   });
