@@ -196,7 +196,17 @@ const VoiceNotes = ({ userId }: { userId?: string }) => {
     queryKey: ['voice-notes', userId],
     queryFn: async () => {
       const { data } = await supabase.from('voice_notes').select('*').eq('user_id', userId!).order('created_at', { ascending: false });
-      return data || [];
+      const rows = data || [];
+      // Resolve a fresh signed URL for each note. Legacy rows store a full public URL — extract the path.
+      const resolved = await Promise.all(rows.map(async (n: any) => {
+        let path: string = n.audio_url || '';
+        const marker = '/voice-notes/';
+        if (path.includes(marker)) path = path.split(marker)[1];
+        if (!path) return { ...n, signed_url: '' };
+        const { data: signed } = await supabase.storage.from('voice-notes').createSignedUrl(path, 3600);
+        return { ...n, signed_url: signed?.signedUrl || '' };
+      }));
+      return resolved;
     },
     enabled: !!userId,
   });
@@ -237,10 +247,10 @@ const VoiceNotes = ({ userId }: { userId?: string }) => {
     const fileName = `${userId}/${Date.now()}.webm`;
     const { error } = await supabase.storage.from('voice-notes').upload(fileName, audioBlob);
     if (error) { toast({ title: 'Error', description: 'No se pudo guardar el audio.', variant: 'destructive' }); return; }
-    const { data: urlData } = supabase.storage.from('voice-notes').getPublicUrl(fileName);
+    // Store the storage path (not a public URL) — bucket is private; signed URLs are generated at display time
     const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
     await supabase.from('voice_notes').insert({
-      title: title.trim(), audio_url: urlData.publicUrl, duration_seconds: duration, user_id: userId,
+      title: title.trim(), audio_url: fileName, duration_seconds: duration, user_id: userId,
       reminder_date: reminderEnabled && reminderDate ? reminderDate : null,
       reminder_time: reminderEnabled && reminderTime ? reminderTime : null,
       reminder_frequency: reminderEnabled && reminderFrequency > 0 ? reminderFrequency : null,
@@ -349,17 +359,17 @@ const VoiceNotes = ({ userId }: { userId?: string }) => {
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm">🎙️ {note.title}</p>
-                <audio src={note.audio_url} controls className="w-full mt-2" />
+                <audio src={note.signed_url} controls className="w-full mt-2" />
                 <p className="text-[10px] text-muted-foreground mt-1">
                   {note.duration_seconds && `${Math.floor(note.duration_seconds / 60)}:${String(note.duration_seconds % 60).padStart(2, '0')} · `}
                   {new Date(note.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
               <div className="flex items-center gap-0.5 shrink-0">
-                <button onClick={() => downloadNote(note.audio_url, note.title)} className="p-1.5 rounded-lg hover:bg-muted transition-colors" title="Descargar">
+                <button onClick={() => downloadNote(note.signed_url, note.title)} className="p-1.5 rounded-lg hover:bg-muted transition-colors" title="Descargar">
                   <Download className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
-                <button onClick={() => shareNote(note.audio_url, note.title)} className="p-1.5 rounded-lg hover:bg-muted transition-colors" title="Compartir">
+                <button onClick={() => shareNote(note.signed_url, note.title)} className="p-1.5 rounded-lg hover:bg-muted transition-colors" title="Compartir">
                   <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
                 <button onClick={() => deleteNote(note.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors">
