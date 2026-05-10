@@ -11,6 +11,7 @@ import Onboarding from "./pages/Onboarding";
 import Admin from "./pages/Admin";
 import Schedule from "./pages/Schedule";
 import Uso from "./pages/Uso";
+import Demo from "./pages/Demo";
 import NotFound from "./pages/NotFound";
 import SharedListView from "./components/SharedListView";
 
@@ -77,6 +78,7 @@ const App = () => (
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
             <Route path="/uso" element={<Uso />} />
+            <Route path="/demo" element={<Demo />} />
             <Route path="/shared/:token" element={<SharedRoute />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
