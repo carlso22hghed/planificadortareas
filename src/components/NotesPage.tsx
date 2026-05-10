@@ -359,17 +359,17 @@ const VoiceNotes = ({ userId }: { userId?: string }) => {
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm">🎙️ {note.title}</p>
-                <audio src={note.audio_url} controls className="w-full mt-2" />
+                <audio src={note.signed_url} controls className="w-full mt-2" />
                 <p className="text-[10px] text-muted-foreground mt-1">
                   {note.duration_seconds && `${Math.floor(note.duration_seconds / 60)}:${String(note.duration_seconds % 60).padStart(2, '0')} · `}
                   {new Date(note.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
               <div className="flex items-center gap-0.5 shrink-0">
-                <button onClick={() => downloadNote(note.audio_url, note.title)} className="p-1.5 rounded-lg hover:bg-muted transition-colors" title="Descargar">
+                <button onClick={() => downloadNote(note.signed_url, note.title)} className="p-1.5 rounded-lg hover:bg-muted transition-colors" title="Descargar">
                   <Download className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
-                <button onClick={() => shareNote(note.audio_url, note.title)} className="p-1.5 rounded-lg hover:bg-muted transition-colors" title="Compartir">
+                <button onClick={() => shareNote(note.signed_url, note.title)} className="p-1.5 rounded-lg hover:bg-muted transition-colors" title="Compartir">
                   <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
                 <button onClick={() => deleteNote(note.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors">
