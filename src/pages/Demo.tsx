@@ -118,19 +118,17 @@ const Demo = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Demo banner */}
-      <div className="sticky top-0 z-50 bg-amber-500/95 text-amber-950 backdrop-blur-md px-4 py-2.5 flex items-center justify-between gap-3 shadow-md">
+      {/* Top bar */}
+      <div className="sticky top-0 z-50 bg-card/90 backdrop-blur-md px-4 py-2.5 flex items-center justify-between gap-3 shadow-sm border-b border-border">
         <div className="flex items-center gap-2 min-w-0">
-          <Sparkles className="w-4 h-4 shrink-0" />
-          <p className="text-xs sm:text-sm font-semibold truncate">
-            Estás en modo demo. Los datos no se guardan permanentemente.{' '}
-            <Link to="/auth" className="underline font-bold whitespace-nowrap">Regístrate ahora</Link> para guardar tu progreso.
+          <Sparkles className="w-4 h-4 shrink-0 text-primary" />
+          <p className="text-xs sm:text-sm font-semibold truncate text-foreground">
+            Planificador Tareas
           </p>
         </div>
-        <button onClick={exitDemo} className="shrink-0 flex items-center gap-1 text-xs font-bold bg-amber-950 text-amber-50 px-2.5 py-1 rounded-lg hover:bg-amber-900 transition-colors">
-          <LogOut className="w-3 h-3" /> Salir
-        </button>
+        <InstallAppButton size="sm" variant="secondary" label="Instalar" className="shrink-0 h-8 rounded-lg" />
       </div>
+
 
       <div className="max-w-2xl mx-auto p-4 space-y-5">
         <header className="text-center pt-4">
