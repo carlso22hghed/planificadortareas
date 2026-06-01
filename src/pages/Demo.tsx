@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Check, Trash2, Plus, X, LogOut, Clock, CalendarDays, Sparkles } from 'lucide-react';
+import InstallAppButton from '@/components/InstallAppButton';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { parseNaturalLanguage } from '@/lib/natural-language-parser';
