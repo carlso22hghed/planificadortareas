@@ -8,7 +8,6 @@ import { Eye } from 'lucide-react';
 
 const Auth = () => {
   const [accepted, setAccepted] = useState(false);
-  const [accepted, setAccepted] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const refCode = searchParams.get('ref');
