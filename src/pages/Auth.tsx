@@ -86,21 +86,6 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    try {
-      const result = await lovable.auth.signInWithOAuth('google', {
-        redirect_uri: window.location.origin,
-      });
-      if (result.error) {
-        toast({ title: 'Error al iniciar sesión', description: String(result.error), variant: 'destructive' });
-      }
-    } catch (err) {
-      toast({ title: 'Error', description: 'No se pudo iniciar sesión con Google.', variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const enterDemoMode = () => {
     localStorage.setItem('demo-mode', 'true');
