@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { lovable } from '@/integrations/lovable';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -8,7 +7,7 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Eye } from 'lucide-react';
 
 const Auth = () => {
-  const [loading, setLoading] = useState(false);
+  const [accepted, setAccepted] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
