@@ -31,7 +31,10 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  if (!user) return <Navigate to="/auth" replace />;
+  if (!user) {
+    if (typeof window !== 'undefined') localStorage.setItem('demo-mode', 'true');
+    return <Navigate to="/demo" replace />;
+  }
   if (profile && !profile.onboarding_completed) return <Navigate to="/onboarding" replace />;
 
   return (
@@ -72,7 +75,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
+            <Route path="/auth" element={<Navigate to="/demo" replace />} />
             <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
