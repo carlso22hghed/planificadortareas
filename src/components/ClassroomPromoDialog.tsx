@@ -1,57 +1,58 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { GraduationCap } from 'lucide-react';
+import { Download } from 'lucide-react';
+import InstallAppButton from '@/components/InstallAppButton';
 
 interface ClassroomPromoDialogProps {
-  onSync: () => void;
+  onSync?: () => void;
 }
 
-const ClassroomPromoDialog = ({ onSync }: ClassroomPromoDialogProps) => {
+// Show promo until June 30, 2026 (inclusive). Hide from July 1, 2026 onwards.
+const PROMO_END = new Date('2026-07-01T00:00:00');
+
+const ClassroomPromoDialog = (_props: ClassroomPromoDialogProps) => {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const count = parseInt(localStorage.getItem('classroomPromoCount') || '0', 10);
-    const alreadySynced = localStorage.getItem('classroomSynced') === 'true';
-
-    if (count < 2 && !alreadySynced) {
-      setOpen(true);
-      localStorage.setItem('classroomPromoCount', String(count + 1));
-    }
+    if (new Date() >= PROMO_END) return;
+    const dismissed = localStorage.getItem('installPromoDismissed') === 'true';
+    const isStandalone =
+      window.matchMedia?.('(display-mode: standalone)').matches ||
+      // @ts-ignore - iOS Safari
+      window.navigator.standalone === true;
+    if (dismissed || isStandalone) return;
+    setOpen(true);
   }, []);
 
-  const handleSync = () => {
+  const handleClose = () => {
+    localStorage.setItem('installPromoDismissed', 'true');
     setOpen(false);
-    onSync();
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); else setOpen(v); }}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
-            <span className="text-2xl">🆕</span> Nuevo
+            <span className="text-2xl">🆕</span> Nueva función
           </DialogTitle>
           <DialogDescription className="text-sm">
-            Sincroniza tus tareas con Google Classroom
+            Instalar Planificador Tareas
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 pt-2">
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-primary/10 border border-primary/20">
-            <GraduationCap className="w-10 h-10 text-primary shrink-0" />
+          <div className="flex items-center gap-3 p-4 rounded-2xl bg-primary/10 border border-primary/20">
+            <Download className="w-10 h-10 text-primary shrink-0" />
             <div>
-              <p className="text-sm font-semibold text-foreground">Google Classroom</p>
-              <p className="text-xs text-muted-foreground">Importa automáticamente tus tareas y deberes de Classroom</p>
+              <p className="text-sm font-semibold text-foreground">Planificador Tareas en tu dispositivo</p>
+              <p className="text-xs text-muted-foreground">Acceso rápido desde tu pantalla de inicio, como una app nativa.</p>
             </div>
           </div>
 
-          <Button onClick={handleSync} className="w-full gap-2 h-11 rounded-xl">
-            <GraduationCap className="w-4 h-4" />
-            Sincronizar con Classroom
-          </Button>
+          <InstallAppButton label="Instalar app" className="w-full h-11 rounded-xl" variant="default" />
 
           <button
-            onClick={() => setOpen(false)}
+            onClick={handleClose}
             className="w-full py-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-medium"
           >
             Ahora no

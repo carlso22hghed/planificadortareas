@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import ForceProfileDialog from "@/components/ForceProfileDialog";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import Demo from "./pages/Demo";
 import Onboarding from "./pages/Onboarding";
 import Admin from "./pages/Admin";
 import Schedule from "./pages/Schedule";
@@ -80,7 +81,7 @@ const App = () => (
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
             <Route path="/uso" element={<Uso />} />
-            <Route path="/demo" element={<Navigate to="/auth" replace />} />
+            <Route path="/demo" element={<Demo />} />
             <Route path="/shared/:token" element={<SharedRoute />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

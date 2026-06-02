@@ -15,7 +15,8 @@ const REWARDS = [
 const PREMIUM_FEATURES = [
   { name: 'Mensajes ilimitados en Nox', description: 'Sin límite de 20 mensajes al día', icon: '💬' },
   { name: 'Acceso Offline Total', description: 'Trabaja sin conexión y sincroniza al volver a tener internet', icon: '📡' },
-  { name: 'Espacios Compartidos', description: 'Listas de tareas colaborativas con chat integrado por tarea y asignación de responsables', icon: '👥' },
+  { name: 'Multidispositivo', description: 'Sincronización avanzada en tiempo real entre distintos dispositivos (móvil, tablet, ordenador)', icon: '📱' },
+  { name: 'Soporte Técnico Prioritario', description: 'Atención al cliente garantizada en menos de 24 horas (o vía chat en vivo)', icon: '🛟' },
 ];
 
 const PremiosPage = () => {

@@ -40,16 +40,39 @@ function getDateStr(d: Date): string {
   return d.toISOString().split('T')[0];
 }
 
-/** Returns the date a task was actually completed (yyyy-mm-dd) or null. */
+/** Returns the date a task counts as completed for productivity (yyyy-mm-dd) or null.
+ *  Exams: only count "estudiar/practicar" (study_completed) and attribute to the
+ *  day BEFORE the exam's due_date (so it boosts productivity on the study day).
+ *  Other tasks: use completed + completed_at as usual.
+ */
 function completionDate(t: DbTask): string | null {
+  if (t.type === 'exam') {
+    if (!(t as any).study_completed) return null;
+    if (t.due_date) {
+      const d = new Date(t.due_date + 'T12:00:00');
+      d.setDate(d.getDate() - 1);
+      return getDateStr(d);
+    }
+    const ca = (t as any).completed_at;
+    if (ca) return ca.split('T')[0];
+    return t.created_at ? t.created_at.split('T')[0] : null;
+  }
   if (!t.completed) return null;
   const ca = (t as any).completed_at;
   if (ca) return ca.split('T')[0];
-  // Fallback for legacy tasks: use due_date or created_at
   return t.due_date || (t.created_at ? t.created_at.split('T')[0] : null);
 }
 
 function completionTimestamp(t: DbTask): Date | null {
+  if (t.type === 'exam') {
+    if (!(t as any).study_completed) return null;
+    if (t.due_date) {
+      const d = new Date(t.due_date + 'T12:00:00');
+      d.setDate(d.getDate() - 1);
+      return d;
+    }
+    return null;
+  }
   if (!t.completed) return null;
   const ca = (t as any).completed_at;
   if (ca) return new Date(ca);
@@ -176,7 +199,7 @@ export function useProductivity(tasks: DbTask[], _scheduleBlocks?: { day: number
 
   // Productivity level: only grows with completions and streak.
   const level = useMemo(() => {
-    const totalCompleted = tasks.filter(t => t.completed).length;
+    const totalCompleted = tasks.filter(t => completionDate(t) !== null).length;
     const completionScore = Math.min(totalCompleted * 0.5, 50);
     const streakScore = Math.min(streak.currentStreak * 5, 50);
     const totalScore = Math.round(completionScore + streakScore);

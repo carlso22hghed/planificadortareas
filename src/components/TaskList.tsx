@@ -34,8 +34,16 @@ const TaskList = ({ tasks, type, onAdd, onToggle, onDelete, onUpdate, onToggleSt
     .filter(t => t.type === type)
     .sort((a, b) => {
       if (a.completed !== b.completed) return a.completed ? 1 : -1;
-      if ((a as any).sort_order !== (b as any).sort_order) return ((a as any).sort_order || 0) - ((b as any).sort_order || 0);
-      return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+      if (type === 'exam') {
+        // Exams: keep manual sort_order (no auto-sort by due date)
+        if ((a as any).sort_order !== (b as any).sort_order) return ((a as any).sort_order || 0) - ((b as any).sort_order || 0);
+        return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+      }
+      // Others: sort primarily by due date
+      const ad = a.due_date ? new Date(a.due_date).getTime() : Infinity;
+      const bd = b.due_date ? new Date(b.due_date).getTime() : Infinity;
+      if (ad !== bd) return ad - bd;
+      return ((a as any).sort_order || 0) - ((b as any).sort_order || 0);
     });
 
   // Group by subject based on grouping mode
