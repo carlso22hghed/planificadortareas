@@ -32,8 +32,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!user) {
-    if (typeof window !== 'undefined') localStorage.setItem('demo-mode', 'true');
-    return <Navigate to="/demo" replace />;
+    return <Navigate to="/auth" replace />;
   }
   if (profile && !profile.onboarding_completed) return <Navigate to="/onboarding" replace />;
 
