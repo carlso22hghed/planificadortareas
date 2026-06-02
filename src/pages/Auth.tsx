@@ -143,6 +143,19 @@ const Auth = () => {
             </svg>
             {loading ? 'Conectando…' : 'Continuar con Google'}
           </Button>
+
+          <div className="relative my-2">
+            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+            <div className="relative flex justify-center text-[10px] uppercase">
+              <span className="bg-card px-2 text-muted-foreground font-bold">o</span>
+            </div>
+          </div>
+
+          <Link to="/demo" className="block">
+            <Button variant="secondary" className="w-full h-11 rounded-xl font-bold">
+              Probar Demo Gratis
+            </Button>
+          </Link>
         </div>
 
         <p className="text-xs text-muted-foreground">
