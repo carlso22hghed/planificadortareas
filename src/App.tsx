@@ -11,7 +11,7 @@ import Onboarding from "./pages/Onboarding";
 import Admin from "./pages/Admin";
 import Schedule from "./pages/Schedule";
 import Uso from "./pages/Uso";
-import Demo from "./pages/Demo";
+
 import NotFound from "./pages/NotFound";
 import SharedListView from "./components/SharedListView";
 
@@ -32,8 +32,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!user) {
-    if (typeof window !== 'undefined') localStorage.setItem('demo-mode', 'true');
-    return <Navigate to="/demo" replace />;
+    return <Navigate to="/auth" replace />;
   }
   if (profile && !profile.onboarding_completed) return <Navigate to="/onboarding" replace />;
 
@@ -75,13 +74,13 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/auth" element={<Navigate to="/demo" replace />} />
+            <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
             <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
             <Route path="/uso" element={<Uso />} />
-            <Route path="/demo" element={<Demo />} />
+            <Route path="/demo" element={<Navigate to="/auth" replace />} />
             <Route path="/shared/:token" element={<SharedRoute />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
