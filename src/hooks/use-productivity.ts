@@ -199,7 +199,7 @@ export function useProductivity(tasks: DbTask[], _scheduleBlocks?: { day: number
 
   // Productivity level: only grows with completions and streak.
   const level = useMemo(() => {
-    const totalCompleted = tasks.filter(t => t.completed).length;
+    const totalCompleted = tasks.filter(t => completionDate(t) !== null).length;
     const completionScore = Math.min(totalCompleted * 0.5, 50);
     const streakScore = Math.min(streak.currentStreak * 5, 50);
     const totalScore = Math.round(completionScore + streakScore);
