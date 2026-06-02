@@ -11,7 +11,7 @@ import Onboarding from "./pages/Onboarding";
 import Admin from "./pages/Admin";
 import Schedule from "./pages/Schedule";
 import Uso from "./pages/Uso";
-import Demo from "./pages/Demo";
+
 import NotFound from "./pages/NotFound";
 import SharedListView from "./components/SharedListView";
 
