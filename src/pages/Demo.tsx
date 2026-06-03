@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Check, Trash2, Plus, X, LogOut, Clock, CalendarDays, Sparkles } from 'lucide-react';
+import { Check, Trash2, Plus, X, LogOut, Clock, CalendarDays, Sparkles, ArrowLeft } from 'lucide-react';
 import InstallAppButton from '@/components/InstallAppButton';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -122,6 +122,10 @@ const Demo = () => {
       {/* Top bar */}
       <div className="sticky top-0 z-50 bg-card/90 backdrop-blur-md px-4 py-2.5 flex items-center justify-between gap-3 shadow-sm border-b border-border">
         <div className="flex items-center gap-2 min-w-0">
+          <Button onClick={exitDemo} size="sm" variant="ghost" className="h-8 px-2 rounded-lg shrink-0">
+            <ArrowLeft className="w-4 h-4" />
+            <span className="hidden sm:inline text-xs font-semibold">Iniciar sesión</span>
+          </Button>
           <Sparkles className="w-4 h-4 shrink-0 text-primary" />
           <p className="text-xs sm:text-sm font-semibold truncate text-foreground">
             Planificador Tareas
