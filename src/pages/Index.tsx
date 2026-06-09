@@ -499,7 +499,13 @@ const Index = () => {
           )}
         >
           <div className={cn('px-3 pb-4 flex justify-center', sidebarExpanded && 'px-4')}>
-            <img src="/logo.png" alt="Logo" className="w-8 h-8 rounded-lg" />
+            <button
+              onClick={(e) => { e.stopPropagation(); const r = (e.currentTarget as HTMLElement).getBoundingClientRect(); setPageTogglePos({ x: r.right + 8, y: r.top }); setShowPageToggleMenu(true); }}
+              title="Páginas visibles"
+              className="cursor-pointer"
+            >
+              <img src="/logo.png" alt="Logo" className="w-8 h-8 rounded-lg" />
+            </button>
           </div>
           {currentTabs.map(tab => {
             const Icon = tab.icon;
