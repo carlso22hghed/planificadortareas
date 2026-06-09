@@ -676,6 +676,7 @@ const Index = () => {
             {activeTab === 'premios' && <PremiosPage />}
             {activeTab === 'calendario' && <CalendarView tasks={tasks} />}
             {activeTab === 'papelera' && <TrashPage />}
+            {activeTab === 'orden-dia' && <OrdenDiaPage />}
             <PrivacyFooter />
           </main>
         </div>
