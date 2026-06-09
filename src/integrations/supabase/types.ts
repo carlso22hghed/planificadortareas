@@ -470,13 +470,17 @@ export type Database = {
       user_settings: {
         Row: {
           app_name: string
+          calendario_enabled: boolean
           context_menu_order: string[]
           created_at: string
           custom_subjects: string[]
           dark_mode: boolean
+          deberes_enabled: boolean
           design_style: string
           dont_forget_enabled: boolean
           enabled_subjects: string[]
+          eventos_enabled: boolean
+          examenes_enabled: boolean
           font_family: string
           grouping_mode: string
           id: string
@@ -484,8 +488,12 @@ export type Database = {
           notes_enabled: boolean
           notification_sound: boolean
           onboarding_tour_completed: boolean
+          papelera_enabled: boolean
+          partidos_enabled: boolean
           partidos_mode: string
           pomodoro_enabled: boolean
+          premios_enabled: boolean
+          productividad_enabled: boolean
           schedule_tab_enabled: boolean
           school_background: string
           school_name: string
@@ -496,13 +504,17 @@ export type Database = {
         }
         Insert: {
           app_name?: string
+          calendario_enabled?: boolean
           context_menu_order?: string[]
           created_at?: string
           custom_subjects?: string[]
           dark_mode?: boolean
+          deberes_enabled?: boolean
           design_style?: string
           dont_forget_enabled?: boolean
           enabled_subjects?: string[]
+          eventos_enabled?: boolean
+          examenes_enabled?: boolean
           font_family?: string
           grouping_mode?: string
           id?: string
@@ -510,8 +522,12 @@ export type Database = {
           notes_enabled?: boolean
           notification_sound?: boolean
           onboarding_tour_completed?: boolean
+          papelera_enabled?: boolean
+          partidos_enabled?: boolean
           partidos_mode?: string
           pomodoro_enabled?: boolean
+          premios_enabled?: boolean
+          productividad_enabled?: boolean
           schedule_tab_enabled?: boolean
           school_background?: string
           school_name?: string
@@ -522,13 +538,17 @@ export type Database = {
         }
         Update: {
           app_name?: string
+          calendario_enabled?: boolean
           context_menu_order?: string[]
           created_at?: string
           custom_subjects?: string[]
           dark_mode?: boolean
+          deberes_enabled?: boolean
           design_style?: string
           dont_forget_enabled?: boolean
           enabled_subjects?: string[]
+          eventos_enabled?: boolean
+          examenes_enabled?: boolean
           font_family?: string
           grouping_mode?: string
           id?: string
@@ -536,8 +556,12 @@ export type Database = {
           notes_enabled?: boolean
           notification_sound?: boolean
           onboarding_tour_completed?: boolean
+          papelera_enabled?: boolean
+          partidos_enabled?: boolean
           partidos_mode?: string
           pomodoro_enabled?: boolean
+          premios_enabled?: boolean
+          productividad_enabled?: boolean
           schedule_tab_enabled?: boolean
           school_background?: string
           school_name?: string
