@@ -542,6 +542,10 @@ const Index = () => {
                 </button>
               )}
               <div>
+                <h1 className="text-2xl font-extrabold text-primary-foreground">{settings.app_name}</h1>
+                <p className="text-primary-foreground/70 text-sm font-medium mt-0.5">{settings.school_name}</p>
+                {profile && <p className="text-primary-foreground/60 text-xs mt-0.5 flex items-center gap-1">Hola, {profile.display_name} <Hand className="w-3 h-3" /></p>}
+              </div>
             </div>
             <div className="flex items-center gap-1">
               {showDontForgetButton && (
