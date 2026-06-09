@@ -118,6 +118,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Realtime sync of user_settings across devices (page toggles + order, etc.)
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`user_settings_sync_${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'user_settings', filter: `user_id=eq.${user.id}` },
+        () => { refreshSettings(); }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
   const signOut = async () => {
     if (user) {
       await supabase.from('profiles').update({ is_active: false }).eq('user_id', user.id);
