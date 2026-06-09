@@ -532,12 +532,16 @@ const Index = () => {
         <div className={cn('max-w-4xl w-full', isLeftNav ? 'mx-auto' : 'mx-auto')}>
           <header className="gradient-hero px-5 pt-8 pb-6 rounded-b-3xl flex items-start justify-between relative">
             <div className="flex items-center gap-3">
-              {!isLeftNav && <img src="/logo.png" alt="Logo" className="w-10 h-10 rounded-xl" />}
+              {!isLeftNav && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); const r = (e.currentTarget as HTMLElement).getBoundingClientRect(); setPageTogglePos({ x: r.left, y: r.bottom + 4 }); setShowPageToggleMenu(true); }}
+                  title="Páginas visibles"
+                  className="cursor-pointer"
+                >
+                  <img src="/logo.png" alt="Logo" className="w-10 h-10 rounded-xl" />
+                </button>
+              )}
               <div>
-                <h1 className="text-2xl font-extrabold text-primary-foreground">{settings.app_name}</h1>
-                <p className="text-primary-foreground/70 text-sm font-medium mt-0.5">{settings.school_name}</p>
-                {profile && <p className="text-primary-foreground/60 text-xs mt-0.5 flex items-center gap-1">Hola, {profile.display_name} <Hand className="w-3 h-3" /></p>}
-              </div>
             </div>
             <div className="flex items-center gap-1">
               {showDontForgetButton && (
