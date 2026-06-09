@@ -44,6 +44,33 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_agendas: {
+        Row: {
+          created_at: string
+          data: Json
+          date: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          date: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          date?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dont_forget: {
         Row: {
           content: string
@@ -488,6 +515,7 @@ export type Database = {
           notes_enabled: boolean
           notification_sound: boolean
           onboarding_tour_completed: boolean
+          orden_dia_enabled: boolean
           papelera_enabled: boolean
           partidos_enabled: boolean
           partidos_mode: string
@@ -522,6 +550,7 @@ export type Database = {
           notes_enabled?: boolean
           notification_sound?: boolean
           onboarding_tour_completed?: boolean
+          orden_dia_enabled?: boolean
           papelera_enabled?: boolean
           partidos_enabled?: boolean
           partidos_mode?: string
@@ -556,6 +585,7 @@ export type Database = {
           notes_enabled?: boolean
           notification_sound?: boolean
           onboarding_tour_completed?: boolean
+          orden_dia_enabled?: boolean
           papelera_enabled?: boolean
           partidos_enabled?: boolean
           partidos_mode?: string

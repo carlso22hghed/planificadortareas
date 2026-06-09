@@ -29,13 +29,14 @@ import PremiosPage from '@/components/PremiosPage';
 import CalendarView from '@/components/CalendarView';
 import CommandPalette from '@/components/CommandPalette';
 import TrashPage from '@/components/TrashPage';
+import OrdenDiaPage from '@/components/OrdenDiaPage';
 import { useGamification } from '@/hooks/use-gamification';
 import QuickCapture from '@/components/QuickCapture';
 import ShareListButton from '@/components/ShareListButton';
 import WeeklySummaryDialog from '@/components/WeeklySummaryDialog';
 import OnboardingTour from '@/components/OnboardingTour';
 import KeyboardShortcutsHelp from '@/components/KeyboardShortcutsHelp';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree, Quote, Gift, CalendarDays, Trash2, Search, ToggleLeft, ToggleRight, RotateCcw } from 'lucide-react';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree, Quote, Gift, CalendarDays, Trash2, Search, ToggleLeft, ToggleRight, RotateCcw, ListChecks } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -338,6 +339,7 @@ const Index = () => {
     { key: 'deberes_enabled', label: tl.tabHomework, settingKey: 'deberes_enabled' },
     { key: 'examenes_enabled', label: tl.tabExam, settingKey: 'examenes_enabled' },
     { key: 'tareas_enabled', label: tl.tabTask, settingKey: 'tareas_enabled' },
+    { key: 'orden_dia_enabled', label: 'Orden del día', settingKey: 'orden_dia_enabled' },
     { key: 'eventos_enabled', label: 'Eventos', settingKey: 'eventos_enabled' },
     { key: 'partidos_enabled', label: 'Partidos', settingKey: 'partidos_enabled' },
     { key: 'horario_enabled', label: isTeacher ? 'Agenda' : 'Horario', settingKey: 'schedule_tab_enabled' },
@@ -393,6 +395,7 @@ const Index = () => {
       'deberes_enabled': () => { if (isPageEnabled('deberes_enabled')) result.push({ id: 'deberes', label: tl.tabHomework, shortLabel: tl.shortHomework, icon: BookOpen }); },
       'examenes_enabled': () => { if (isPageEnabled('examenes_enabled')) result.push({ id: 'examenes', label: tl.tabExam, shortLabel: tl.shortExam, icon: GraduationCap }); },
       'tareas_enabled': () => { if (settings.tareas_enabled) result.push({ id: 'tareas', label: tl.tabTask, shortLabel: tl.shortTask, icon: ClipboardList }); },
+      'orden_dia_enabled': () => { if ((settings as any).orden_dia_enabled) result.push({ id: 'orden-dia', label: 'Orden del día', shortLabel: 'Orden', icon: ListChecks }); },
       'eventos_enabled': () => {
         if (isPageEnabled('eventos_enabled')) {
           if (settings.partidos_mode === 'replace') {
@@ -673,6 +676,7 @@ const Index = () => {
             {activeTab === 'premios' && <PremiosPage />}
             {activeTab === 'calendario' && <CalendarView tasks={tasks} />}
             {activeTab === 'papelera' && <TrashPage />}
+            {activeTab === 'orden-dia' && <OrdenDiaPage />}
             <PrivacyFooter />
           </main>
         </div>
