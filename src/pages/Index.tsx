@@ -29,6 +29,7 @@ import PremiosPage from '@/components/PremiosPage';
 import CalendarView from '@/components/CalendarView';
 import CommandPalette from '@/components/CommandPalette';
 import TrashPage from '@/components/TrashPage';
+import OrdenDiaPage from '@/components/OrdenDiaPage';
 import { useGamification } from '@/hooks/use-gamification';
 import QuickCapture from '@/components/QuickCapture';
 import ShareListButton from '@/components/ShareListButton';
