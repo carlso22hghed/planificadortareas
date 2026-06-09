@@ -395,6 +395,7 @@ const Index = () => {
       'deberes_enabled': () => { if (isPageEnabled('deberes_enabled')) result.push({ id: 'deberes', label: tl.tabHomework, shortLabel: tl.shortHomework, icon: BookOpen }); },
       'examenes_enabled': () => { if (isPageEnabled('examenes_enabled')) result.push({ id: 'examenes', label: tl.tabExam, shortLabel: tl.shortExam, icon: GraduationCap }); },
       'tareas_enabled': () => { if (settings.tareas_enabled) result.push({ id: 'tareas', label: tl.tabTask, shortLabel: tl.shortTask, icon: ClipboardList }); },
+      'orden_dia_enabled': () => { if ((settings as any).orden_dia_enabled) result.push({ id: 'orden-dia', label: 'Orden del día', shortLabel: 'Orden', icon: ListChecks }); },
       'eventos_enabled': () => {
         if (isPageEnabled('eventos_enabled')) {
           if (settings.partidos_mode === 'replace') {
