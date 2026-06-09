@@ -339,6 +339,7 @@ const Index = () => {
     { key: 'deberes_enabled', label: tl.tabHomework, settingKey: 'deberes_enabled' },
     { key: 'examenes_enabled', label: tl.tabExam, settingKey: 'examenes_enabled' },
     { key: 'tareas_enabled', label: tl.tabTask, settingKey: 'tareas_enabled' },
+    { key: 'orden_dia_enabled', label: 'Orden del día', settingKey: 'orden_dia_enabled' },
     { key: 'eventos_enabled', label: 'Eventos', settingKey: 'eventos_enabled' },
     { key: 'partidos_enabled', label: 'Partidos', settingKey: 'partidos_enabled' },
     { key: 'horario_enabled', label: isTeacher ? 'Agenda' : 'Horario', settingKey: 'schedule_tab_enabled' },
