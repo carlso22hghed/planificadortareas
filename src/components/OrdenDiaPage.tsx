@@ -8,7 +8,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, Star, Clock, ListTodo, Heart, StickyNote, Repeat, Info, Users, Calendar, CheckCircle2, Paperclip } from 'lucide-react';
+import { Plus, Trash2, Star, Clock, ListTodo, Heart, StickyNote, Repeat, Info, Users, Calendar, CheckCircle2, Paperclip, Zap } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 type Priority = { id: string; text: string; done: boolean };
 type Appointment = { id: string; time: string; endTime: string; title: string; place: string };
@@ -17,6 +20,7 @@ type FreeTime = { id: string; activity: string; time: string };
 type Habit = { id: string; name: string; done: boolean };
 type AgendaItem = { id: string; time: string; duration: string; topic: string; owner: string; objective: 'informar' | 'debatir' | 'decidir' };
 type Agreement = { id: string; task: string; owner: string; deadline: string };
+type SimpleItem = { id: string; name: string; startTime: string; endTime: string; done: boolean };
 
 type AgendaData = {
   // Información Básica
@@ -41,6 +45,7 @@ type AgendaData = {
   questions: string;
   agreements: Agreement[];
   attachments: string;
+  simple: SimpleItem[];
 };
 
 const EMPTY_DATA: AgendaData = {
@@ -66,6 +71,7 @@ const EMPTY_DATA: AgendaData = {
   questions: '',
   agreements: [],
   attachments: '',
+  simple: [],
 };
 
 const uid = () => crypto.randomUUID();
@@ -135,6 +141,40 @@ const OrdenDiaPage = () => {
           <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-44" />
         </div>
       </div>
+
+      <Tabs defaultValue="sencillo" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-xs">
+          <TabsTrigger value="sencillo">Sencillo</TabsTrigger>
+          <TabsTrigger value="avanzado">Avanzado</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="sencillo" className="space-y-3 mt-4">
+          <SencilloQuickCapture onAdd={(item) => update({ simple: [...data.simple, item] })} />
+          <SencilloAddDialog onAdd={(item) => update({ simple: [...data.simple, item] })} />
+          {data.simple.length === 0 ? (
+            <div className="glass-card rounded-2xl p-8 text-center">
+              <ListTodo className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Sin tareas para hoy. Escribe algo como <span className="font-mono">ducharme 18:30-18:35</span> o pulsa "Crear tarea".</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {[...data.simple].sort((a, b) => (a.startTime || '99:99').localeCompare(b.startTime || '99:99')).map(it => (
+                <div key={it.id} className={cn('glass-card rounded-2xl p-3 flex items-center gap-3', it.done && 'opacity-60')}>
+                  <Checkbox checked={it.done} onCheckedChange={(v) => update({ simple: data.simple.map(x => x.id === it.id ? { ...x, done: !!v } : x) })} />
+                  <div className="flex-1 min-w-0">
+                    <p className={cn('text-sm font-semibold', it.done && 'line-through')}>{it.name}</p>
+                    {(it.startTime || it.endTime) && (
+                      <p className="text-xs text-muted-foreground">{it.startTime}{it.endTime && ` – ${it.endTime}`}</p>
+                    )}
+                  </div>
+                  <Button size="icon" variant="ghost" onClick={() => update({ simple: data.simple.filter(x => x.id !== it.id) })}><Trash2 className="w-4 h-4" /></Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="avanzado" className="space-y-6 mt-4">
 
       {/* Información Básica */}
       <Card className="rounded-2xl">
@@ -352,7 +392,102 @@ const OrdenDiaPage = () => {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+      </Tabs>
     </div>
+  );
+};
+
+// Parse "task name 18:30-18:35" or "task name 18:30 - 18:35"
+function parseSimpleQuick(text: string): { name: string; startTime: string; endTime: string } | null {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+  const re = /^(.+?)\s+(\d{1,2}:\d{2})\s*[-–a]\s*(\d{1,2}:\d{2})$/i;
+  const m = trimmed.match(re);
+  if (m) {
+    const pad = (t: string) => { const [h, mm] = t.split(':'); return `${h.padStart(2, '0')}:${mm}`; };
+    return { name: m[1].trim(), startTime: pad(m[2]), endTime: pad(m[3]) };
+  }
+  // single time
+  const re2 = /^(.+?)\s+(\d{1,2}:\d{2})$/;
+  const m2 = trimmed.match(re2);
+  if (m2) {
+    const pad = (t: string) => { const [h, mm] = t.split(':'); return `${h.padStart(2, '0')}:${mm}`; };
+    return { name: m2[1].trim(), startTime: pad(m2[2]), endTime: '' };
+  }
+  return { name: trimmed, startTime: '', endTime: '' };
+}
+
+const SencilloQuickCapture = ({ onAdd }: { onAdd: (item: SimpleItem) => void }) => {
+  const [input, setInput] = useState('');
+  const submit = () => {
+    const parsed = parseSimpleQuick(input);
+    if (!parsed || !parsed.name) return;
+    onAdd({ id: uid(), name: parsed.name, startTime: parsed.startTime, endTime: parsed.endTime, done: false });
+    setInput('');
+  };
+  const preview = input.trim() ? parseSimpleQuick(input) : null;
+  return (
+    <div className="glass-card rounded-2xl p-3 space-y-2">
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Zap className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && submit()}
+            placeholder="ducharme 18:30-18:35"
+            className="w-full bg-muted/50 rounded-xl pl-9 pr-3 py-2.5 text-sm outline-none placeholder:text-muted-foreground"
+          />
+        </div>
+        <Button onClick={submit} disabled={!input.trim()}>Crear</Button>
+      </div>
+      {preview && (preview.startTime || preview.endTime) && (
+        <p className="text-[10px] text-muted-foreground px-1">
+          <span className="font-semibold text-foreground">{preview.name}</span>
+          {preview.startTime && ` · 🕐 ${preview.startTime}${preview.endTime ? ` – ${preview.endTime}` : ''}`}
+        </p>
+      )}
+    </div>
+  );
+};
+
+const SencilloAddDialog = ({ onAdd }: { onAdd: (item: SimpleItem) => void }) => {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const submit = () => {
+    if (!name.trim()) return;
+    onAdd({ id: uid(), name: name.trim(), startTime, endTime, done: false });
+    setName(''); setStartTime(''); setEndTime(''); setOpen(false);
+  };
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="w-full gap-2 rounded-full"><Plus className="w-4 h-4" /> Crear tarea</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader><DialogTitle>Nueva tarea</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label className="text-xs">Nombre</Label>
+            <Input value={name} onChange={e => setName(e.target.value)} placeholder="¿Qué vas a hacer?" autoFocus />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">De (opcional)</Label>
+              <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs">A (opcional)</Label>
+              <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
+            </div>
+          </div>
+          <Button className="w-full" onClick={submit} disabled={!name.trim()}>Crear tarea</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

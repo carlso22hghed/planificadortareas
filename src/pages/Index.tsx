@@ -30,13 +30,14 @@ import CalendarView from '@/components/CalendarView';
 import CommandPalette from '@/components/CommandPalette';
 import TrashPage from '@/components/TrashPage';
 import OrdenDiaPage from '@/components/OrdenDiaPage';
+import ChatPage, { useChatUnreadCount } from '@/components/ChatPage';
 import { useGamification } from '@/hooks/use-gamification';
 import QuickCapture from '@/components/QuickCapture';
 import ShareListButton from '@/components/ShareListButton';
 import WeeklySummaryDialog from '@/components/WeeklySummaryDialog';
 import OnboardingTour from '@/components/OnboardingTour';
 import KeyboardShortcutsHelp from '@/components/KeyboardShortcutsHelp';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree, Quote, Gift, CalendarDays, Trash2, Search, ToggleLeft, ToggleRight, RotateCcw, ListChecks } from 'lucide-react';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree, Quote, Gift, CalendarDays, Trash2, Search, ToggleLeft, ToggleRight, RotateCcw, ListChecks, MessageSquare } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -53,6 +54,7 @@ const Index = () => {
   const { isTeacher, labels: tl } = useTeacherMode();
   const classroomSyncedRef = useRef(false);
   const [activeTab, setActiveTab] = useState<TabType>('inicio');
+  const chatUnread = useChatUnreadCount();
   const [editCountdown, setEditCountdown] = useState<DbCountdown | null>(null);
   const notifiedRef = useRef(false);
   const [sidebarHover, setSidebarHover] = useState(false);
@@ -350,6 +352,7 @@ const Index = () => {
     { key: 'calendario_enabled', label: 'Calendario', settingKey: 'calendario_enabled' },
     { key: 'premios_enabled', label: 'Premios', settingKey: 'premios_enabled' },
     { key: 'papelera_enabled', label: 'Papelera', settingKey: 'papelera_enabled' },
+    { key: 'chat_enabled', label: 'Chat', settingKey: 'chat_enabled' },
   ];
 
   const savedOrder: string[] = (settings as any).context_menu_order || [];
@@ -418,6 +421,7 @@ const Index = () => {
       'calendario_enabled': () => { if (isPageEnabled('calendario_enabled')) result.push({ id: 'calendario', label: 'Calendario', shortLabel: 'Cal.', icon: CalendarDays }); },
       'premios_enabled': () => { if (isPageEnabled('premios_enabled')) result.push({ id: 'premios', label: 'Premios', shortLabel: 'Prem.', icon: Gift }); },
       'papelera_enabled': () => { if (isPageEnabled('papelera_enabled')) result.push({ id: 'papelera', label: 'Papelera', shortLabel: 'Pap.', icon: Trash2 }); },
+      'chat_enabled': () => { if (isPageEnabled('chat_enabled')) result.push({ id: 'chat', label: 'Chat', shortLabel: 'Chat', icon: MessageSquare }); },
     };
 
     // Build tabs in context_menu_order
@@ -516,11 +520,14 @@ const Index = () => {
             return (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  'flex items-center gap-2 transition-colors w-full py-3',
+                  'flex items-center gap-2 transition-colors w-full py-3 relative',
                   sidebarExpanded ? 'px-4' : 'px-0 justify-center',
                   isActive ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 )}>
-                <Icon className="w-5 h-5 shrink-0" />
+                <div className="relative">
+                  <Icon className="w-5 h-5 shrink-0" />
+                  {tab.id === 'chat' && chatUnread > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-destructive rounded-full ring-2 ring-card" />}
+                </div>
                 {sidebarExpanded && <span className="text-xs font-bold uppercase tracking-wide whitespace-nowrap">{tab.label}</span>}
               </button>
             );
@@ -677,6 +684,7 @@ const Index = () => {
             {activeTab === 'calendario' && <CalendarView tasks={tasks} />}
             {activeTab === 'papelera' && <TrashPage />}
             {activeTab === 'orden-dia' && <OrdenDiaPage />}
+            {activeTab === 'chat' && <ChatPage />}
             <PrivacyFooter />
           </main>
         </div>
@@ -698,10 +706,13 @@ const Index = () => {
                 return (
                   <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                     className={cn(
-                      'flex flex-1 flex-col items-center py-3 gap-1 justify-center transition-colors',
+                      'flex flex-1 flex-col items-center py-3 gap-1 justify-center transition-colors relative',
                       isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
                     )}>
-                    <Icon className={cn('w-5 h-5', isActive && 'animate-pulse-soft')} />
+                    <div className="relative">
+                      <Icon className={cn('w-5 h-5', isActive && 'animate-pulse-soft')} />
+                      {tab.id === 'chat' && chatUnread > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-destructive rounded-full ring-2 ring-card" />}
+                    </div>
                     <span className="text-[10px] font-bold uppercase tracking-wide">
                       {isMobile ? tab.shortLabel : tab.label}
                     </span>
