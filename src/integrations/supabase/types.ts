@@ -14,6 +14,106 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_members: {
+        Row: {
+          chat_id: string
+          created_at: string
+          custom_name: string | null
+          id: string
+          invited_by: string | null
+          last_read_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          chat_id: string
+          created_at?: string
+          custom_name?: string | null
+          id?: string
+          invited_by?: string | null
+          last_read_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          chat_id?: string
+          created_at?: string
+          custom_name?: string | null
+          id?: string
+          invited_by?: string | null
+          last_read_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_members_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          chat_id: string
+          content: string
+          created_at: string
+          id: string
+          sender_id: string
+        }
+        Insert: {
+          chat_id: string
+          content: string
+          created_at?: string
+          id?: string
+          sender_id: string
+        }
+        Update: {
+          chat_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chats: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          is_group: boolean
+          name: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          is_group?: boolean
+          name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_group?: boolean
+          name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       countdowns: {
         Row: {
           created_at: string
@@ -498,6 +598,7 @@ export type Database = {
         Row: {
           app_name: string
           calendario_enabled: boolean
+          chat_enabled: boolean
           context_menu_order: string[]
           created_at: string
           custom_subjects: string[]
@@ -533,6 +634,7 @@ export type Database = {
         Insert: {
           app_name?: string
           calendario_enabled?: boolean
+          chat_enabled?: boolean
           context_menu_order?: string[]
           created_at?: string
           custom_subjects?: string[]
@@ -568,6 +670,7 @@ export type Database = {
         Update: {
           app_name?: string
           calendario_enabled?: boolean
+          chat_enabled?: boolean
           context_menu_order?: string[]
           created_at?: string
           custom_subjects?: string[]
@@ -683,6 +786,22 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      is_chat_member: {
+        Args: { _chat_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_chat_member_any: {
+        Args: { _chat_id: string; _user_id: string }
+        Returns: boolean
+      }
+      search_users_by_email: {
+        Args: { query: string }
+        Returns: {
+          display_name: string
+          email: string
+          user_id: string
+        }[]
       }
     }
     Enums: {
