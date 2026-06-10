@@ -30,13 +30,14 @@ import CalendarView from '@/components/CalendarView';
 import CommandPalette from '@/components/CommandPalette';
 import TrashPage from '@/components/TrashPage';
 import OrdenDiaPage from '@/components/OrdenDiaPage';
+import ChatPage, { useChatUnreadCount } from '@/components/ChatPage';
 import { useGamification } from '@/hooks/use-gamification';
 import QuickCapture from '@/components/QuickCapture';
 import ShareListButton from '@/components/ShareListButton';
 import WeeklySummaryDialog from '@/components/WeeklySummaryDialog';
 import OnboardingTour from '@/components/OnboardingTour';
 import KeyboardShortcutsHelp from '@/components/KeyboardShortcutsHelp';
-import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree, Quote, Gift, CalendarDays, Trash2, Search, ToggleLeft, ToggleRight, RotateCcw, ListChecks } from 'lucide-react';
+import { Home, BookOpen, GraduationCap, Calendar, Trophy, ClipboardList, CalendarClock, AlertTriangle, FileText, X, BarChart3, Users, Hand, PartyPopper, CheckCircle, Tent, Timer, Palmtree, Quote, Gift, CalendarDays, Trash2, Search, ToggleLeft, ToggleRight, RotateCcw, ListChecks, MessageSquare } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -350,6 +351,7 @@ const Index = () => {
     { key: 'calendario_enabled', label: 'Calendario', settingKey: 'calendario_enabled' },
     { key: 'premios_enabled', label: 'Premios', settingKey: 'premios_enabled' },
     { key: 'papelera_enabled', label: 'Papelera', settingKey: 'papelera_enabled' },
+    { key: 'chat_enabled', label: 'Chat', settingKey: 'chat_enabled' },
   ];
 
   const savedOrder: string[] = (settings as any).context_menu_order || [];
@@ -418,6 +420,7 @@ const Index = () => {
       'calendario_enabled': () => { if (isPageEnabled('calendario_enabled')) result.push({ id: 'calendario', label: 'Calendario', shortLabel: 'Cal.', icon: CalendarDays }); },
       'premios_enabled': () => { if (isPageEnabled('premios_enabled')) result.push({ id: 'premios', label: 'Premios', shortLabel: 'Prem.', icon: Gift }); },
       'papelera_enabled': () => { if (isPageEnabled('papelera_enabled')) result.push({ id: 'papelera', label: 'Papelera', shortLabel: 'Pap.', icon: Trash2 }); },
+      'chat_enabled': () => { if (isPageEnabled('chat_enabled')) result.push({ id: 'chat', label: 'Chat', shortLabel: 'Chat', icon: MessageSquare }); },
     };
 
     // Build tabs in context_menu_order
@@ -677,6 +680,7 @@ const Index = () => {
             {activeTab === 'calendario' && <CalendarView tasks={tasks} />}
             {activeTab === 'papelera' && <TrashPage />}
             {activeTab === 'orden-dia' && <OrdenDiaPage />}
+            {activeTab === 'chat' && <ChatPage />}
             <PrivacyFooter />
           </main>
         </div>
