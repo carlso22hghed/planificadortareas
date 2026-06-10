@@ -8,7 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, Star, Clock, ListTodo, Heart, StickyNote, Repeat, Info, Users, Calendar, CheckCircle2, Paperclip } from 'lucide-react';
+import { Plus, Trash2, Star, Clock, ListTodo, Heart, StickyNote, Repeat, Info, Users, Calendar, CheckCircle2, Paperclip, Zap } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 type Priority = { id: string; text: string; done: boolean };
 type Appointment = { id: string; time: string; endTime: string; title: string; place: string };
@@ -17,6 +19,7 @@ type FreeTime = { id: string; activity: string; time: string };
 type Habit = { id: string; name: string; done: boolean };
 type AgendaItem = { id: string; time: string; duration: string; topic: string; owner: string; objective: 'informar' | 'debatir' | 'decidir' };
 type Agreement = { id: string; task: string; owner: string; deadline: string };
+type SimpleItem = { id: string; name: string; startTime: string; endTime: string; done: boolean };
 
 type AgendaData = {
   // Información Básica
@@ -41,6 +44,7 @@ type AgendaData = {
   questions: string;
   agreements: Agreement[];
   attachments: string;
+  simple: SimpleItem[];
 };
 
 const EMPTY_DATA: AgendaData = {
@@ -66,6 +70,7 @@ const EMPTY_DATA: AgendaData = {
   questions: '',
   agreements: [],
   attachments: '',
+  simple: [],
 };
 
 const uid = () => crypto.randomUUID();
