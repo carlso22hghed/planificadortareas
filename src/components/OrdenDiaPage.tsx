@@ -141,6 +141,40 @@ const OrdenDiaPage = () => {
         </div>
       </div>
 
+      <Tabs defaultValue="sencillo" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-xs">
+          <TabsTrigger value="sencillo">Sencillo</TabsTrigger>
+          <TabsTrigger value="avanzado">Avanzado</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="sencillo" className="space-y-3 mt-4">
+          <SencilloQuickCapture onAdd={(item) => update({ simple: [...data.simple, item] })} />
+          <SencilloAddDialog onAdd={(item) => update({ simple: [...data.simple, item] })} />
+          {data.simple.length === 0 ? (
+            <div className="glass-card rounded-2xl p-8 text-center">
+              <ListTodo className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Sin tareas para hoy. Escribe algo como <span className="font-mono">ducharme 18:30-18:35</span> o pulsa "Crear tarea".</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {[...data.simple].sort((a, b) => (a.startTime || '99:99').localeCompare(b.startTime || '99:99')).map(it => (
+                <div key={it.id} className={cn('glass-card rounded-2xl p-3 flex items-center gap-3', it.done && 'opacity-60')}>
+                  <Checkbox checked={it.done} onCheckedChange={(v) => update({ simple: data.simple.map(x => x.id === it.id ? { ...x, done: !!v } : x) })} />
+                  <div className="flex-1 min-w-0">
+                    <p className={cn('text-sm font-semibold', it.done && 'line-through')}>{it.name}</p>
+                    {(it.startTime || it.endTime) && (
+                      <p className="text-xs text-muted-foreground">{it.startTime}{it.endTime && ` – ${it.endTime}`}</p>
+                    )}
+                  </div>
+                  <Button size="icon" variant="ghost" onClick={() => update({ simple: data.simple.filter(x => x.id !== it.id) })}><Trash2 className="w-4 h-4" /></Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="avanzado" className="space-y-6 mt-4">
+
       {/* Información Básica */}
       <Card className="rounded-2xl">
         <CardHeader>
