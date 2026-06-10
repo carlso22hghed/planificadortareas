@@ -54,6 +54,7 @@ const Index = () => {
   const { isTeacher, labels: tl } = useTeacherMode();
   const classroomSyncedRef = useRef(false);
   const [activeTab, setActiveTab] = useState<TabType>('inicio');
+  const chatUnread = useChatUnreadCount();
   const [editCountdown, setEditCountdown] = useState<DbCountdown | null>(null);
   const notifiedRef = useRef(false);
   const [sidebarHover, setSidebarHover] = useState(false);
@@ -519,11 +520,14 @@ const Index = () => {
             return (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  'flex items-center gap-2 transition-colors w-full py-3',
+                  'flex items-center gap-2 transition-colors w-full py-3 relative',
                   sidebarExpanded ? 'px-4' : 'px-0 justify-center',
                   isActive ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 )}>
-                <Icon className="w-5 h-5 shrink-0" />
+                <div className="relative">
+                  <Icon className="w-5 h-5 shrink-0" />
+                  {tab.id === 'chat' && chatUnread > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-destructive rounded-full ring-2 ring-card" />}
+                </div>
                 {sidebarExpanded && <span className="text-xs font-bold uppercase tracking-wide whitespace-nowrap">{tab.label}</span>}
               </button>
             );
@@ -702,10 +706,13 @@ const Index = () => {
                 return (
                   <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                     className={cn(
-                      'flex flex-1 flex-col items-center py-3 gap-1 justify-center transition-colors',
+                      'flex flex-1 flex-col items-center py-3 gap-1 justify-center transition-colors relative',
                       isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
                     )}>
-                    <Icon className={cn('w-5 h-5', isActive && 'animate-pulse-soft')} />
+                    <div className="relative">
+                      <Icon className={cn('w-5 h-5', isActive && 'animate-pulse-soft')} />
+                      {tab.id === 'chat' && chatUnread > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-destructive rounded-full ring-2 ring-card" />}
+                    </div>
                     <span className="text-[10px] font-bold uppercase tracking-wide">
                       {isMobile ? tab.shortLabel : tab.label}
                     </span>
