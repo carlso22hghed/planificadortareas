@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Plus, Trash2, Star, Clock, ListTodo, Heart, StickyNote, Repeat, Info, Users, Calendar, CheckCircle2, Paperclip, Zap } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 type Priority = { id: string; text: string; done: boolean };
 type Appointment = { id: string; time: string; endTime: string; title: string; place: string };
