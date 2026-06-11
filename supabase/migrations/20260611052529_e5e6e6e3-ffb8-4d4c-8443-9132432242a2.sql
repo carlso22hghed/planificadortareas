@@ -1,0 +1,2 @@
+CREATE POLICY "Creator can kick members" ON public.chat_members FOR DELETE TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.chats c WHERE c.id = chat_members.chat_id AND c.created_by = auth.uid()));
