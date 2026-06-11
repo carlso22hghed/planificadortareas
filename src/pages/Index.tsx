@@ -54,7 +54,7 @@ const Index = () => {
   const { isTeacher, labels: tl } = useTeacherMode();
   const classroomSyncedRef = useRef(false);
   const [activeTab, setActiveTab] = useState<TabType>('inicio');
-  const chatUnread = useChatUnreadCount();
+  const chatUnread = useChatUnreadCount(activeTab === 'chat');
   const [editCountdown, setEditCountdown] = useState<DbCountdown | null>(null);
   const notifiedRef = useRef(false);
   const [sidebarHover, setSidebarHover] = useState(false);
