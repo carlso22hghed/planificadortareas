@@ -162,6 +162,46 @@ const ChatPage = () => {
     setTimeout(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }); }, 0);
   }, [activeChatId]);
 
+  // Typing indicator: broadcast channel per active chat
+  useEffect(() => {
+    if (!activeChatId || !user) return;
+    setTypingUsers({});
+    const ch = supabase.channel(`typing:${activeChatId}`, { config: { broadcast: { self: false } } });
+    ch.on('broadcast', { event: 'typing' }, (payload) => {
+      const uid = (payload.payload as any)?.user_id as string | undefined;
+      if (!uid || uid === user.id) return;
+      setTypingUsers(prev => ({ ...prev, [uid]: Date.now() }));
+    });
+    ch.subscribe();
+    typingChannelRef.current = ch;
+    const interval = setInterval(() => {
+      setTypingUsers(prev => {
+        const now = Date.now();
+        const next: Record<string, number> = {};
+        let changed = false;
+        for (const k in prev) {
+          if (now - prev[k] < 4000) next[k] = prev[k];
+          else changed = true;
+        }
+        return changed ? next : prev;
+      });
+    }, 1000);
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(ch);
+      typingChannelRef.current = null;
+    };
+  }, [activeChatId, user?.id]);
+
+  const broadcastTyping = () => {
+    const ch = typingChannelRef.current;
+    if (!ch || !user) return;
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < 1500) return;
+    lastTypingSentRef.current = now;
+    ch.send({ type: 'broadcast', event: 'typing', payload: { user_id: user.id } });
+  };
+
   const loadOlder = async () => {
     if (!activeChatId || loadingOlder) return;
     const list = messagesByChat[activeChatId] || [];
