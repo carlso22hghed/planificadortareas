@@ -47,6 +47,9 @@ const ChatPage = () => {
   const [draft, setDraft] = useState('');
   const [hasMore, setHasMore] = useState<Record<string, boolean>>({});
   const [loadingOlder, setLoadingOlder] = useState(false);
+  const [typingUsers, setTypingUsers] = useState<Record<string, number>>({});
+  const typingChannelRef = useRef<any>(null);
+  const lastTypingSentRef = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeChatIdRef = useRef<string | null>(null);
   useEffect(() => { activeChatIdRef.current = activeChatId; }, [activeChatId]);
