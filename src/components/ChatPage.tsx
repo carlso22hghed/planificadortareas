@@ -405,8 +405,34 @@ const ChatPage = () => {
               );
             })}
           </div>
+          {(() => {
+            const now = Date.now();
+            const ids = Object.entries(typingUsers).filter(([, ts]) => now - ts < 4000).map(([id]) => id);
+            if (ids.length === 0) return null;
+            const names = ids.map(id => profiles[id]?.display_name || profiles[id]?.email?.split('@')[0] || 'Alguien');
+            let label: string;
+            if (!activeChat?.is_group) label = 'está escribiendo…';
+            else if (names.length === 1) label = `${names[0]} está escribiendo…`;
+            else if (names.length === 2) label = `${names[0]} y ${names[1]} están escribiendo…`;
+            else label = 'Varios están escribiendo…';
+            return (
+              <div className="px-3 pb-1 text-xs text-muted-foreground italic flex items-center gap-1.5">
+                <span className="flex gap-0.5">
+                  <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </span>
+                {label}
+              </div>
+            );
+          })()}
           <div className="border-t border-border p-2 flex gap-2">
-            <Input value={draft} onChange={e => setDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }} placeholder="Escribe un mensaje…" />
+            <Input
+              value={draft}
+              onChange={e => { setDraft(e.target.value); if (e.target.value.trim()) broadcastTyping(); }}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+              placeholder="Escribe un mensaje…"
+            />
             <Button onClick={sendMessage} disabled={!draft.trim()}><Send className="w-4 h-4" /></Button>
           </div>
         </div>
