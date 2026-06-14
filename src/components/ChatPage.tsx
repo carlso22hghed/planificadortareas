@@ -5,7 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Search, Send, MessageSquare, Check, CheckCheck, X, Users, Pencil, ArrowLeft, UserPlus, UserMinus, Clock, Loader2 } from 'lucide-react';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Plus, Search, Send, MessageSquare, Check, CheckCheck, X, Users, Pencil, ArrowLeft,
+  UserPlus, UserMinus, Clock, Loader2, Mic, Square, Trash2, Reply, MoreVertical, Bell, Play, Pause,
+} from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -26,12 +32,27 @@ type Member = {
   last_read_at: string;
   invited_by: string | null;
 };
-type Message = { id: string; chat_id: string; sender_id: string; content: string; created_at: string; _status?: 'sending' | 'sent' };
+type Message = {
+  id: string;
+  chat_id: string;
+  sender_id: string;
+  content: string;
+  created_at: string;
+  reply_to_id?: string | null;
+  edited_at?: string | null;
+  deleted_at?: string | null;
+  attachment_url?: string | null;
+  attachment_type?: string | null;
+  audio_duration_ms?: number | null;
+  _status?: 'sending' | 'sent';
+};
 type UserHit = { user_id: string; display_name: string; email: string };
 type ProfileLite = { user_id: string; display_name: string; email: string };
+type Presence = { user_id: string; is_online: boolean; last_seen_at: string };
 
 const sb = supabase as any;
 const PAGE_SIZE = 30;
+const ONLINE_THRESHOLD_MS = 75_000; // count as online if heartbeat within 75s
 
 const ChatPage = () => {
   const { user } = useAuth();
@@ -40,22 +61,39 @@ const ChatPage = () => {
   const [messagesByChat, setMessagesByChat] = useState<Record<string, Message[]>>({});
   const [lastMsgByChat, setLastMsgByChat] = useState<Record<string, Message>>({});
   const [profiles, setProfiles] = useState<Record<string, ProfileLite>>({});
+  const [presence, setPresence] = useState<Record<string, Presence>>({});
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
   const [membersOpen, setMembersOpen] = useState(false);
   const [draft, setDraft] = useState('');
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const [editing, setEditing] = useState<{ id: string; content: string } | null>(null);
   const [hasMore, setHasMore] = useState<Record<string, boolean>>({});
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [typingUsers, setTypingUsers] = useState<Record<string, number>>({});
+  const [recording, setRecording] = useState(false);
+  const [recordingMs, setRecordingMs] = useState(0);
+  const [notifPerm, setNotifPerm] = useState<NotificationPermission>(typeof Notification !== 'undefined' ? Notification.permission : 'default');
   const typingChannelRef = useRef<any>(null);
   const lastTypingSentRef = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeChatIdRef = useRef<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordChunksRef = useRef<Blob[]>([]);
+  const recordStartRef = useRef(0);
+  const recordTimerRef = useRef<number | null>(null);
   useEffect(() => { activeChatIdRef.current = activeChatId; }, [activeChatId]);
 
   const myMembership = (chatId: string) => members.find(m => m.chat_id === chatId && m.user_id === user?.id);
-  const myChats = chats.filter(c => myMembership(c.id)?.status === 'accepted');
+  const myChats = useMemo(() => {
+    const list = chats.filter(c => myMembership(c.id)?.status === 'accepted');
+    return list.sort((a, b) => {
+      const ta = new Date(lastMsgByChat[a.id]?.created_at || a.updated_at).getTime();
+      const tb = new Date(lastMsgByChat[b.id]?.created_at || b.updated_at).getTime();
+      return tb - ta;
+    });
+  }, [chats, members, lastMsgByChat, user?.id]);
   const myPending = chats.filter(c => myMembership(c.id)?.status === 'pending');
 
   const loadAll = useCallback(async () => {
@@ -74,16 +112,21 @@ const ChatPage = () => {
     setMembers(allMems || []);
     const uids = Array.from(new Set((allMems || []).map((m: Member) => m.user_id)));
     if (uids.length) {
-      const { data: profs } = await sb.from('profiles').select('user_id, display_name, email').in('user_id', uids);
-      const map: Record<string, ProfileLite> = {};
-      (profs || []).forEach((p: ProfileLite) => { map[p.user_id] = p; });
-      setProfiles(map);
+      const [{ data: profs }, { data: pres }] = await Promise.all([
+        sb.from('profiles').select('user_id, display_name, email').in('user_id', uids),
+        sb.from('user_presence').select('user_id, is_online, last_seen_at').in('user_id', uids),
+      ]);
+      const pmap: Record<string, ProfileLite> = {};
+      (profs || []).forEach((p: ProfileLite) => { pmap[p.user_id] = p; });
+      setProfiles(pmap);
+      const prmap: Record<string, Presence> = {};
+      (pres || []).forEach((p: Presence) => { prmap[p.user_id] = p; });
+      setPresence(prmap);
     }
-    // Load latest message per chat (single query, group client-side)
     const acceptedIds = myMems.filter(m => m.status === 'accepted').map(m => m.chat_id);
     if (acceptedIds.length) {
       const { data: recents } = await sb.from('chat_messages')
-        .select('*').in('chat_id', acceptedIds).order('created_at', { ascending: false }).limit(200);
+        .select('*').in('chat_id', acceptedIds).order('created_at', { ascending: false }).limit(300);
       const last: Record<string, Message> = {};
       (recents || []).forEach((m: Message) => { if (!last[m.chat_id]) last[m.chat_id] = m; });
       setLastMsgByChat(last);
@@ -99,28 +142,51 @@ const ChatPage = () => {
       .channel('chat-sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_members' }, () => loadAll())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, () => loadAll())
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'chat_members' }, () => {
-        // refresh members for read-receipt updates
-        loadAll();
-      })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
         const m = payload.new as Message;
         setLastMsgByChat(prev => ({ ...prev, [m.chat_id]: m }));
         setMessagesByChat(prev => {
           const list = prev[m.chat_id] || [];
           if (list.find(x => x.id === m.id)) return prev;
-          // Replace optimistic message if exists
           const filtered = list.filter(x => !(x._status === 'sending' && x.sender_id === m.sender_id && x.content === m.content));
           return { ...prev, [m.chat_id]: [...filtered, m] };
         });
-        // Auto mark as read if this chat is open
         if (activeChatIdRef.current === m.chat_id && m.sender_id !== user.id) {
           markRead(m.chat_id);
         }
       })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'chat_messages' }, (payload) => {
+        const m = payload.new as Message;
+        setMessagesByChat(prev => {
+          const list = prev[m.chat_id];
+          if (!list) return prev;
+          return { ...prev, [m.chat_id]: list.map(x => x.id === m.id ? { ...x, ...m } : x) };
+        });
+        setLastMsgByChat(prev => prev[m.chat_id]?.id === m.id ? { ...prev, [m.chat_id]: { ...prev[m.chat_id], ...m } } : prev);
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'chat_messages' }, (payload) => {
+        const m = payload.old as Message;
+        setMessagesByChat(prev => {
+          const list = prev[m.chat_id];
+          if (!list) return prev;
+          return { ...prev, [m.chat_id]: list.filter(x => x.id !== m.id) };
+        });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_presence' }, (payload: any) => {
+        const p = (payload.new || payload.old) as Presence;
+        if (!p) return;
+        setPresence(prev => ({ ...prev, [p.user_id]: { user_id: p.user_id, is_online: p.is_online, last_seen_at: p.last_seen_at } }));
+      })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user?.id, loadAll]);
+
+  // Force re-render every 30s so "online" state expires
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const i = setInterval(() => setTick(t => t + 1), 30000);
+    return () => clearInterval(i);
+  }, []);
 
   const markRead = useCallback(async (chatId: string) => {
     if (!user) return;
@@ -128,7 +194,6 @@ const ChatPage = () => {
       .eq('chat_id', chatId).eq('user_id', user.id);
   }, [user?.id]);
 
-  // Load latest page of messages when opening a chat
   useEffect(() => {
     if (!activeChatId || !user) return;
     (async () => {
@@ -138,11 +203,9 @@ const ChatPage = () => {
       setMessagesByChat(prev => ({ ...prev, [activeChatId]: ordered }));
       setHasMore(prev => ({ ...prev, [activeChatId]: (data?.length || 0) === PAGE_SIZE }));
       await markRead(activeChatId);
-      // refresh members so other people see our last_read_at quickly via realtime
     })();
   }, [activeChatId, user?.id, markRead]);
 
-  // Auto scroll to bottom on new messages (only when near bottom)
   const lastMessageCount = useRef(0);
   useEffect(() => {
     const list = activeChatId ? messagesByChat[activeChatId] || [] : [];
@@ -156,13 +219,14 @@ const ChatPage = () => {
     }
   }, [messagesByChat, activeChatId]);
 
-  // Reset scroll on chat change
   useEffect(() => {
     lastMessageCount.current = 0;
+    setReplyTo(null);
+    setEditing(null);
     setTimeout(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }); }, 0);
   }, [activeChatId]);
 
-  // Typing indicator: broadcast channel per active chat
+  // Typing indicator
   useEffect(() => {
     if (!activeChatId || !user) return;
     setTypingUsers({});
@@ -217,9 +281,7 @@ const ChatPage = () => {
     setMessagesByChat(prev => ({ ...prev, [activeChatId]: [...ordered, ...(prev[activeChatId] || [])] }));
     setHasMore(prev => ({ ...prev, [activeChatId]: (data?.length || 0) === PAGE_SIZE }));
     setLoadingOlder(false);
-    setTimeout(() => {
-      if (el) el.scrollTop = el.scrollHeight - prevHeight;
-    }, 0);
+    setTimeout(() => { if (el) el.scrollTop = el.scrollHeight - prevHeight; }, 0);
   };
 
   const onScroll = () => {
@@ -248,25 +310,53 @@ const ChatPage = () => {
     return { unread, last };
   };
 
+  const previewText = (m: Message) => {
+    if (m.deleted_at) return 'Mensaje eliminado';
+    if (m.attachment_type === 'audio') return '🎤 Mensaje de voz';
+    return m.content;
+  };
+
+  const isUserOnline = (uid: string) => {
+    const p = presence[uid];
+    if (!p) return false;
+    if (!p.is_online) return false;
+    return Date.now() - new Date(p.last_seen_at).getTime() < ONLINE_THRESHOLD_MS;
+  };
+
+  const formatLastSeen = (uid: string) => {
+    const p = presence[uid];
+    if (!p) return 'desconectado';
+    const d = new Date(p.last_seen_at);
+    const now = new Date();
+    const sameDay = d.toDateString() === now.toDateString();
+    const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+    const isYesterday = d.toDateString() === yesterday.toDateString();
+    const hh = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    if (sameDay) return `ult. vez a las ${hh}`;
+    if (isYesterday) return `ult. vez ayer a las ${hh}`;
+    return `ult. vez ${d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })} a las ${hh}`;
+  };
+
   const sendMessage = async () => {
     if (!draft.trim() || !activeChatId || !user) return;
     const content = draft.trim();
+    const reply_to_id = replyTo?.id || null;
     setDraft('');
+    setReplyTo(null);
     const tempId = 'temp-' + Math.random().toString(36).slice(2);
     const optimistic: Message = {
-      id: tempId, chat_id: activeChatId, sender_id: user.id, content,
+      id: tempId, chat_id: activeChatId, sender_id: user.id, content, reply_to_id,
       created_at: new Date().toISOString(), _status: 'sending',
     };
     setMessagesByChat(prev => ({ ...prev, [activeChatId]: [...(prev[activeChatId] || []), optimistic] }));
     setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }), 0);
     const { data, error } = await sb.from('chat_messages')
-      .insert({ chat_id: activeChatId, sender_id: user.id, content }).select().single();
+      .insert({ chat_id: activeChatId, sender_id: user.id, content, reply_to_id }).select().single();
     if (error) {
       setMessagesByChat(prev => ({ ...prev, [activeChatId]: (prev[activeChatId] || []).filter(m => m.id !== tempId) }));
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
       return;
     }
-    // Replace optimistic with real
     setMessagesByChat(prev => {
       const list = prev[activeChatId] || [];
       const exists = list.find(x => x.id === data.id);
@@ -274,6 +364,110 @@ const ChatPage = () => {
       return { ...prev, [activeChatId]: exists ? cleaned.concat() : [...cleaned, data] };
     });
     setLastMsgByChat(prev => ({ ...prev, [activeChatId]: data }));
+  };
+
+  // Audio recording
+  const startRecording = async () => {
+    if (!activeChatId) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
+      const mr = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      recordChunksRef.current = [];
+      mr.ondataavailable = (e) => { if (e.data.size > 0) recordChunksRef.current.push(e.data); };
+      mr.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(recordChunksRef.current, { type: mr.mimeType || 'audio/webm' });
+        const durationMs = Date.now() - recordStartRef.current;
+        await uploadAudio(blob, durationMs);
+      };
+      mr.start();
+      mediaRecorderRef.current = mr;
+      recordStartRef.current = Date.now();
+      setRecording(true);
+      setRecordingMs(0);
+      recordTimerRef.current = window.setInterval(() => setRecordingMs(Date.now() - recordStartRef.current), 200);
+    } catch (e: any) {
+      toast({ title: 'Sin acceso al micrófono', description: e?.message || 'Permite el micrófono para grabar', variant: 'destructive' });
+    }
+  };
+
+  const stopRecording = (cancel = false) => {
+    const mr = mediaRecorderRef.current;
+    if (!mr) return;
+    if (cancel) mr.onstop = () => { mr.stream.getTracks().forEach(t => t.stop()); };
+    try { mr.stop(); } catch {}
+    mediaRecorderRef.current = null;
+    if (recordTimerRef.current) { clearInterval(recordTimerRef.current); recordTimerRef.current = null; }
+    setRecording(false);
+    setRecordingMs(0);
+  };
+
+  const uploadAudio = async (blob: Blob, durationMs: number) => {
+    if (!activeChatId || !user) return;
+    const ext = blob.type.includes('mp4') ? 'm4a' : 'webm';
+    const path = `${activeChatId}/${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const tempId = 'temp-audio-' + Math.random().toString(36).slice(2);
+    const optimistic: Message = {
+      id: tempId, chat_id: activeChatId, sender_id: user.id, content: '',
+      attachment_type: 'audio', audio_duration_ms: durationMs,
+      created_at: new Date().toISOString(), _status: 'sending',
+    };
+    setMessagesByChat(prev => ({ ...prev, [activeChatId]: [...(prev[activeChatId] || []), optimistic] }));
+    const { error: upErr } = await sb.storage.from('chat-audio').upload(path, blob, { contentType: blob.type, upsert: false });
+    if (upErr) {
+      setMessagesByChat(prev => ({ ...prev, [activeChatId]: (prev[activeChatId] || []).filter(m => m.id !== tempId) }));
+      toast({ title: 'Error subiendo audio', description: upErr.message, variant: 'destructive' });
+      return;
+    }
+    const { data, error } = await sb.from('chat_messages').insert({
+      chat_id: activeChatId, sender_id: user.id, content: '',
+      attachment_url: path, attachment_type: 'audio', audio_duration_ms: durationMs,
+      reply_to_id: replyTo?.id || null,
+    }).select().single();
+    setReplyTo(null);
+    if (error || !data) {
+      setMessagesByChat(prev => ({ ...prev, [activeChatId]: (prev[activeChatId] || []).filter(m => m.id !== tempId) }));
+      toast({ title: 'Error', description: error?.message || 'No se pudo enviar el audio', variant: 'destructive' });
+      return;
+    }
+    setMessagesByChat(prev => {
+      const list = prev[activeChatId] || [];
+      const exists = list.find(x => x.id === data.id);
+      const cleaned = list.filter(x => x.id !== tempId && (!exists || x.id !== data.id));
+      return { ...prev, [activeChatId]: exists ? cleaned.concat() : [...cleaned, data] };
+    });
+    setLastMsgByChat(prev => ({ ...prev, [activeChatId]: data }));
+  };
+
+  const deleteMessage = async (m: Message) => {
+    if (!confirm('¿Eliminar este mensaje?')) return;
+    const { error } = await sb.from('chat_messages').update({
+      deleted_at: new Date().toISOString(), content: '', attachment_url: null,
+    }).eq('id', m.id);
+    if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    else if (m.attachment_url) {
+      await sb.storage.from('chat-audio').remove([m.attachment_url]).catch(() => {});
+    }
+  };
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    const newContent = editing.content.trim();
+    if (!newContent) { setEditing(null); return; }
+    const { error } = await sb.from('chat_messages').update({
+      content: newContent, edited_at: new Date().toISOString(),
+    }).eq('id', editing.id);
+    if (error) toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    setEditing(null);
+  };
+
+  const requestNotifications = async () => {
+    try {
+      const p = await Notification.requestPermission();
+      setNotifPerm(p);
+      if (p === 'granted') toast({ title: 'Notificaciones activadas' });
+    } catch {}
   };
 
   const acceptInvite = async (chatId: string) => {
@@ -289,13 +483,23 @@ const ChatPage = () => {
   const activeMembers = members.filter(m => m.chat_id === activeChatId);
   const activeMessages = activeChatId ? messagesByChat[activeChatId] || [] : [];
 
-  // Calculate other members' min last_read_at for read-receipt ticks (only accepted)
   const otherReadFloor = useMemo(() => {
     if (!activeChat) return 0;
     const others = activeMembers.filter(m => m.user_id !== user?.id && m.status === 'accepted');
     if (others.length === 0) return 0;
     return Math.min(...others.map(m => new Date(m.last_read_at).getTime()));
   }, [activeMembers, activeChat, user?.id]);
+
+  // For 1-1 chats, the other user
+  const otherUserId = activeChat && !activeChat.is_group
+    ? activeMembers.find(m => m.user_id !== user?.id)?.user_id
+    : null;
+
+  const messagesById = useMemo(() => {
+    const map: Record<string, Message> = {};
+    activeMessages.forEach(m => { map[m.id] = m; });
+    return map;
+  }, [activeMessages]);
 
   return (
     <div className="space-y-4 animate-slide-up pb-6">
@@ -305,6 +509,14 @@ const ChatPage = () => {
         </h1>
         {!activeChat && <NewChatButton open={newChatOpen} setOpen={setNewChatOpen} onCreated={(id) => { setActiveChatId(id); loadAll(); }} excludeIds={[]} />}
       </div>
+
+      {!activeChat && notifPerm !== 'granted' && (
+        <button onClick={requestNotifications} className="w-full glass-card rounded-2xl p-3 flex items-center gap-2 hover:ring-2 ring-primary/30 transition-all text-left">
+          <Bell className="w-4 h-4 text-primary" />
+          <span className="text-sm flex-1">Activa las notificaciones para enterarte de mensajes nuevos</span>
+          <span className="text-xs text-primary font-semibold">Activar</span>
+        </button>
+      )}
 
       {!activeChat && myPending.length > 0 && (
         <div className="space-y-2">
@@ -338,18 +550,22 @@ const ChatPage = () => {
             const { unread, last } = unreadInfo(c);
             const senderP = last && profiles[last.sender_id];
             const preview = last
-              ? `${last.sender_id === user?.id ? 'Tú: ' : c.is_group ? `${senderP?.display_name || senderP?.email || 'Alguien'}: ` : ''}${last.content}`
+              ? `${last.sender_id === user?.id ? 'Tú: ' : c.is_group ? `${senderP?.display_name || senderP?.email || 'Alguien'}: ` : ''}${previewText(last)}`
               : (c.is_group ? 'Chat de grupo' : 'Chat individual');
+            const other = !c.is_group ? members.find(m => m.chat_id === c.id && m.user_id !== user?.id) : null;
+            const online = other && isUserOnline(other.user_id);
             return (
               <button key={c.id} onClick={() => setActiveChatId(c.id)} className="w-full glass-card rounded-2xl p-3 flex items-center gap-3 hover:ring-2 ring-primary/30 transition-all text-left">
                 <div className={cn('w-10 h-10 rounded-full flex items-center justify-center relative', c.is_group ? 'bg-primary/20' : 'bg-muted')}>
                   {c.is_group ? <Users className="w-5 h-5 text-primary" /> : <MessageSquare className="w-5 h-5" />}
+                  {online && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full ring-2 ring-card" />}
                   {unread && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-destructive rounded-full ring-2 ring-card" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className={cn('text-sm truncate', unread ? 'font-extrabold' : 'font-semibold')}>{chatLabel(c)}</p>
                   <p className={cn('text-xs truncate', unread ? 'text-foreground font-semibold' : 'text-muted-foreground')}>{preview}</p>
                 </div>
+                {last && <span className="text-[10px] text-muted-foreground self-start whitespace-nowrap">{new Date(last.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>}
                 {unread && <span className="w-2.5 h-2.5 bg-destructive rounded-full" />}
               </button>
             );
@@ -364,8 +580,18 @@ const ChatPage = () => {
                 {activeChat.is_group && <Users className="w-3.5 h-3.5" />}
                 {chatLabel(activeChat)}
               </p>
-              <p className="text-[11px] text-muted-foreground truncate">
-                {activeMembers.filter(m => m.status === 'accepted').map(m => profiles[m.user_id]?.display_name || profiles[m.user_id]?.email || '...').join(', ')}
+              <p className="text-[11px] truncate flex items-center gap-1">
+                {!activeChat.is_group && otherUserId ? (
+                  isUserOnline(otherUserId) ? (
+                    <><span className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-emerald-600 dark:text-emerald-400 font-medium">en línea</span></>
+                  ) : (
+                    <span className="text-muted-foreground">{formatLastSeen(otherUserId)}</span>
+                  )
+                ) : (
+                  <span className="text-muted-foreground truncate">
+                    {activeMembers.filter(m => m.status === 'accepted').map(m => profiles[m.user_id]?.display_name || profiles[m.user_id]?.email || '...').join(', ')}
+                  </span>
+                )}
               </p>
             </div>
             {activeChat.is_group && (
@@ -384,18 +610,65 @@ const ChatPage = () => {
               const senderP = profiles[m.sender_id];
               const isSending = m._status === 'sending';
               const isRead = !isSending && otherReadFloor >= new Date(m.created_at).getTime();
+              const isDeleted = !!m.deleted_at;
+              const isEditing = editing?.id === m.id;
+              const quoted = m.reply_to_id ? messagesById[m.reply_to_id] : null;
+              const quotedSender = quoted ? profiles[quoted.sender_id] : null;
               return (
-                <div key={m.id} className={cn('flex flex-col', mine ? 'items-end' : 'items-start')}>
+                <div key={m.id} className={cn('group flex flex-col', mine ? 'items-end' : 'items-start')}>
                   {activeChat.is_group && !mine && (
                     <span className="text-[10px] text-muted-foreground px-2">{senderP?.display_name || senderP?.email || 'Alguien'}</span>
                   )}
-                  <div className={cn('max-w-[75%] rounded-2xl px-3 py-2 text-sm break-words',
-                    mine ? 'bg-primary text-primary-foreground rounded-br-sm' : 'bg-muted text-foreground rounded-bl-sm')}>
-                    {m.content}
+                  <div className="flex items-end gap-1 max-w-[85%]">
+                    {mine && !isDeleted && (
+                      <MessageActions
+                        canEdit={!m.attachment_url}
+                        onReply={() => setReplyTo(m)}
+                        onEdit={() => setEditing({ id: m.id, content: m.content })}
+                        onDelete={() => deleteMessage(m)}
+                      />
+                    )}
+                    <div className={cn('rounded-2xl px-3 py-2 text-sm break-words',
+                      mine ? 'bg-primary text-primary-foreground rounded-br-sm' : 'bg-muted text-foreground rounded-bl-sm',
+                      isDeleted && 'italic opacity-70')}>
+                      {quoted && !isDeleted && (
+                        <div className={cn('border-l-2 pl-2 mb-1 text-[11px] opacity-90',
+                          mine ? 'border-primary-foreground/60' : 'border-primary/60')}>
+                          <p className="font-semibold truncate">{quotedSender?.display_name || quotedSender?.email || (quoted.sender_id === user?.id ? 'Tú' : 'Alguien')}</p>
+                          <p className="truncate">{previewText(quoted)}</p>
+                        </div>
+                      )}
+                      {isDeleted ? (
+                        <span>Mensaje eliminado</span>
+                      ) : isEditing ? (
+                        <div className="flex items-center gap-1">
+                          <Input
+                            value={editing!.content}
+                            onChange={e => setEditing({ ...editing!, content: e.target.value })}
+                            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); saveEdit(); } if (e.key === 'Escape') setEditing(null); }}
+                            autoFocus
+                            className="h-7 text-sm bg-background text-foreground"
+                          />
+                          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={saveEdit}><Check className="w-3.5 h-3.5" /></Button>
+                          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditing(null)}><X className="w-3.5 h-3.5" /></Button>
+                        </div>
+                      ) : m.attachment_type === 'audio' && m.attachment_url ? (
+                        <AudioPlayer path={m.attachment_url} durationMs={m.audio_duration_ms || 0} mine={mine} />
+                      ) : (
+                        <span>{m.content}</span>
+                      )}
+                    </div>
+                    {!mine && !isDeleted && (
+                      <MessageActions
+                        canEdit={false}
+                        onReply={() => setReplyTo(m)}
+                      />
+                    )}
                   </div>
                   <span className="text-[10px] text-muted-foreground px-2 flex items-center gap-1">
                     {new Date(m.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
-                    {mine && (
+                    {m.edited_at && !isDeleted && <span className="italic">editado</span>}
+                    {mine && !isDeleted && (
                       isSending ? <Clock className="w-3 h-3" />
                         : isRead ? <CheckCheck className="w-3.5 h-3.5 text-sky-500" />
                         : <CheckCheck className="w-3.5 h-3.5 text-muted-foreground" />
@@ -426,14 +699,44 @@ const ChatPage = () => {
               </div>
             );
           })()}
-          <div className="border-t border-border p-2 flex gap-2">
-            <Input
-              value={draft}
-              onChange={e => { setDraft(e.target.value); if (e.target.value.trim()) broadcastTyping(); }}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-              placeholder="Escribe un mensaje…"
-            />
-            <Button onClick={sendMessage} disabled={!draft.trim()}><Send className="w-4 h-4" /></Button>
+          {replyTo && (
+            <div className="px-3 py-2 border-t border-border bg-muted/30 flex items-center gap-2">
+              <Reply className="w-4 h-4 text-primary shrink-0" />
+              <div className="flex-1 min-w-0 border-l-2 border-primary pl-2">
+                <p className="text-[11px] font-semibold text-primary truncate">
+                  {replyTo.sender_id === user?.id ? 'Tú' : (profiles[replyTo.sender_id]?.display_name || profiles[replyTo.sender_id]?.email || 'Alguien')}
+                </p>
+                <p className="text-xs truncate text-muted-foreground">{previewText(replyTo)}</p>
+              </div>
+              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setReplyTo(null)}><X className="w-4 h-4" /></Button>
+            </div>
+          )}
+          <div className="border-t border-border p-2 flex gap-2 items-center">
+            {recording ? (
+              <>
+                <Button size="icon" variant="ghost" onClick={() => stopRecording(true)} title="Cancelar"><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-md bg-destructive/10">
+                  <span className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
+                  <span className="text-sm font-mono">{Math.floor(recordingMs / 1000)}s</span>
+                  <span className="text-xs text-muted-foreground">Grabando…</span>
+                </div>
+                <Button onClick={() => stopRecording(false)} title="Enviar audio"><Send className="w-4 h-4" /></Button>
+              </>
+            ) : (
+              <>
+                <Input
+                  value={draft}
+                  onChange={e => { setDraft(e.target.value); if (e.target.value.trim()) broadcastTyping(); }}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                  placeholder="Escribe un mensaje…"
+                />
+                {draft.trim() ? (
+                  <Button onClick={sendMessage}><Send className="w-4 h-4" /></Button>
+                ) : (
+                  <Button variant="outline" onClick={startRecording} title="Grabar audio"><Mic className="w-4 h-4" /></Button>
+                )}
+              </>
+            )}
           </div>
         </div>
       )}
@@ -457,6 +760,65 @@ const ChatPage = () => {
           profiles={profiles}
           currentUserId={user!.id}
           onChanged={loadAll}
+        />
+      )}
+    </div>
+  );
+};
+
+const MessageActions = ({ onReply, onEdit, onDelete, canEdit }: {
+  onReply: () => void; onEdit?: () => void; onDelete?: () => void; canEdit: boolean;
+}) => (
+  <DropdownMenu>
+    <DropdownMenuTrigger asChild>
+      <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted/50 self-center" aria-label="Acciones">
+        <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
+      </button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent align="end">
+      <DropdownMenuItem onClick={onReply}><Reply className="w-4 h-4 mr-2" />Responder</DropdownMenuItem>
+      {onEdit && canEdit && <DropdownMenuItem onClick={onEdit}><Pencil className="w-4 h-4 mr-2" />Editar</DropdownMenuItem>}
+      {onDelete && <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive"><Trash2 className="w-4 h-4 mr-2" />Eliminar</DropdownMenuItem>}
+    </DropdownMenuContent>
+  </DropdownMenu>
+);
+
+const AudioPlayer = ({ path, durationMs, mine }: { path: string; durationMs: number; mine: boolean }) => {
+  const [url, setUrl] = useState<string | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await sb.storage.from('chat-audio').createSignedUrl(path, 3600);
+      if (!cancelled && data?.signedUrl) setUrl(data.signedUrl);
+    })();
+    return () => { cancelled = true; };
+  }, [path]);
+  const toggle = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (playing) { a.pause(); } else { a.play().catch(() => {}); }
+  };
+  const secs = Math.max(1, Math.round(durationMs / 1000));
+  return (
+    <div className="flex items-center gap-2 min-w-[140px]">
+      <button onClick={toggle} disabled={!url} className={cn('w-8 h-8 rounded-full flex items-center justify-center shrink-0',
+        mine ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary text-primary-foreground')}>
+        {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+      </button>
+      <div className="flex-1">
+        <div className={cn('h-1 rounded-full', mine ? 'bg-primary-foreground/30' : 'bg-primary/30')} />
+        <span className={cn('text-[10px]', mine ? 'text-primary-foreground/80' : 'text-muted-foreground')}>{secs}s</span>
+      </div>
+      {url && (
+        <audio
+          ref={audioRef}
+          src={url}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onEnded={() => setPlaying(false)}
+          preload="none"
         />
       )}
     </div>
@@ -712,7 +1074,6 @@ export const useChatUnreadCount = (isChatTabActive: boolean = false) => {
   const isActiveRef = useRef(isChatTabActive);
   useEffect(() => { isActiveRef.current = isChatTabActive; }, [isChatTabActive]);
 
-  // Request notification permission once
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
       if (Notification.permission === 'default') {
@@ -757,17 +1118,16 @@ export const useChatUnreadCount = (isChatTabActive: boolean = false) => {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, async (payload) => {
         const m = payload.new as Message;
         if (m.sender_id !== user.id) {
-          // Notify if user is not viewing chat
           if (document.visibilityState !== 'visible' || !isActiveRef.current) {
             const { data: prof } = await sb.from('profiles').select('display_name,email').eq('user_id', m.sender_id).maybeSingle();
             const name = prof?.display_name || prof?.email || 'Nuevo mensaje';
-            showNotification(name, m.content);
+            const body = m.attachment_type === 'audio' ? '🎤 Mensaje de voz' : m.content;
+            showNotification(name, body);
           }
         }
         refresh();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_members' }, async (payload: any) => {
-        // Detect new pending invite for me
         if (payload.eventType === 'INSERT' && payload.new?.user_id === user.id && payload.new?.status === 'pending') {
           showNotification('Nueva invitación de chat', 'Has recibido una invitación');
         }

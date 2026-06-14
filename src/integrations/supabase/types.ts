@@ -57,24 +57,42 @@ export type Database = {
       }
       chat_messages: {
         Row: {
+          attachment_type: string | null
+          attachment_url: string | null
+          audio_duration_ms: number | null
           chat_id: string
           content: string
           created_at: string
+          deleted_at: string | null
+          edited_at: string | null
           id: string
+          reply_to_id: string | null
           sender_id: string
         }
         Insert: {
+          attachment_type?: string | null
+          attachment_url?: string | null
+          audio_duration_ms?: number | null
           chat_id: string
           content: string
           created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
           id?: string
+          reply_to_id?: string | null
           sender_id: string
         }
         Update: {
+          attachment_type?: string | null
+          attachment_url?: string | null
+          audio_duration_ms?: number | null
           chat_id?: string
           content?: string
           created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
           id?: string
+          reply_to_id?: string | null
           sender_id?: string
         }
         Relationships: [
@@ -83,6 +101,13 @@ export type Database = {
             columns: ["chat_id"]
             isOneToOne: false
             referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
             referencedColumns: ["id"]
           },
         ]
@@ -571,6 +596,27 @@ export type Database = {
           referral_count?: number
           tasks_completed_total?: number
           total_points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_presence: {
+        Row: {
+          is_online: boolean
+          last_seen_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          is_online?: boolean
+          last_seen_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          is_online?: boolean
+          last_seen_at?: string
           updated_at?: string
           user_id?: string
         }

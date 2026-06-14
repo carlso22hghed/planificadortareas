@@ -132,6 +132,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
+  // Presence: heartbeat so others see when this user is online / last seen
+  useEffect(() => {
+    if (!user) return;
+    const sb: any = supabase;
+    const writePresence = (online: boolean) => {
+      sb.from('user_presence').upsert({
+        user_id: user.id,
+        is_online: online,
+        last_seen_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' }).then(() => {});
+    };
+    writePresence(true);
+    const interval = setInterval(() => writePresence(true), 30000);
+    const onVisibility = () => writePresence(document.visibilityState === 'visible');
+    const onBeforeUnload = () => {
+      try {
+        navigator.sendBeacon?.(
+          `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/user_presence?on_conflict=user_id`,
+          new Blob([JSON.stringify({ user_id: user.id, is_online: false, last_seen_at: new Date().toISOString(), updated_at: new Date().toISOString() })], { type: 'application/json' })
+        );
+      } catch {}
+      writePresence(false);
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      writePresence(false);
+    };
+  }, [user?.id]);
+
+
   const signOut = async () => {
     if (user) {
       await supabase.from('profiles').update({ is_active: false }).eq('user_id', user.id);
