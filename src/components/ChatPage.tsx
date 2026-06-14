@@ -47,6 +47,9 @@ const ChatPage = () => {
   const [draft, setDraft] = useState('');
   const [hasMore, setHasMore] = useState<Record<string, boolean>>({});
   const [loadingOlder, setLoadingOlder] = useState(false);
+  const [typingUsers, setTypingUsers] = useState<Record<string, number>>({});
+  const typingChannelRef = useRef<any>(null);
+  const lastTypingSentRef = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeChatIdRef = useRef<string | null>(null);
   useEffect(() => { activeChatIdRef.current = activeChatId; }, [activeChatId]);
@@ -158,6 +161,46 @@ const ChatPage = () => {
     lastMessageCount.current = 0;
     setTimeout(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }); }, 0);
   }, [activeChatId]);
+
+  // Typing indicator: broadcast channel per active chat
+  useEffect(() => {
+    if (!activeChatId || !user) return;
+    setTypingUsers({});
+    const ch = supabase.channel(`typing:${activeChatId}`, { config: { broadcast: { self: false } } });
+    ch.on('broadcast', { event: 'typing' }, (payload) => {
+      const uid = (payload.payload as any)?.user_id as string | undefined;
+      if (!uid || uid === user.id) return;
+      setTypingUsers(prev => ({ ...prev, [uid]: Date.now() }));
+    });
+    ch.subscribe();
+    typingChannelRef.current = ch;
+    const interval = setInterval(() => {
+      setTypingUsers(prev => {
+        const now = Date.now();
+        const next: Record<string, number> = {};
+        let changed = false;
+        for (const k in prev) {
+          if (now - prev[k] < 4000) next[k] = prev[k];
+          else changed = true;
+        }
+        return changed ? next : prev;
+      });
+    }, 1000);
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(ch);
+      typingChannelRef.current = null;
+    };
+  }, [activeChatId, user?.id]);
+
+  const broadcastTyping = () => {
+    const ch = typingChannelRef.current;
+    if (!ch || !user) return;
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < 1500) return;
+    lastTypingSentRef.current = now;
+    ch.send({ type: 'broadcast', event: 'typing', payload: { user_id: user.id } });
+  };
 
   const loadOlder = async () => {
     if (!activeChatId || loadingOlder) return;
@@ -362,8 +405,34 @@ const ChatPage = () => {
               );
             })}
           </div>
+          {(() => {
+            const now = Date.now();
+            const ids = Object.entries(typingUsers).filter(([, ts]) => now - ts < 4000).map(([id]) => id);
+            if (ids.length === 0) return null;
+            const names = ids.map(id => profiles[id]?.display_name || profiles[id]?.email?.split('@')[0] || 'Alguien');
+            let label: string;
+            if (!activeChat?.is_group) label = 'está escribiendo…';
+            else if (names.length === 1) label = `${names[0]} está escribiendo…`;
+            else if (names.length === 2) label = `${names[0]} y ${names[1]} están escribiendo…`;
+            else label = 'Varios están escribiendo…';
+            return (
+              <div className="px-3 pb-1 text-xs text-muted-foreground italic flex items-center gap-1.5">
+                <span className="flex gap-0.5">
+                  <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </span>
+                {label}
+              </div>
+            );
+          })()}
           <div className="border-t border-border p-2 flex gap-2">
-            <Input value={draft} onChange={e => setDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }} placeholder="Escribe un mensaje…" />
+            <Input
+              value={draft}
+              onChange={e => { setDraft(e.target.value); if (e.target.value.trim()) broadcastTyping(); }}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+              placeholder="Escribe un mensaje…"
+            />
             <Button onClick={sendMessage} disabled={!draft.trim()}><Send className="w-4 h-4" /></Button>
           </div>
         </div>
